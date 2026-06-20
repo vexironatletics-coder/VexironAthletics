@@ -22,6 +22,7 @@ import analyticsRoutes from './routes/analytics';
 import { requireDb } from './middleware/requireDb';
 
 dotenv.config();
+dotenv.config({ path: path.join(process.cwd(), 'backend', '.env') });
 
 type CreateAppOptions = {
   /** When false, skip the API 404 handler so Next.js can serve the storefront. */
@@ -51,7 +52,8 @@ export const createApp = (options: CreateAppOptions = {}): express.Application =
 
   app.get('/api/health', (_req, res) => {
     const dbConnected = isDbConnected();
-    res.status(dbConnected ? 200 : 503).json({
+    // Always HTTP 200 — Hostinger treats 503 as "app down" and shows a platform error page.
+    res.status(200).json({
       status: dbConnected ? 'ok' : 'degraded',
       db: dbConnected ? 'connected' : 'disconnected',
       timestamp: new Date().toISOString(),
