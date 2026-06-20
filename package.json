@@ -14,5 +14,8 @@
   "dependencies": {
     "express": "^5.2.1",
     "next": "16.2.9"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
   }
 }

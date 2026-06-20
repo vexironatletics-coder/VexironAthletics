@@ -32,7 +32,7 @@ export function RecentlyViewedSection() {
 
   return (
     <ThemedSection
-      variant="default"
+      variant="soft"
       badge="For you"
       badgeIcon={Clock}
       title="Recently Viewed"

@@ -20,7 +20,7 @@ export const productApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ['Product'],
+  tagTypes: ['Product', 'Analytics'],
   endpoints: (builder) => ({
     getProducts: builder.query<ProductsResponse, ProductFilters | void>({
       query: (filters) => {
