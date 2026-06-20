@@ -16,6 +16,7 @@ import {
 } from '@/store/api/orderApi';
 import { formatPrice } from '@/lib/utils';
 import type { OrderStatus } from '@/lib/utils';
+import { formatPaymentMethod } from '@/components/orders/OrderList';
 
 export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState('');
@@ -127,6 +128,7 @@ export default function AdminOrdersPage() {
                 <th className="px-4 py-3 text-left">ID</th>
                 <th className="px-4 py-3 text-left">Date</th>
                 <th className="px-4 py-3 text-left">Status</th>
+                <th className="px-4 py-3 text-left">Payment</th>
                 <th className="px-4 py-3 text-left">Total</th>
                 <th className="px-4 py-3 text-left">Update</th>
                 <th className="px-4 py-3 text-left">Documents</th>
@@ -139,6 +141,19 @@ export default function AdminOrdersPage() {
                   <td className="px-4 py-3">{new Date(order.createdAt).toLocaleDateString()}</td>
                   <td className="px-4 py-3">
                     <StatusBadge status={order.status as OrderStatus} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <p className="text-xs font-medium">{formatPaymentMethod(order.paymentMethod)}</p>
+                    {order.paymentMethod === 'bank' && order.bankPaymentProof?.url && (
+                      <a
+                        href={order.bankPaymentProof.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 inline-block text-xs text-[var(--accent)] hover:underline"
+                      >
+                        View proof
+                      </a>
+                    )}
                   </td>
                   <td className="px-4 py-3">{formatPrice(order.total)}</td>
                   <td className="px-4 py-3">

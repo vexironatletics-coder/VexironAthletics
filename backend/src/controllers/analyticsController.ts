@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { isDbConnected } from '../config/db';
 import { AudienceVisit } from '../models/AudienceVisit';
 import {
   getClientIp,
@@ -15,26 +16,32 @@ export const trackVisit = async (req: Request, res: Response): Promise<void> => 
     sessionId?: string;
   };
 
-  const userIp = getClientIp(req);
-  const deviceIp = getDeviceIp(req);
-  const userAgent = req.headers['user-agent'] ?? '';
-  const geo = resolveGeoLocation(userIp);
-  const device = parseUserAgent(userAgent);
-  const referrerHost = parseReferrerHost(referrer);
+  try {
+    if (isDbConnected()) {
+      const userIp = getClientIp(req);
+      const deviceIp = getDeviceIp(req);
+      const userAgent = req.headers['user-agent'] ?? '';
+      const geo = resolveGeoLocation(userIp);
+      const device = parseUserAgent(userAgent);
+      const referrerHost = parseReferrerHost(referrer);
 
-  await AudienceVisit.create({
-    userIp,
-    deviceIp,
-    ...geo,
-    userAgent,
-    ...device,
-    path,
-    referrer,
-    referrerHost,
-    user: req.user?.id,
-    sessionId,
-    visitedAt: new Date(),
-  });
+      await AudienceVisit.create({
+        userIp,
+        deviceIp,
+        ...geo,
+        userAgent,
+        ...device,
+        path,
+        referrer,
+        referrerHost,
+        user: req.user?.id,
+        sessionId,
+        visitedAt: new Date(),
+      });
+    }
+  } catch (err) {
+    console.warn('[Analytics] track skipped:', err instanceof Error ? err.message : err);
+  }
 
   res.status(201).json({ ok: true });
 };

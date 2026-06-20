@@ -1,4 +1,9 @@
 import { Request, Response } from 'express';
+import { getBankTransferDetails } from '../config/bankTransfer';
+
+export const getBankDetails = (_req: Request, res: Response): void => {
+  res.json(getBankTransferDetails());
+};
 
 export const confirmCod = (_req: Request, res: Response): void => {
   res.json({ message: 'Cash on delivery confirmed at order creation' });

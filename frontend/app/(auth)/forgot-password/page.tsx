@@ -9,7 +9,6 @@ export default function ForgotPasswordPage() {
     <AuthLayout
       title="Forgot password?"
       subtitle="Enter your email and we'll send you a link to reset your password."
-      imageSeed="auth-forgot"
     >
       <ErrorBoundary>
         <ForgotPasswordForm />

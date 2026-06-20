@@ -10,6 +10,7 @@ import type { Order } from '@/lib/types';
 
 const PAYMENT_LABELS: Record<string, string> = {
   cod: 'Cash on Delivery',
+  bank: 'Bank Transfer',
   card: 'Credit / Debit Card',
   online: 'Online Payment',
 };

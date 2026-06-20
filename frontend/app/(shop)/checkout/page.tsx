@@ -11,12 +11,12 @@ import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { ThemedCouponChip, ThemedSection } from '@/components/ui/themed-section';
 import { CreditCard } from 'lucide-react';
 import { shippingSchema, type ShippingFormData } from '@/lib/validators';
 import { ShippingAddressForm } from '@/components/checkout/ShippingAddressForm';
+import { BankTransferSection } from '@/components/checkout/BankTransferSection';
 import { useCreateOrderMutation } from '@/store/api/orderApi';
 import { useValidateCouponMutation } from '@/store/api/couponApi';
 import { useGetLoyaltyProfileQuery } from '@/store/api/loyaltyApi';
@@ -24,10 +24,14 @@ import { clearCart, selectCartSubtotal, selectShippingFee } from '@/store/slices
 import type { RootState } from '@/store';
 import { formatPrice } from '@/lib/utils';
 import { formatShippingPhones } from '@/lib/shippingAddress';
+import { formatPaymentMethod } from '@/components/orders/OrderList';
+import Image from 'next/image';
 
 export default function CheckoutPage() {
   const [step, setStep] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState<'cod'>('cod');
+  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'bank'>('cod');
+  const [paymentProof, setPaymentProof] = useState<File | null>(null);
+  const [paymentProofPreview, setPaymentProofPreview] = useState<string | null>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const router = useRouter();
@@ -122,7 +126,30 @@ export default function CheckoutPage() {
     }
   };
 
+  const onPaymentMethodChange = (method: 'cod' | 'bank') => {
+    setPaymentMethod(method);
+    if (method === 'cod') {
+      if (paymentProofPreview) URL.revokeObjectURL(paymentProofPreview);
+      setPaymentProof(null);
+      setPaymentProofPreview(null);
+    }
+  };
+
+  const continueToReview = () => {
+    if (paymentMethod === 'bank' && !paymentProof) {
+      toast.error('Please upload your bank payment proof before continuing');
+      return;
+    }
+    setStep(3);
+  };
+
   const onPlaceOrder = async () => {
+    if (paymentMethod === 'bank' && !paymentProof) {
+      toast.error('Please upload your bank payment proof');
+      setStep(2);
+      return;
+    }
+
     if (!token && typeof window !== 'undefined' && !localStorage.getItem('token')) {
       toast.error('Please sign in to place your order');
       router.push('/login?callbackUrl=%2Fcheckout');
@@ -145,6 +172,8 @@ export default function CheckoutPage() {
         shippingAddress,
         couponCode: couponCode.trim() || undefined,
         pointsToRedeem: pointsToRedeem || undefined,
+        paymentMethod,
+        paymentProof: paymentMethod === 'bank' ? paymentProof ?? undefined : undefined,
       }).unwrap();
       dispatch(clearCart());
       setOrderId(order._id);
@@ -242,22 +271,39 @@ export default function CheckoutPage() {
             <CardHeader><CardTitle>Payment Method</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <label className="theme-border-accent flex cursor-pointer items-center gap-3 rounded-lg border p-4">
-                <input type="radio" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} />
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  checked={paymentMethod === 'cod'}
+                  onChange={() => onPaymentMethodChange('cod')}
+                />
                 <span className="font-medium">Cash on Delivery</span>
               </label>
-              <div className="flex cursor-not-allowed items-center gap-3 rounded-lg border border-zinc-200 p-4 opacity-50 dark:border-zinc-700">
-                <input type="radio" disabled />
-                <span>Pay by Code</span>
-                <Badge variant="secondary">Coming Soon</Badge>
-              </div>
-              <div className="flex cursor-not-allowed items-center gap-3 rounded-lg border border-zinc-200 p-4 opacity-50 dark:border-zinc-700">
-                <input type="radio" disabled />
-                <span>Online Banking</span>
-                <Badge variant="secondary">Coming Soon</Badge>
-              </div>
+              <label className="theme-border-accent flex cursor-pointer items-center gap-3 rounded-lg border p-4">
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  checked={paymentMethod === 'bank'}
+                  onChange={() => onPaymentMethodChange('bank')}
+                />
+                <span className="font-medium">Bank Transfer</span>
+              </label>
+
+              {paymentMethod === 'bank' && (
+                <BankTransferSection
+                  total={total}
+                  paymentProof={paymentProof}
+                  paymentProofPreview={paymentProofPreview}
+                  onProofChange={(file, preview) => {
+                    setPaymentProof(file);
+                    setPaymentProofPreview(preview);
+                  }}
+                />
+              )}
+
               <div className="flex gap-4">
                 <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
-                <Button className="flex-1" onClick={() => setStep(3)}>Review Order</Button>
+                <Button className="flex-1" onClick={continueToReview}>Review Order</Button>
               </div>
             </CardContent>
           </Card>
@@ -267,6 +313,21 @@ export default function CheckoutPage() {
           <Card className="theme-border-accent mt-8 border shadow-sm">
             <CardHeader><CardTitle>Review & Place Order</CardTitle></CardHeader>
             <CardContent className="space-y-4">
+              <div className="theme-border-accent rounded-lg border bg-[var(--secondary)]/30 p-4 text-sm">
+                <p className="font-medium">Payment</p>
+                <p className="mt-1 text-[var(--muted)]">{formatPaymentMethod(paymentMethod)}</p>
+                {paymentMethod === 'bank' && paymentProofPreview && (
+                  <div className="relative mt-3 h-32 w-full max-w-[200px] overflow-hidden rounded-md border bg-white dark:bg-zinc-900">
+                    <Image
+                      src={paymentProofPreview}
+                      alt="Payment proof"
+                      fill
+                      className="object-contain"
+                      unoptimized
+                    />
+                  </div>
+                )}
+              </div>
               <div className="theme-border-accent rounded-lg border bg-[var(--secondary)]/30 p-4 text-sm">
                 <p className="font-medium">Shipping to</p>
                 <p className="mt-1 text-[var(--muted)]">

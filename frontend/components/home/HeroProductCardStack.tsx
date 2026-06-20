@@ -11,38 +11,40 @@ import type { Product } from '@/lib/types';
 const CARD_COUNT = 5;
 const ROTATE_MS = 3500;
 
+import { heroStackShirtImages } from '@/lib/shirtImages';
+
 const fallbackProducts: Pick<Product, '_id' | 'name' | 'price' | 'discountPrice' | 'images'>[] = [
   {
     _id: 'hero-fallback-1',
-    name: 'Performance Tee',
+    name: 'Classic Oxford Shirt',
     price: 2499,
     discountPrice: 1999,
-    images: [{ url: 'https://picsum.photos/seed/hero-prod-1/400/520', public_id: '' }],
+    images: [{ url: heroStackShirtImages[0], public_id: '' }],
   },
   {
     _id: 'hero-fallback-2',
-    name: 'Training Joggers',
+    name: 'Striped Cotton Shirt',
     price: 3299,
-    images: [{ url: 'https://picsum.photos/seed/hero-prod-2/400/520', public_id: '' }],
+    images: [{ url: heroStackShirtImages[1], public_id: '' }],
   },
   {
     _id: 'hero-fallback-3',
-    name: 'Athletic Hoodie',
+    name: 'Premium Dress Shirt',
     price: 4499,
     discountPrice: 3799,
-    images: [{ url: 'https://picsum.photos/seed/hero-prod-3/400/520', public_id: '' }],
+    images: [{ url: heroStackShirtImages[2], public_id: '' }],
   },
   {
     _id: 'hero-fallback-4',
-    name: 'Running Shorts',
+    name: 'Casual Linen Shirt',
     price: 1899,
-    images: [{ url: 'https://picsum.photos/seed/hero-prod-4/400/520', public_id: '' }],
+    images: [{ url: heroStackShirtImages[3], public_id: '' }],
   },
   {
     _id: 'hero-fallback-5',
-    name: 'Sports Jacket',
+    name: 'Everyday Tee',
     price: 5499,
-    images: [{ url: 'https://picsum.photos/seed/hero-prod-5/400/520', public_id: '' }],
+    images: [{ url: heroStackShirtImages[4], public_id: '' }],
   },
 ];
 

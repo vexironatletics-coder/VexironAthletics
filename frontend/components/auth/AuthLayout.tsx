@@ -3,26 +3,26 @@ import Link from 'next/link';
 import { APP_NAME } from '@/lib/constants';
 import { FadeIn, SlideUp } from '@/components/ui/motion';
 
+import { authSideShirtImage } from '@/lib/shirtImages';
+
 interface AuthLayoutProps {
   children: React.ReactNode;
   title: string;
   subtitle: string;
-  imageSeed?: string;
 }
 
 export function AuthLayout({
   children,
   title,
   subtitle,
-  imageSeed = 'auth-fashion',
 }: AuthLayoutProps) {
   return (
     <div className="site-auth-bg min-h-[calc(100vh-4rem)]">
       <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-6xl lg:grid-cols-2">
         <div className="relative hidden overflow-hidden lg:block">
           <Image
-            src={`https://picsum.photos/seed/${imageSeed}/1200/1600`}
-            alt="Fashion collection"
+            src={authSideShirtImage}
+            alt="Shirt collection"
             fill
             className="object-cover animate-ken-burns"
             priority

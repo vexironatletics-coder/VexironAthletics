@@ -12,7 +12,6 @@ export default function LoginPage() {
     <AuthLayout
       title="Welcome back"
       subtitle="Sign in to track orders, manage your wishlist, and checkout faster."
-      imageSeed="auth-login"
     >
       <ErrorBoundary>
         <Suspense fallback={<Skeleton className="h-96 w-full rounded-2xl" />}>

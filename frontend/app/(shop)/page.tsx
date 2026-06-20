@@ -19,10 +19,12 @@ import {
 import { useGetProductsQuery } from '@/store/api/productApi';
 import Image from 'next/image';
 
+import { categoryShirtImages } from '@/lib/shirtImages';
+
 const categories = [
-  { slug: 'men', label: 'Men', image: 'https://picsum.photos/seed/men-cat/600/800' },
-  { slug: 'women', label: 'Women', image: 'https://picsum.photos/seed/women-cat/600/800' },
-  { slug: 'children', label: 'Children', image: 'https://picsum.photos/seed/kids-cat/600/800' },
+  { slug: 'men', label: 'Men', image: categoryShirtImages.men },
+  { slug: 'women', label: 'Women', image: categoryShirtImages.women },
+  { slug: 'children', label: 'Children', image: categoryShirtImages.children },
 ];
 
 export default function LandingPage() {

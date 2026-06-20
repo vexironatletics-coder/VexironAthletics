@@ -14,6 +14,8 @@ import {
 import { verifyToken } from '../middleware/auth';
 import { adminOnly } from '../middleware/adminOnly';
 import { orderRateLimit } from '../middleware/rateLimit';
+import { parseOrderBody } from '../middleware/parseOrderBody';
+import { upload } from '../config/multer';
 import { MAX_ORDER_LINE_ITEMS, MAX_QTY_PER_LINE } from '../utils/constants';
 
 const router = Router();
@@ -25,7 +27,10 @@ router.post(
   '/',
   verifyToken,
   orderRateLimit,
+  upload.single('paymentProof'),
+  parseOrderBody,
   [
+    body('paymentMethod').optional().isIn(['cod', 'bank']).withMessage('Invalid payment method'),
     body('items')
       .isArray({ min: 1, max: MAX_ORDER_LINE_ITEMS })
       .withMessage(`Order must contain 1–${MAX_ORDER_LINE_ITEMS} items`),

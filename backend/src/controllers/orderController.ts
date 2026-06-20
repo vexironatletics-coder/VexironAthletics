@@ -18,6 +18,7 @@ import { generateInvoicePdf, generateOrdersReportPdf, generateDispatchReceiptPdf
 import { sendOrderConfirmationEmail, sendOrderStatusUpdateEmail } from '../services/emailService';
 import { normalizeShippingAddress } from '../utils/shippingAddress';
 import { MAX_ORDER_LINE_ITEMS, MAX_QTY_PER_LINE } from '../utils/constants';
+import { uploadPaymentProof } from '../services/paymentProofUpload';
 import { logAdminAction } from '../services/auditService';
 
 interface OrderItemInput {
@@ -34,7 +35,7 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
     return;
   }
 
-  const { items, shippingAddress: rawShippingAddress, notes, couponCode, pointsToRedeem } = req.body as {
+  const { items, shippingAddress: rawShippingAddress, notes, couponCode, pointsToRedeem, paymentMethod: rawPaymentMethod } = req.body as {
     items: OrderItemInput[];
     shippingAddress: {
       name: string;
@@ -50,7 +51,18 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
     notes?: string;
     couponCode?: string;
     pointsToRedeem?: number;
+    paymentMethod?: 'cod' | 'bank';
   };
+
+  const paymentMethod = rawPaymentMethod === 'bank' ? 'bank' : 'cod';
+
+  if (paymentMethod === 'bank') {
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ message: 'Payment proof image is required for bank transfer' });
+      return;
+    }
+  }
 
   let shippingAddress;
   try {
@@ -161,13 +173,19 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
     const total = Math.max(0, afterCoupon - pointsDiscount + shippingFee);
     const pointsEarned = calculatePointsEarned(total);
 
+    let bankPaymentProof: { url: string; public_id: string } | undefined;
+    if (paymentMethod === 'bank' && req.file) {
+      bankPaymentProof = await uploadPaymentProof(req.file);
+    }
+
     const [order] = await Order.create(
       [
         {
           user: req.user!.id,
           items: orderItems,
           shippingAddress,
-          paymentMethod: 'cod',
+          paymentMethod,
+          bankPaymentProof,
           status: 'pending',
           subtotal,
           shippingFee,
@@ -198,7 +216,7 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
       })),
       total,
       shippingAddress,
-      'cod'
+      paymentMethod
     ).catch((err) => {
       console.error('[Order Email] Failed to send confirmation:', err);
     });

@@ -14,6 +14,14 @@ interface CreateOrderPayload {
   notes?: string;
   couponCode?: string;
   pointsToRedeem?: number;
+  paymentMethod?: 'cod' | 'bank';
+  paymentProof?: File;
+}
+
+export interface BankTransferDetails {
+  accountName: string;
+  bankName: string;
+  accountNumber: string;
 }
 
 interface LowStockProduct {
@@ -52,8 +60,30 @@ export const orderApi = createApi({
   tagTypes: ['Order', 'Analytics'],
   endpoints: (builder) => ({
     createOrder: builder.mutation<Order, CreateOrderPayload>({
-      query: (body) => ({ url: '/orders', method: 'POST', body }),
+      query: ({ paymentProof, ...body }) => {
+        if (paymentProof) {
+          const formData = new FormData();
+          formData.append('paymentProof', paymentProof);
+          formData.append('paymentMethod', 'bank');
+          formData.append('items', JSON.stringify(body.items));
+          formData.append('shippingAddress', JSON.stringify(body.shippingAddress));
+          if (body.notes) formData.append('notes', body.notes);
+          if (body.couponCode) formData.append('couponCode', body.couponCode);
+          if (body.pointsToRedeem) {
+            formData.append('pointsToRedeem', String(body.pointsToRedeem));
+          }
+          return { url: '/orders', method: 'POST', body: formData };
+        }
+        return {
+          url: '/orders',
+          method: 'POST',
+          body: { ...body, paymentMethod: body.paymentMethod ?? 'cod' },
+        };
+      },
       invalidatesTags: ['Order'],
+    }),
+    getBankTransferDetails: builder.query<BankTransferDetails, void>({
+      query: () => '/payments/bank-details',
     }),
     getMyOrders: builder.query<
       OrdersResponse,
@@ -122,6 +152,7 @@ export const orderApi = createApi({
 
 export const {
   useCreateOrderMutation,
+  useGetBankTransferDetailsQuery,
   useGetMyOrdersQuery,
   useGetOrderByIdQuery,
   useGetAllOrdersQuery,

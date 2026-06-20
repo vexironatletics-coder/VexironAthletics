@@ -9,7 +9,6 @@ export default function RegisterPage() {
     <AuthLayout
       title="Join VexironAthletics"
       subtitle="Create an account to save favorites, track orders, and enjoy a personalized experience."
-      imageSeed="auth-register"
     >
       <ErrorBoundary>
         <Suspense fallback={null}>

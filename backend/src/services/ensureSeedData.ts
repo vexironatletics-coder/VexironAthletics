@@ -56,3 +56,18 @@ export const ensureSeedData = async (): Promise<void> => {
 
   console.log(`[Seed] Loaded ${docs.length} sample products`);
 };
+
+/** Refresh catalog product images (e.g. after replacing placeholder picsum URLs). */
+export const syncCatalogProductImages = async (): Promise<void> => {
+  const docs = buildCatalogProductDocs();
+  const results = await Promise.all(
+    docs.map((doc) =>
+      Product.updateOne({ name: doc.name }, { $set: { images: doc.images } })
+    )
+  );
+  const updated = results.filter((r) => r.modifiedCount > 0).length;
+  if (updated > 0) {
+    console.log(`[Seed] Updated shirt images on ${updated} products`);
+    await syncAllProductsToSearch().catch(() => undefined);
+  }
+};

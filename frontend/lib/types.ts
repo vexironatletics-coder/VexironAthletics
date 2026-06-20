@@ -89,7 +89,8 @@ export interface Order {
     qty: number;
   }[];
   shippingAddress: ShippingAddress;
-  paymentMethod: 'cod';
+  paymentMethod: 'cod' | 'bank';
+  bankPaymentProof?: { url: string; public_id?: string };
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   subtotal: number;
   shippingFee: number;

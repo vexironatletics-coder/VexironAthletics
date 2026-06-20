@@ -9,7 +9,6 @@ export default function ResetPasswordPage() {
     <AuthLayout
       title="Set new password"
       subtitle="Choose a strong password you haven't used before."
-      imageSeed="auth-reset"
     >
       <ErrorBoundary>
         <ResetPasswordForm />

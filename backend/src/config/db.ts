@@ -3,7 +3,6 @@ import mongoose from 'mongoose';
 const connectOptions = {
   serverSelectionTimeoutMS: 15000,
   socketTimeoutMS: 45000,
-  family: 4 as const,
   tls: true,
   retryWrites: true,
 };
@@ -48,14 +47,15 @@ const getPublicIpHint = async (): Promise<string | null> => {
   }
 };
 
-export const connectDBWithRetry = async (): Promise<void> => {
+export const connectDBWithRetry = async (): Promise<boolean> => {
   let attempt = 0;
   let publicIpHint: string | null = null;
 
-  const tryConnect = async (): Promise<void> => {
+  const tryConnect = async (): Promise<boolean> => {
     attempt += 1;
     try {
       await connectDB();
+      return true;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       console.error(`MongoDB attempt ${attempt} failed: ${message}`);

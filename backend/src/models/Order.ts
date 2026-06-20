@@ -7,7 +7,12 @@ export type OrderStatus =
   | 'delivered'
   | 'cancelled';
 
-export type PaymentMethod = 'cod';
+export type PaymentMethod = 'cod' | 'bank';
+
+export interface IBankPaymentProof {
+  url: string;
+  public_id?: string;
+}
 
 export interface IOrderItem {
   product: Types.ObjectId;
@@ -37,6 +42,7 @@ export interface IOrder extends Document {
   items: IOrderItem[];
   shippingAddress: IShippingAddress;
   paymentMethod: PaymentMethod;
+  bankPaymentProof?: IBankPaymentProof;
   status: OrderStatus;
   subtotal: number;
   shippingFee: number;
@@ -84,7 +90,11 @@ const orderSchema = new Schema<IOrder>(
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     items: [orderItemSchema],
     shippingAddress: { type: shippingAddressSchema, required: true },
-    paymentMethod: { type: String, enum: ['cod'], default: 'cod' },
+    paymentMethod: { type: String, enum: ['cod', 'bank'], default: 'cod' },
+    bankPaymentProof: {
+      url: { type: String },
+      public_id: { type: String },
+    },
     status: {
       type: String,
       enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],

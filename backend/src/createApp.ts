@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import path from 'path';
 import { isDbConnected } from './config/db';
 import { errorHandler, notFound } from './middleware/errorHandler';
 import authRoutes from './routes/auth';
@@ -18,6 +19,7 @@ import promotionRoutes from './routes/promotions';
 import settingsRoutes from './routes/settings';
 import loyaltyRoutes from './routes/loyalty';
 import analyticsRoutes from './routes/analytics';
+import { requireDb } from './middleware/requireDb';
 
 dotenv.config();
 
@@ -42,6 +44,11 @@ export const createApp = (options: CreateAppOptions = {}): express.Application =
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true }));
 
+  app.use(
+    '/api/uploads/payment-proofs',
+    express.static(path.join(process.cwd(), 'uploads', 'payment-proofs'))
+  );
+
   app.get('/api/health', (_req, res) => {
     const dbConnected = isDbConnected();
     res.status(dbConnected ? 200 : 503).json({
@@ -50,8 +57,16 @@ export const createApp = (options: CreateAppOptions = {}): express.Application =
       timestamp: new Date().toISOString(),
       message: dbConnected
         ? 'API is ready'
-        : 'API running but database not connected — check MongoDB Atlas IP whitelist',
+        : 'API running but database not connected — check MONGODB_URI and Atlas IP whitelist',
     });
+  });
+
+  /** Block DB-dependent routes until MongoDB is connected (503 instead of 500). */
+  app.use('/api', (req, res, next) => {
+    if (req.path === '/health') return next();
+    if (req.path === '/settings/public') return next();
+    if (req.path === '/analytics/track' && req.method === 'POST') return next();
+    return requireDb(req, res, next);
   });
 
   app.use('/api/auth', authRoutes);

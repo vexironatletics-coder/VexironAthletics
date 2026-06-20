@@ -2,6 +2,7 @@ import puppeteer from 'puppeteer';
 import { IOrder } from '../models/Order';
 import { APP_NAME } from '../utils/constants';
 import { formatShippingPhones } from '../utils/shippingAddress';
+import { formatPaymentMethodLabel } from '../config/bankTransfer';
 
 const formatPrice = (n: number) => `₨${n.toLocaleString('en-PK')}`;
 
@@ -59,7 +60,7 @@ const buildInvoiceHtml = (order: IOrder, customerName: string, customerEmail: st
     ${order.shippingAddress.state} ${order.shippingAddress.postal}, ${order.shippingAddress.country}<br/>
     ${formatShippingPhones(order.shippingAddress)}
   </div>
-  <p style="margin-top:40px;font-size:12px;color:#71717a;">Payment: ${order.paymentMethod.toUpperCase()} · Status: ${order.status}</p>
+  <p style="margin-top:40px;font-size:12px;color:#71717a;">Payment: ${formatPaymentMethodLabel(order.paymentMethod)} · Status: ${order.status}</p>
 </body></html>`;
 };
 
@@ -190,7 +191,9 @@ const buildDispatchReceiptHtml = (
     </div>
     <div>
       <div class="cod-box">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#9a3412;">Amount to collect (COD)</div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#9a3412;">
+          ${order.paymentMethod === 'bank' ? 'Prepaid (Bank Transfer)' : 'Amount to collect (COD)'}
+        </div>
         <div class="amount">${formatPrice(order.total)}</div>
         ${order.shippingFee === 0 ? '<div style="font-size:11px;color:#71717a;margin-top:4px;">Includes free shipping</div>' : `<div style="font-size:11px;color:#71717a;margin-top:4px;">Shipping: ${formatPrice(order.shippingFee)}</div>`}
       </div>

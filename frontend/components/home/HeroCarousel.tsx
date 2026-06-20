@@ -25,6 +25,8 @@ import 'swiper/css/effect-fade';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
+import { heroBannerImages } from '@/lib/shirtImages';
+
 const heroSlides = [
   {
     id: 'elevate',
@@ -33,7 +35,7 @@ const heroSlides = [
     titleAccent: 'Style',
     subtitle:
       'Discover premium clothing for men, women, and children. Quality fashion crafted for athletes and everyday champions.',
-    image: 'https://picsum.photos/seed/hero-banner/1920/1080',
+    image: heroBannerImages.elevate,
     cta: { label: 'Shop Men', href: '/category/men' },
     secondary: { label: 'Shop Women', href: '/category/women' },
   },
@@ -43,7 +45,7 @@ const heroSlides = [
     title: 'Summer',
     titleAccent: 'Collection',
     subtitle: 'Light fabrics, bold colors, and effortless fits designed for heat, movement, and confidence.',
-    image: 'https://picsum.photos/seed/hero-summer/1920/1080',
+    image: heroBannerImages.summer,
     cta: { label: 'Explore Collection', href: '/products' },
     secondary: { label: 'View Sale', href: '/products?sort=price-desc' },
   },
@@ -53,7 +55,7 @@ const heroSlides = [
     title: 'Playful Styles for',
     titleAccent: 'Kids',
     subtitle: 'Durable, comfortable pieces built for school days, sports, and weekend adventures.',
-    image: 'https://picsum.photos/seed/hero-kids/1920/1080',
+    image: heroBannerImages.kids,
     cta: { label: 'Shop Children', href: '/category/children' },
     secondary: { label: 'All Products', href: '/products' },
   },
@@ -63,7 +65,7 @@ const heroSlides = [
     title: 'Free Delivery Above',
     titleAccent: '₨5,000',
     subtitle: 'Nationwide shipping with cash on delivery, secure checkout, and easy 30-day returns.',
-    image: 'https://picsum.photos/seed/hero-delivery/1920/1080',
+    image: heroBannerImages.delivery,
     cta: { label: 'Start Shopping', href: '/products' },
     secondary: { label: 'Shipping Info', href: '/shipping' },
   },

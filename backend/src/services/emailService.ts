@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { formatShippingPhones } from '../utils/shippingAddress';
+import { formatPaymentMethodLabel } from '../config/bankTransfer';
 
 const getTransporter = () => {
   const host = process.env.SMTP_HOST;
@@ -121,7 +122,7 @@ export const sendOrderConfirmationEmail = async (
           ${shippingAddress.country}<br/>
           Mobile: ${formatShippingPhones(shippingAddress)}
         </p>
-        <p style="margin:16px 0 0;font-weight:600;">Payment: ${paymentMethod === 'cod' ? 'Cash on Delivery' : paymentMethod}</p>
+        <p style="margin:16px 0 0;font-weight:600;">Payment: ${formatPaymentMethodLabel(paymentMethod)}</p>
       </div>
       <p style="margin-top:24px;color:#71717a;font-size:13px;">
         We'll notify you when your order ships. Questions? Reply to this email or contact support.

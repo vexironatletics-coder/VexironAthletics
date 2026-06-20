@@ -1,7 +1,9 @@
 import { Router } from 'express';
-import { confirmCod, payByCode, onlineBanking } from '../controllers/paymentController';
+import { confirmCod, payByCode, onlineBanking, getBankDetails } from '../controllers/paymentController';
 
 const router = Router();
+
+router.get('/bank-details', getBankDetails);
 
 router.post('/cod', confirmCod);
 router.post('/code', payByCode);
