@@ -19,7 +19,7 @@ export default function CategoryPage({
   const category = slug as 'men' | 'women' | 'children';
   const [page, setPage] = useState(1);
 
-  const { data, isLoading } = useGetProductsQuery({
+  const { data, isLoading, isError } = useGetProductsQuery({
     category,
     limit: PAGE_SIZE,
     page,
@@ -34,7 +34,7 @@ export default function CategoryPage({
         title={`${slug.charAt(0).toUpperCase() + slug.slice(1)}'s Collection`}
         description={`Browse our latest ${slug}'s athletic wear — performance-ready styles for every day.`}
       >
-        <ProductGrid products={data?.products ?? []} loading={isLoading} />
+        <ProductGrid products={data?.products ?? []} loading={isLoading} error={isError} />
         {data?.pagination && data.pagination.pages > 1 && (
           <Pagination pagination={data.pagination} onPageChange={setPage} />
         )}

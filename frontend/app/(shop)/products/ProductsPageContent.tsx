@@ -33,7 +33,7 @@ export default function ProductsPageContent() {
     search: searchParams.get('search') ?? undefined,
   };
 
-  const { data, isLoading, isFetching } = useGetProductsQuery(filters);
+  const { data, isLoading, isFetching, isError } = useGetProductsQuery(filters);
 
   const updateParams = useCallback(
     (updates: Record<string, string | undefined>) => {
@@ -115,7 +115,7 @@ export default function ProductsPageContent() {
               </div>
             </div>
 
-            <ProductGrid products={data?.products ?? []} loading={isLoading || isFetching} view={view} />
+            <ProductGrid products={data?.products ?? []} loading={isLoading || isFetching} error={isError} view={view} />
 
             {data?.pagination && data.pagination.pages > 1 && (
               <Pagination pagination={data.pagination} onPageChange={goToPage} />

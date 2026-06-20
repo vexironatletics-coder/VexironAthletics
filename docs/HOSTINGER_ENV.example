@@ -7,7 +7,7 @@ NEXT_PUBLIC_API_URL=https://honeydew-salmon-303748.hostingersite.com/api
 NEXT_PUBLIC_SITE_URL=https://honeydew-salmon-303748.hostingersite.com
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
 CLERK_SECRET_KEY=sk_test_...
-MONGODB_URI=mongodb://USER:PASSWORD@cluster.mongodb.net/ecom-store?ssl=true&authSource=admin&retryWrites=true&w=majority
+MONGODB_URI=<paste the full line from your local backend/.env — same value that works locally>
 JWT_SECRET=your-long-random-secret
 JWT_EXPIRES_IN=7d
 ADMIN_EMAIL=admin@vexironathletics.com
