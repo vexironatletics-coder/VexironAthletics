@@ -35,6 +35,12 @@ async function main() {
   const apiApp = createApp({ catchAll: false });
   const server = express();
 
+  const manifestPath = path.join(frontendDir, 'public', 'manifest.json');
+  server.get(['/manifest.json', '/manifest.webmanifest'], (_req, res) => {
+    res.type('application/manifest+json');
+    res.sendFile(manifestPath);
+  });
+
   server.use(apiApp);
 
   server.all('{*path}', (req, res) => {

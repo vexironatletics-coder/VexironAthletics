@@ -70,6 +70,7 @@ export async function generateMetadata(): Promise<Metadata> {
     alternates: {
       canonical: getSiteUrl(),
     },
+    manifest: '/manifest.json',
   };
 }
 

@@ -1,10 +1,21 @@
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
+import { isDbConnected } from '../config/db';
 import { Promotion } from '../models/Promotion';
+import { catalogPromotions } from '../data/catalogSeed';
 
 export const getActivePromotions = async (_req: Request, res: Response): Promise<void> => {
-  const promotions = await Promotion.find({ active: true }).sort({ sortOrder: 1, createdAt: -1 });
-  res.json(promotions);
+  if (!isDbConnected()) {
+    res.json(catalogPromotions.filter((p) => p.active));
+    return;
+  }
+
+  try {
+    const promotions = await Promotion.find({ active: true }).sort({ sortOrder: 1, createdAt: -1 });
+    res.json(promotions);
+  } catch {
+    res.json(catalogPromotions.filter((p) => p.active));
+  }
 };
 
 export const getPromotions = async (_req: Request, res: Response): Promise<void> => {
