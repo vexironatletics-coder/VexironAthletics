@@ -7,10 +7,11 @@ import type { Product } from '@/lib/types';
 interface ProductGridProps {
   products: Product[];
   loading?: boolean;
+  error?: boolean;
   view?: 'grid' | 'list';
 }
 
-export function ProductGrid({ products, loading, view = 'grid' }: ProductGridProps) {
+export function ProductGrid({ products, loading, error, view = 'grid' }: ProductGridProps) {
   if (loading) {
     return (
       <div className={view === 'grid' ? 'grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4' : 'space-y-4'}>
@@ -24,7 +25,9 @@ export function ProductGrid({ products, loading, view = 'grid' }: ProductGridPro
   if (products.length === 0) {
     return (
       <div className="py-16 text-center text-zinc-500">
-        No products found. Try adjusting your filters.
+        {error
+          ? 'Could not load products. Check that the API is running and NEXT_PUBLIC_API_URL is set correctly.'
+          : 'No products found. Try adjusting your filters.'}
       </div>
     );
   }

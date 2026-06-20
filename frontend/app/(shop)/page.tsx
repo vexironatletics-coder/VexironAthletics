@@ -26,7 +26,7 @@ const categories = [
 ];
 
 export default function LandingPage() {
-  const { data, isLoading } = useGetProductsQuery({ limit: 8, sort: 'newest' });
+  const { data, isLoading, isError } = useGetProductsQuery({ limit: 8, sort: 'newest' });
 
   return (
     <ErrorBoundary>
@@ -82,7 +82,7 @@ export default function LandingPage() {
           </Link>
         }
       >
-        <ProductGrid products={data?.products ?? []} loading={isLoading} />
+        <ProductGrid products={data?.products ?? []} loading={isLoading} error={isError} />
       </ThemedSection>
 
       <TrendingNowSection />
