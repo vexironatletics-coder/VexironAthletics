@@ -77,3 +77,11 @@ export const analyticsRateLimit = rateLimit({
   max: 120,
   keyPrefix: 'analytics',
 });
+
+/** General API rate limit — applied to every /api/* route. */
+export const globalApiRateLimit = rateLimit({
+  windowMs: 60 * 1000,
+  max: 200,
+  keyPrefix: 'api',
+  message: 'Too many requests from this IP. Please slow down.',
+});

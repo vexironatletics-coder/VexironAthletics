@@ -85,8 +85,8 @@ export default async function RootLayout({
     <ClerkProvider
       signInUrl="/login"
       signUpUrl="/register"
-      signInFallbackRedirectUrl="/dashboard/user/profile"
-      signUpFallbackRedirectUrl="/dashboard/user/profile"
+      signInFallbackRedirectUrl="/sso-callback"
+      signUpFallbackRedirectUrl="/sso-callback"
     >
       <html
         lang="en"

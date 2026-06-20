@@ -6,13 +6,7 @@ import { Footer } from '@/components/layout/Footer';
 import { WhatsAppButton } from '@/components/layout/WhatsAppButton';
 import { ApiConnectionBanner } from '@/components/layout/ApiConnectionBanner';
 
-function useIsAdminDashboard() {
-  const pathname = usePathname();
-  return pathname.startsWith('/dashboard/admin');
-}
-
 export function ShopNavbar() {
-  if (useIsAdminDashboard()) return null;
   return (
     <>
       <ApiConnectionBanner />
@@ -22,11 +16,13 @@ export function ShopNavbar() {
 }
 
 export function ShopFooter() {
-  if (useIsAdminDashboard()) return null;
+  const pathname = usePathname();
+  if (pathname.startsWith('/dashboard/admin')) return null;
   return <Footer />;
 }
 
 export function ShopWhatsApp() {
-  if (useIsAdminDashboard()) return null;
+  const pathname = usePathname();
+  if (pathname.startsWith('/dashboard/admin')) return null;
   return <WhatsAppButton />;
 }

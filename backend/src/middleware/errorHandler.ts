@@ -18,6 +18,8 @@ const isDbUnavailableError = (err: unknown): boolean => {
   );
 };
 
+const isProd = process.env.NODE_ENV === 'production';
+
 export const errorHandler = (
   err: AppError,
   _req: Request,
@@ -26,19 +28,22 @@ export const errorHandler = (
 ): void => {
   if (isDbUnavailableError(err)) {
     console.error('[API] Database unavailable:', err instanceof Error ? err.message : err);
-    res.status(503).json({
-      message:
-        'Database is temporarily unavailable. Please try again in a moment.',
-    });
+    res.status(503).json({ message: 'Database is temporarily unavailable. Please try again in a moment.' });
     return;
   }
 
-  console.error('[API Error]', err);
-
   const statusCode = err.statusCode ?? 500;
-  res.status(statusCode).json({
-    message: err.message || 'Internal Server Error',
-  });
+
+  if (statusCode >= 500) {
+    // Never expose internal error details in production
+    console.error('[API Error]', err);
+    res.status(statusCode).json({
+      message: isProd ? 'An unexpected error occurred. Please try again.' : (err.message || 'Internal Server Error'),
+    });
+  } else {
+    // 4xx errors are safe to return as-is (validation failures, not found, etc.)
+    res.status(statusCode).json({ message: err.message || 'Request error' });
+  }
 };
 
 export const notFound = (_req: Request, res: Response): void => {
