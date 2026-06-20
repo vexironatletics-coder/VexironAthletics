@@ -1,6 +1,5 @@
 import type { MetadataRoute } from 'next';
 import { APP_NAME } from '@/lib/constants';
-import { getSiteUrl } from '@/lib/seo';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -11,6 +10,7 @@ export default function manifest(): MetadataRoute.Manifest {
     display: 'standalone',
     background_color: '#fafafa',
     theme_color: '#18181b',
+    scope: '/',
     icons: [
       {
         src: '/favicon.ico',
@@ -21,6 +21,5 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ['shopping', 'fashion', 'lifestyle'],
     lang: 'en-PK',
     dir: 'ltr',
-    scope: getSiteUrl(),
   };
 }

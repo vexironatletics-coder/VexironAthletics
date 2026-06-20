@@ -4,7 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import path from 'path';
-import { isDbConnected } from './config/db';
+import { isDbConnected, isMongoConfigured } from './config/db';
 import { errorHandler, notFound } from './middleware/errorHandler';
 import authRoutes from './routes/auth';
 import productRoutes from './routes/products';
@@ -52,14 +52,17 @@ export const createApp = (options: CreateAppOptions = {}): express.Application =
 
   app.get('/api/health', (_req, res) => {
     const dbConnected = isDbConnected();
-    // Always HTTP 200 — Hostinger treats 503 as "app down" and shows a platform error page.
+    const mongoConfigured = isMongoConfigured();
     res.status(200).json({
       status: dbConnected ? 'ok' : 'degraded',
       db: dbConnected ? 'connected' : 'disconnected',
+      mongodbConfigured: mongoConfigured,
       timestamp: new Date().toISOString(),
       message: dbConnected
         ? 'API is ready'
-        : 'API running but database not connected — check MONGODB_URI and Atlas IP whitelist',
+        : mongoConfigured
+          ? 'Database not connected — check MongoDB Atlas Network Access (allow 0.0.0.0/0)'
+          : 'MONGODB_URI is missing — add it in Hostinger Environment variables',
     });
   });
 

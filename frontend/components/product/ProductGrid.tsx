@@ -26,7 +26,7 @@ export function ProductGrid({ products, loading, error, view = 'grid' }: Product
     return (
       <div className="py-16 text-center text-zinc-500">
         {error
-          ? 'Could not load products. Check that the API is running and NEXT_PUBLIC_API_URL is set correctly.'
+          ? 'Could not load products. The database may be offline — open /api/health to check connection.'
           : 'No products found. Try adjusting your filters.'}
       </div>
     );

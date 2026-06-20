@@ -1,21 +1,32 @@
 import mongoose from 'mongoose';
 
-const connectOptions = {
-  serverSelectionTimeoutMS: 15000,
-  socketTimeoutMS: 45000,
-  tls: true,
-  retryWrites: true,
-};
-
 export const isDbConnected = (): boolean => mongoose.connection.readyState === 1;
 
+export const isMongoConfigured = (): boolean =>
+  Boolean(process.env.MONGODB_URI?.trim() || process.env.MONGODB_URI_SRV?.trim());
+
+const getConnectOptions = (uri: string): mongoose.ConnectOptions => {
+  const useTls =
+    uri.startsWith('mongodb+srv://') ||
+    /[?&](ssl=true|tls=true)/i.test(uri);
+
+  return {
+    serverSelectionTimeoutMS: 20000,
+    socketTimeoutMS: 45000,
+    ...(useTls ? { tls: true } : {}),
+  };
+};
+
 export const connectDB = async (): Promise<void> => {
-  const primaryUri = process.env.MONGODB_URI;
-  if (!primaryUri) {
-    throw new Error('MONGODB_URI is not defined in backend/.env');
+  const primaryUri = process.env.MONGODB_URI?.trim();
+  const fallbackUri = process.env.MONGODB_URI_SRV?.trim();
+
+  if (!primaryUri && !fallbackUri) {
+    throw new Error(
+      'MONGODB_URI is not set. Add it in Hostinger hPanel → Environment variables.'
+    );
   }
 
-  const fallbackUri = process.env.MONGODB_URI_SRV;
   const uris = [primaryUri, fallbackUri].filter(Boolean) as string[];
 
   let lastError: Error | null = null;
@@ -25,7 +36,7 @@ export const connectDB = async (): Promise<void> => {
       if (mongoose.connection.readyState !== 0) {
         await mongoose.disconnect();
       }
-      await mongoose.connect(uri, connectOptions);
+      await mongoose.connect(uri, getConnectOptions(uri));
       console.log('MongoDB connected');
       return;
     } catch (error) {
