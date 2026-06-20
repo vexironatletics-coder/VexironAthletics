@@ -13,9 +13,7 @@
   },
   "dependencies": {
     "express": "^5.2.1",
-    "next": "16.2.9"
-  },
-  "devDependencies": {
+    "next": "16.2.9",
     "typescript": "^5.8.3"
   }
 }
