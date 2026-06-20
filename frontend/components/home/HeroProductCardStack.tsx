@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useGetProductsQuery } from '@/store/api/productApi';
 import { cn, formatPrice } from '@/lib/utils';
 import type { Product } from '@/lib/types';
@@ -196,17 +196,6 @@ export function HeroProductCardStack({
           );
         })}
       </div>
-
-      {/* Front card CTA strip */}
-      {frontCard && !compact && (
-        <Link
-          href={`/products/${frontCard._id}`}
-          className="group mx-auto mt-2 flex max-w-[220px] items-center justify-between rounded-xl border border-white/25 bg-white/10 px-4 py-2.5 text-sm font-medium text-white backdrop-blur-md transition hover:border-white/40 hover:bg-white/15"
-        >
-          <span className="truncate pr-2">Shop {frontCard.name}</span>
-          <ArrowRight className="h-4 w-4 shrink-0 transition group-hover:translate-x-0.5" />
-        </Link>
-      )}
 
       {/* Dot indicators */}
       <div className="mt-4 flex justify-center gap-1.5">

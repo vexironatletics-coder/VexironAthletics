@@ -17,6 +17,7 @@ import {
   LogOut,
   Package,
   LayoutDashboard,
+  ShieldCheck,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -116,6 +117,20 @@ export function Navbar() {
                 </Link>
               );
             })}
+            {user?.role === 'admin' && (
+              <Link
+                href="/dashboard/admin"
+                className={cn(
+                  'flex items-center gap-1.5 rounded-[var(--radius)] px-3 py-2 text-sm font-medium transition-all duration-200',
+                  pathname.startsWith('/dashboard/admin')
+                    ? 'bg-[var(--accent)] text-white'
+                    : 'bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)]/20'
+                )}
+              >
+                <ShieldCheck className="h-4 w-4" />
+                Admin Panel
+              </Link>
+            )}
           </nav>
         </div>
 
@@ -261,6 +276,16 @@ export function Navbar() {
                 </Link>
               );
             })}
+            {user?.role === 'admin' && (
+              <Link
+                href="/dashboard/admin"
+                className="flex items-center gap-2 rounded-[var(--radius)] bg-[var(--accent)]/10 px-3 py-2.5 text-sm font-semibold text-[var(--accent)] transition hover:bg-[var(--accent)]/20"
+                onClick={() => setMobileOpen(false)}
+              >
+                <ShieldCheck className="h-4 w-4" />
+                Admin Panel
+              </Link>
+            )}
           </nav>
         </div>
       )}
