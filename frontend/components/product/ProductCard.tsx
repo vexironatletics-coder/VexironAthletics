@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Heart, Star } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
@@ -14,6 +15,8 @@ import type { RootState } from '@/store';
 import { addItem } from '@/store/slices/cartSlice';
 import { toggleWishlist } from '@/store/slices/wishlistSlice';
 import { buildCartItemFromProduct, getCheckoutRedirectUrl } from '@/lib/productCart';
+
+const PLACEHOLDER = '/placeholder.svg';
 
 interface ProductCardProps {
   product: Product;
@@ -28,7 +31,7 @@ export function ProductCard({ product, view = 'grid' }: ProductCardProps) {
   const isWishlisted = wishlist.includes(product._id);
   const salePrice = product.discountPrice ?? product.price;
   const hasDiscount = product.discountPrice && product.discountPrice < product.price;
-  const imageUrl = product.images[0]?.url ?? '/placeholder.png';
+  const [imageUrl, setImageUrl] = useState(product.images[0]?.url ?? PLACEHOLDER);
   const outOfStock = product.stock < 1;
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -87,7 +90,14 @@ export function ProductCard({ product, view = 'grid' }: ProductCardProps) {
     return (
       <div className="group flex gap-4 rounded-lg border border-zinc-200 p-4 transition hover:shadow-md dark:border-zinc-800">
         <Link href={`/products/${product._id}`} className="relative h-32 w-24 shrink-0 overflow-hidden rounded-md">
-          <Image src={imageUrl} alt={product.name} fill className="object-cover" sizes="96px" />
+          <Image
+            src={imageUrl}
+            alt={product.name}
+            fill
+            className="object-cover"
+            sizes="96px"
+            onError={() => setImageUrl(PLACEHOLDER)}
+          />
         </Link>
         <div className="flex min-w-0 flex-1 flex-col justify-between">
           <div>
@@ -127,6 +137,7 @@ export function ProductCard({ product, view = 'grid' }: ProductCardProps) {
             fill
             className="object-cover transition duration-300 group-hover:scale-105"
             sizes="(max-width:768px) 50vw, 25vw"
+            onError={() => setImageUrl(PLACEHOLDER)}
           />
           {hasDiscount && (
             <Badge className="absolute left-2 top-2" variant="red">
