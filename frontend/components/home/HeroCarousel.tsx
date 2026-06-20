@@ -192,11 +192,11 @@ export function HeroCarousel() {
       </Swiper>
 
       {/* Rotating product cards — fixed on hero right (desktop) */}
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-[5] hidden w-[46%] items-center overflow-hidden lg:flex">
+      {/* <div className="pointer-events-none absolute inset-y-0 right-0 z-[5] hidden w-[46%] items-center overflow-hidden lg:flex">
         <div className="pointer-events-auto w-full pr-6 xl:pr-12">
           <HeroProductCardStack />
         </div>
-      </div>
+      </div> */}
 
       {/* Compact stack on mobile — bottom of hero */}
       <div className="pointer-events-none absolute inset-x-0 bottom-14 z-[5] overflow-hidden px-4 lg:hidden">

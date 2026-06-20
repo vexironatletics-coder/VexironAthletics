@@ -51,7 +51,7 @@ export const createApp = (options: CreateAppOptions = {}): express.Application =
           connectSrc: ["'self'", 'https:'],
           frameSrc: ["'none'"],
           objectSrc: ["'none'"],
-          upgradeInsecureRequests: isProd ? [] : null,
+          ...(isProd ? { upgradeInsecureRequests: [] } : {}),
         },
       },
       crossOriginEmbedderPolicy: false,
