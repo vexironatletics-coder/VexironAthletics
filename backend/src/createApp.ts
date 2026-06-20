@@ -59,17 +59,9 @@ export const createApp = (options: CreateAppOptions = {}): express.Application =
   );
 
   // ── CORS ───────────────────────────────────────────────────────────────────
-  const allowedOrigins = (process.env.CLIENT_URL ?? 'http://localhost:3000')
-    .split(',')
-    .map((o) => o.trim())
-    .filter(Boolean);
-
   app.use(
     cors({
-      origin: (origin, cb) => {
-        if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-        cb(new Error(`CORS: origin "${origin}" not allowed`));
-      },
+      origin: process.env.CLIENT_URL ?? 'http://localhost:3000',
       credentials: true,
     })
   );
@@ -77,9 +69,9 @@ export const createApp = (options: CreateAppOptions = {}): express.Application =
   // ── Request logging ────────────────────────────────────────────────────────
   app.use(morgan(isProd ? 'combined' : 'dev'));
 
-  // ── Body parsing (tight limits; file uploads use multer instead) ───────────
-  app.use(express.json({ limit: '2mb' }));
-  app.use(express.urlencoded({ extended: true, limit: '2mb' }));
+  // ── Body parsing ───────────────────────────────────────────────────────────
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true }));
 
   // ── Input sanitization (NoSQL injection prevention) ────────────────────────
   app.use(sanitizeInputs);
