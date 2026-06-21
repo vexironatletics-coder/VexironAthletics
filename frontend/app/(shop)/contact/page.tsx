@@ -24,7 +24,7 @@ export default function ContactPage() {
           <a href="mailto:support@vexironathletics.com">support@vexironathletics.com</a>
         </li>
         <li>
-          <strong>Phone:</strong> +92 300 1234567
+          <strong>Phone:</strong> +92 307 7229449
         </li>
         <li>
           <strong>Address:</strong> Lahore, Punjab, Pakistan

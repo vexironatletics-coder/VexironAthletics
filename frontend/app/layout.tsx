@@ -71,6 +71,13 @@ export async function generateMetadata(): Promise<Metadata> {
       canonical: getSiteUrl(),
     },
     manifest: '/manifest.json',
+    icons: {
+      icon: [
+        { url: '/favicon.svg', type: 'image/svg+xml' },
+      ],
+      shortcut: '/favicon.svg',
+      apple: '/favicon.svg',
+    },
   };
 }
 

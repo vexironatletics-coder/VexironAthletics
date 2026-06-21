@@ -44,12 +44,19 @@ export const createApp = (options: CreateAppOptions = {}): express.Application =
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-inline'", 'https://clerk.honeydew-salmon-303748.hostingersite.com'],
-          styleSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            "'unsafe-eval'",
+            'https://*.clerk.com',
+            'https://*.clerk.accounts.dev',
+            process.env.CLIENT_URL ?? 'http://localhost:3000',
+          ],
+          styleSrc: ["'self'", "'unsafe-inline'", 'https:'],
           imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
           fontSrc: ["'self'", 'https:', 'data:'],
           connectSrc: ["'self'", 'https:'],
-          frameSrc: ["'none'"],
+          frameSrc: ["'self'", 'https://*.clerk.com', 'https://*.clerk.accounts.dev'],
           objectSrc: ["'none'"],
           ...(isProd ? { upgradeInsecureRequests: [] } : {}),
         },
