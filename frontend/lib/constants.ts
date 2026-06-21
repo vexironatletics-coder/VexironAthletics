@@ -10,7 +10,7 @@ export const WHATSAPP_DEFAULT_MESSAGE =
 
 export const WHATSAPP_CHAT_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_DEFAULT_MESSAGE)}`;
 
-export const PHONE_DISPLAY = process.env.NEXT_PUBLIC_PHONE_DISPLAY ?? '+92 300 1234567';
+export const PHONE_DISPLAY = process.env.NEXT_PUBLIC_PHONE_DISPLAY ?? '+92 307 7229449';
 export const PHONE_CALL_URL = `tel:+${WHATSAPP_NUMBER}`;
 
 export const CONTACT_PROMO_MESSAGES = [

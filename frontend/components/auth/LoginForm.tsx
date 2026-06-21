@@ -105,7 +105,7 @@ export function LoginForm() {
 
       <SocialAuth />
 
-      <AdminAccessCard onUseCredentials={fillAdminCredentials} />
+      {/* <AdminAccessCard onUseCredentials={fillAdminCredentials} /> */}
 
       <p className="mt-8 text-center text-sm text-zinc-500">
         Don&apos;t have an account?{' '}
