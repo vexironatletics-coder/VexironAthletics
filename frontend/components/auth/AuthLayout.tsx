@@ -17,8 +17,8 @@ export function AuthLayout({
   subtitle,
 }: AuthLayoutProps) {
   return (
-    <div className="site-auth-bg min-h-[calc(100vh-4rem)]">
-      <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-6xl lg:grid-cols-2">
+    <div className=" rounded-lg site-auth-bg min-h-[calc(100vh-4rem)]">
+      <div className="mt-10 mb-10 p-3 mx-auto grid min-h-[calc(100vh-4rem)] max-w-6xl lg:grid-cols-2">
         <div className="relative hidden overflow-hidden lg:block">
           <Image
             src={authSideShirtImage}

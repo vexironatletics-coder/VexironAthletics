@@ -232,6 +232,12 @@ html {
   background: color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
+/* ── Brand color utility ── */
+.brand-navy   { color: #0A2947; }
+.brand-cream  { color: #F3E4C9; }
+.bg-brand-navy  { background-color: #0A2947; }
+.bg-brand-cream { background-color: #F3E4C9; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

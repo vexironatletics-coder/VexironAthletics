@@ -108,7 +108,7 @@ export function ProductCard({ product, view = 'grid' }: ProductCardProps) {
             <p className="mt-1 line-clamp-2 text-sm text-zinc-500 dark:text-zinc-400">
               {product.description}
             </p>
-            <div className="mt-2 flex items-center gap-1 text-sm text-amber-500">
+            <div className="mt-2 flex items-center gap-1 text-sm text-[#8B5E3C]">
               <Star className="h-4 w-4 fill-current" />
               {product.ratings.toFixed(1)} ({product.numReviews})
             </div>
@@ -167,7 +167,7 @@ export function ProductCard({ product, view = 'grid' }: ProductCardProps) {
         <p className="mt-0.5 hidden sm:block line-clamp-2 text-xs sm:text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
           {product.description}
         </p>
-        <div className="mt-1.5 flex items-center gap-0.5 text-xs text-amber-500">
+        <div className="mt-1.5 flex items-center gap-0.5 text-xs text-[#8B5E3C]">
           {Array.from({ length: 5 }).map((_, i) => (
             <Star
               key={i}
