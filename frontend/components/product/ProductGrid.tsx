@@ -14,9 +14,9 @@ interface ProductGridProps {
 export function ProductGrid({ products, loading, error, view = 'grid' }: ProductGridProps) {
   if (loading) {
     return (
-      <div className={view === 'grid' ? 'grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4' : 'space-y-4'}>
-        {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className={view === 'grid' ? 'aspect-[3/4] w-full' : 'h-32 w-full'} />
+      <div className={view === 'grid' ? 'grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' : 'space-y-4'}>
+        {Array.from({ length: 10 }).map((_, i) => (
+          <Skeleton key={i} className={view === 'grid' ? 'aspect-[4/5] w-full' : 'h-32 w-full'} />
         ))}
       </div>
     );
@@ -43,7 +43,7 @@ export function ProductGrid({ products, loading, error, view = 'grid' }: Product
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {products.map((product) => (
         <ProductCard key={product._id} product={product} />
       ))}

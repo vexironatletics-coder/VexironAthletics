@@ -89,7 +89,7 @@ export function HeroCarousel() {
   }, [activeIndex]);
 
   return (
-    <section className="relative min-h-[82vh] overflow-hidden bg-[var(--hero-from)] lg:min-h-[90vh]">
+    <section className="relative h-[82vh] overflow-hidden bg-[var(--hero-from)] lg:h-[90vh]">
       <Swiper
         modules={[Autoplay, EffectFade, Navigation, Pagination]}
         effect="fade"
@@ -100,11 +100,11 @@ export function HeroCarousel() {
         pagination={{ clickable: true, el: '.hero-pagination' }}
         onSwiper={setSwiper}
         onSlideChange={(s) => setActiveIndex(s.realIndex)}
-        className="h-full min-h-[82vh] lg:min-h-[90vh]"
+        className="h-full w-full"
       >
         {heroSlides.map((slide, index) => (
           <SwiperSlide key={slide.id}>
-            <div className="relative flex min-h-[82vh] items-center lg:min-h-[90vh]">
+            <div className="relative flex h-[82vh] items-center lg:h-[90vh]">
               <div className="absolute inset-0">
                 <Image
                   src={slide.image}
@@ -191,12 +191,12 @@ export function HeroCarousel() {
         ))}
       </Swiper>
 
-      {/* Rotating product cards — fixed on hero right (desktop) */}
-      {/* <div className="pointer-events-none absolute inset-y-0 right-0 z-[5] hidden w-[46%] items-center overflow-hidden lg:flex">
+      {/* Rotating product cards — right side on desktop */}
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-[5] hidden w-[44%] items-center overflow-hidden lg:flex">
         <div className="pointer-events-auto w-full pr-6 xl:pr-12">
           <HeroProductCardStack />
         </div>
-      </div> */}
+      </div>
 
       {/* Compact stack on mobile — bottom of hero */}
       <div className="pointer-events-none absolute inset-x-0 bottom-14 z-[5] overflow-hidden px-4 lg:hidden">

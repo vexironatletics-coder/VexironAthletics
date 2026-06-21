@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, ImageIcon } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { useLazySearchSuggestQuery, useVisualSearchMutation } from '@/store/api/searchApi';
+import { useLazySearchSuggestQuery } from '@/store/api/searchApi';
 import { formatPrice } from '@/lib/utils';
 
 export function SearchAutocomplete() {
@@ -13,8 +13,6 @@ export function SearchAutocomplete() {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [fetchSuggest, { data }] = useLazySearchSuggestQuery();
-  const [visualSearch] = useVisualSearchMutation();
-  const fileRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -39,20 +37,6 @@ export function SearchAutocomplete() {
     }
   };
 
-  const handleVisualUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append('image', file);
-    try {
-      const result = await visualSearch(formData).unwrap();
-      sessionStorage.setItem('visualSearchResults', JSON.stringify(result.products));
-      router.push('/search?visual=1');
-    } catch {
-      router.push('/search?visual=1');
-    }
-  };
-
   return (
     <div className="relative w-full max-w-md">
       <form onSubmit={handleSubmit} className="flex gap-2">
@@ -67,15 +51,6 @@ export function SearchAutocomplete() {
             className="pl-10"
           />
         </div>
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          className="flex h-10 w-10 items-center justify-center rounded-md border border-zinc-200 transition hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
-          aria-label="Visual search"
-        >
-          <ImageIcon className="h-4 w-4" />
-        </button>
-        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleVisualUpload} />
       </form>
 
       {open && data?.suggestions && data.suggestions.length > 0 && (

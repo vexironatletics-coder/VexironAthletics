@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
@@ -75,7 +76,7 @@ export function Navbar() {
   };
 
   const navLinkClass =
-    'text-sm font-medium opacity-80 transition-colors duration-200 hover:opacity-100 hover:text-[var(--accent)]';
+    'text-sm font-medium text-[var(--header-fg)] opacity-80 transition-colors duration-200 hover:opacity-100 hover:text-[var(--brand-cream)]';
 
   const isNavActive = (href: string, match?: 'home') => {
     if (match === 'home') return pathname === '/';
@@ -86,7 +87,7 @@ export function Navbar() {
 
   return (
     <header className="site-header sticky top-0 z-50 border-b shadow-sm">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-14 sm:h-16 max-w-7xl items-center justify-between gap-2 sm:gap-4 px-3 sm:px-6 lg:px-8">
         <div className="flex items-center gap-6">
           <button
             type="button"
@@ -96,8 +97,15 @@ export function Navbar() {
           >
             {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
-          <Link href="/" className="text-xl font-bold tracking-tight text-[var(--accent)]">
-            {APP_NAME}
+          <Link href="/" aria-label={APP_NAME} className="flex items-center">
+            <Image
+              src="/logo.png"
+              alt={APP_NAME}
+              width={140}
+              height={40}
+              className="h-9 w-auto object-contain"
+              priority
+            />
           </Link>
           <nav className="hidden items-center gap-1 lg:flex">
             {navLinks.map((link) => {

@@ -64,11 +64,11 @@ export function ProductCard({ product, view = 'grid' }: ProductCardProps) {
   };
 
   const actionButtons = (
-    <div className="flex gap-2">
+    <div className="flex gap-1.5 sm:gap-2">
       <Button
         size="sm"
         variant="accent"
-        className="flex-1"
+        className="flex-1 h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
         disabled={outOfStock}
         onClick={handleBuyNow}
       >
@@ -77,11 +77,11 @@ export function ProductCard({ product, view = 'grid' }: ProductCardProps) {
       <Button
         size="sm"
         variant="outline"
-        className="flex-1"
+        className="flex-1 h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
         disabled={outOfStock}
         onClick={handleAddToCart}
       >
-        Add to Cart
+        + Cart
       </Button>
     </div>
   );
@@ -130,7 +130,7 @@ export function ProductCard({ product, view = 'grid' }: ProductCardProps) {
   return (
     <div className="group overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-950 dark:hover:shadow-zinc-900/50">
       <Link href={`/products/${product._id}`} className="block">
-        <div className="relative aspect-[3/4] overflow-hidden">
+        <div className="relative aspect-[3/4] sm:aspect-[4/5] overflow-hidden">
           <Image
             src={imageUrl}
             alt={product.name}
@@ -159,33 +159,33 @@ export function ProductCard({ product, view = 'grid' }: ProductCardProps) {
           </div>
         </div>
       </Link>
-      <div className="p-4">
+      <div className="p-3 sm:p-4">
         <Link href={`/products/${product._id}`}>
-          <Badge variant="secondary" className="mb-2 capitalize">{product.category}</Badge>
-          <h3 className="font-semibold line-clamp-1 transition hover:text-[var(--accent)]">{product.name}</h3>
+          <Badge variant="secondary" className="mb-1 text-[10px] sm:text-xs capitalize">{product.category}</Badge>
+          <h3 className="text-sm sm:text-base font-semibold line-clamp-1 transition hover:text-[var(--accent)]">{product.name}</h3>
         </Link>
-        <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
+        <p className="mt-0.5 hidden sm:block line-clamp-2 text-xs sm:text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
           {product.description}
         </p>
-        <div className="mt-2 flex items-center gap-1 text-sm text-amber-500">
+        <div className="mt-1.5 flex items-center gap-0.5 text-xs text-amber-500">
           {Array.from({ length: 5 }).map((_, i) => (
             <Star
               key={i}
               className={cn(
-                'h-3.5 w-3.5',
+                'h-3 w-3',
                 i < Math.round(product.ratings) ? 'fill-current' : 'text-zinc-300'
               )}
             />
           ))}
           <span className="ml-1 text-zinc-500">({product.ratings.toFixed(1)})</span>
         </div>
-        <div className="mt-2 flex items-center gap-2">
+        <div className="mt-1.5 flex items-center gap-2">
           {hasDiscount && (
-            <span className="text-sm text-zinc-400 line-through">{formatPrice(product.price)}</span>
+            <span className="text-xs text-zinc-400 line-through">{formatPrice(product.price)}</span>
           )}
-          <span className="text-lg font-bold">{formatPrice(salePrice)}</span>
+          <span className="text-sm sm:text-base font-bold">{formatPrice(salePrice)}</span>
         </div>
-        <div className="mt-3">{actionButtons}</div>
+        <div className="mt-2">{actionButtons}</div>
       </div>
     </div>
   );

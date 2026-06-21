@@ -3,58 +3,64 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --primary: #18181b;
-  --primary-foreground: #fafafa;
-  --accent: #f97316;
-  --accent-foreground: #ffffff;
-  --secondary: #f4f4f5;
-  --hero-from: #18181b;
-  --hero-to: #3f3f46;
-  --gradient-start: #f97316;
-  --gradient-end: #ef4444;
-  --background: #fafafa;
-  --foreground: #171717;
+  /* VexironAthletics Brand Palette */
+  --brand-navy:  #0A2947;
+  --brand-cream: #F3E4C9;
+  --brand-sage:  #D3D4C0;
+  --brand-brown: #8B5E3C;
+
+  --primary: #0A2947;
+  --primary-foreground: #F3E4C9;
+  --accent: #0A2947;
+  --accent-foreground: #F3E4C9;
+  --secondary: #F3E4C9;
+  --hero-from: #0A2947;
+  --hero-to: #1a3d6b;
+  --gradient-start: #0A2947;
+  --gradient-end: #8B5E3C;
+  --background: #fafaf8;
+  --foreground: #0A2947;
   --card: #ffffff;
-  --muted: #71717a;
-  --border: #e4e4e7;
-  --ring: #a1a1aa;
-  --header-bg: #ffffff;
-  --header-fg: #171717;
-  --footer-bg: #f4f4f5;
-  --footer-fg: #171717;
-  --link: #f97316;
-  --link-hover: #18181b;
+  --muted: #8B5E3C;
+  --border: #D3D4C0;
+  --ring: #D3D4C0;
+  --header-bg: #0A2947;
+  --header-fg: #F3E4C9;
+  --footer-bg: #0A2947;
+  --footer-fg: #F3E4C9;
+  --link: #0A2947;
+  --link-hover: #8B5E3C;
   --input-bg: #ffffff;
-  --input-border: #e4e4e7;
+  --input-border: #D3D4C0;
   --radius: 0.5rem;
-  --sidebar-thread: #d4d4d8;
+  --sidebar-thread: #D3D4C0;
 }
 
 .dark {
-  --primary: #fafafa;
-  --primary-foreground: #18181b;
-  --accent: #fb923c;
-  --accent-foreground: #18181b;
-  --secondary: #27272a;
-  --hero-from: #09090b;
-  --hero-to: #18181b;
-  --gradient-start: #fb923c;
-  --gradient-end: #f97316;
-  --background: #09090b;
-  --foreground: #fafafa;
-  --card: #0a0a0a;
-  --muted: #a1a1aa;
-  --border: #27272a;
-  --ring: #52525b;
-  --header-bg: #0a0a0a;
-  --header-fg: #fafafa;
-  --footer-bg: #27272a;
-  --footer-fg: #fafafa;
-  --link: #fb923c;
-  --link-hover: #fafafa;
-  --input-bg: #0a0a0a;
-  --input-border: #27272a;
-  --sidebar-thread: #3f3f46;
+  --primary: #F3E4C9;
+  --primary-foreground: #0A2947;
+  --accent: #4a7ebd;
+  --accent-foreground: #ffffff;
+  --secondary: #0f2438;
+  --hero-from: #050d19;
+  --hero-to: #0A2947;
+  --gradient-start: #4a7ebd;
+  --gradient-end: #8B5E3C;
+  --background: #060d18;
+  --foreground: #F3E4C9;
+  --card: #0a1826;
+  --muted: #D3D4C0;
+  --border: #1a3050;
+  --ring: #2a4a70;
+  --header-bg: #040c17;
+  --header-fg: #F3E4C9;
+  --footer-bg: #040c17;
+  --footer-fg: #D3D4C0;
+  --link: #7aaee0;
+  --link-hover: #F3E4C9;
+  --input-bg: #0a1826;
+  --input-border: #1a3050;
+  --sidebar-thread: #1a3050;
 }
 
 @theme inline {
@@ -134,26 +140,27 @@ html {
 /* ── Site chrome (WordPress-style global theme) ── */
 
 .site-header {
+  background: var(--header-bg);
   color: var(--header-fg);
-  border-color: color-mix(in srgb, var(--border) 80%, transparent);
+  border-color: color-mix(in srgb, var(--border) 30%, transparent);
   transition: background 0.3s ease, color 0.3s ease;
 }
 
 [data-header="solid"] .site-header {
-  background: color-mix(in srgb, var(--header-bg) 95%, transparent);
+  background: color-mix(in srgb, var(--header-bg) 97%, transparent);
   backdrop-filter: blur(12px);
 }
 
 [data-header="gradient"] .site-header {
   background: linear-gradient(135deg, var(--hero-from), var(--hero-to));
-  color: #fff;
+  color: var(--brand-cream);
   border-color: transparent;
   box-shadow: 0 4px 24px color-mix(in srgb, var(--hero-from) 30%, transparent);
 }
 
 [data-header="accent"] .site-header {
-  background: var(--primary);
-  color: var(--primary-foreground);
+  background: var(--brand-navy);
+  color: var(--brand-cream);
   border-color: transparent;
 }
 
