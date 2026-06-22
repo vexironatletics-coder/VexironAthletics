@@ -130,7 +130,7 @@ export function ProductCard({ product, view = 'grid' }: ProductCardProps) {
   return (
     <div className="group overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-950 dark:hover:shadow-zinc-900/50">
       <Link href={`/products/${product._id}`} className="block">
-        <div className="relative aspect-[3/4] sm:aspect-[4/5] overflow-hidden">
+        <div className="relative aspect-[4/3] overflow-hidden">
           <Image
             src={imageUrl}
             alt={product.name}
@@ -164,8 +164,10 @@ export function ProductCard({ product, view = 'grid' }: ProductCardProps) {
           <Badge variant="secondary" className="mb-1 text-[10px] sm:text-xs capitalize">{product.category}</Badge>
           <h3 className="text-sm sm:text-base font-semibold line-clamp-1 transition hover:text-[var(--accent)]">{product.name}</h3>
         </Link>
-        <p className="mt-0.5 hidden sm:block line-clamp-2 text-xs sm:text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
-          {product.description}
+        <p className="mt-1 text-xs sm:text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
+          {product.description.length > 100
+            ? product.description.slice(0, 100) + '…'
+            : product.description}
         </p>
         <div className="mt-1.5 flex items-center gap-0.5 text-xs text-[#8B5E3C]">
           {Array.from({ length: 5 }).map((_, i) => (
