@@ -77,7 +77,7 @@ export default function AdminDashboardPage() {
                         </thead>
                         <tbody>
                           {data?.lowStockProducts.map((product) => (
-                            <tr key={product._id} className="border-b border-zinc-100 dark:border-zinc-800">
+                            <tr key={product._id} className="border-b border-[var(--border)]">
                               <td className="py-2">{product.name}</td>
                               <td className="py-2 capitalize">{product.category}</td>
                               <td className="py-2">
@@ -108,7 +108,7 @@ export default function AdminDashboardPage() {
                     {data?.dailySales.map((day) => (
                       <div key={day._id} className="flex flex-1 flex-col items-center gap-1">
                         <div
-                          className="w-full rounded-t bg-zinc-900 dark:bg-zinc-50"
+                          className="w-full rounded-t bg-[var(--primary)]"
                           style={{
                             height: `${Math.max(10, (day.sales / (data.revenue || 1)) * 100)}%`,
                           }}
@@ -135,7 +135,7 @@ export default function AdminDashboardPage() {
                       </thead>
                       <tbody>
                         {data?.recentOrders.map((order) => (
-                          <tr key={order._id} className="border-b border-zinc-100 dark:border-zinc-800">
+                          <tr key={order._id} className="border-b border-[var(--border)]">
                             <td className="py-2 font-mono text-xs">{order._id.slice(-8)}</td>
                             <td className="py-2">{new Date(order.createdAt).toLocaleDateString()}</td>
                             <td className="py-2">

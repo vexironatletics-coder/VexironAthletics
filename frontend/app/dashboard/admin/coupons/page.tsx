@@ -204,7 +204,7 @@ export default function AdminCouponsPage() {
                 <div>
                   <Label>Type</Label>
                   <select
-                    className="flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+                    className="flex h-10 w-full rounded-md border border-[var(--border)] bg-[var(--card)] px-3 text-sm text-[var(--foreground)]"
                     value={form.type}
                     onChange={(e) => setForm({ ...form, type: e.target.value as typeof form.type })}
                   >
@@ -236,13 +236,14 @@ export default function AdminCouponsPage() {
               ) : (
                 <div className="space-y-3">
                   {coupons.map((c) => (
-                    <div key={c._id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
+                    <div key={c._id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--card)] p-4">
                       <div>
                         <p className="font-mono font-bold">{c.code}</p>
                         <p className="text-sm text-zinc-500">
                           {c.type === 'free_shipping' ? 'Free shipping' : c.type === 'percent' ? `${c.value}% off` : `₨${c.value} off`}
                           {' · '}Min ₨{c.minOrder} · Used {c.usedCount}/{c.maxUses}
                         </p>
+
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant={c.active ? 'default' : 'secondary'}>{c.active ? 'Active' : 'Inactive'}</Badge>

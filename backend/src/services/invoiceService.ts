@@ -1,263 +1,374 @@
-import puppeteer from 'puppeteer';
+import PDFDocument from 'pdfkit';
 import { IOrder } from '../models/Order';
 import { APP_NAME } from '../utils/constants';
 import { formatShippingPhones } from '../utils/shippingAddress';
 import { formatPaymentMethodLabel } from '../config/bankTransfer';
 
-const formatPrice = (n: number) => `₨${n.toLocaleString('en-PK')}`;
+const formatPrice = (n: number) => `Rs ${n.toLocaleString('en-PK')}`;
 
-const buildInvoiceHtml = (order: IOrder, customerName: string, customerEmail: string): string => {
-  const rows = order.items
-    .map(
-      (item) => `
-      <tr>
-        <td>${item.name}<br/><small>${item.size} / ${item.color}</small></td>
-        <td>${item.qty}</td>
-        <td>${formatPrice(item.price)}</td>
-        <td>${formatPrice(item.price * item.qty)}</td>
-      </tr>`
-    )
-    .join('');
+const NAVY   = '#0A2947';
+const CREAM  = '#F3E4C9';
+const BROWN  = '#8B5E3C';
+const GRAY   = '#71717a';
+const LIGHT  = '#f4f4f5';
+const BLACK  = '#171717';
+const RED    = '#dc2626';
 
-  const discountRow = order.couponDiscount
-    ? `<tr><td colspan="3">Coupon (${order.couponCode})</td><td>-${formatPrice(order.couponDiscount)}</td></tr>`
-    : '';
-  const pointsRow = order.loyaltyPointsRedeemed
-    ? `<tr><td colspan="3">Loyalty points redeemed</td><td>-${formatPrice(order.loyaltyPointsRedeemed)}</td></tr>`
-    : '';
-
-  return `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><style>
-  body { font-family: Arial, sans-serif; color: #171717; padding: 40px; }
-  h1 { margin: 0 0 4px; font-size: 28px; }
-  .meta { color: #71717a; font-size: 13px; margin-bottom: 32px; }
-  table { width: 100%; border-collapse: collapse; margin-top: 24px; }
-  th, td { border-bottom: 1px solid #e4e4e7; padding: 10px 8px; text-align: left; font-size: 13px; }
-  th { background: #fafafa; }
-  .totals { margin-top: 24px; width: 280px; margin-left: auto; }
-  .totals div { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
-  .total { font-weight: bold; font-size: 16px; border-top: 2px solid #171717; padding-top: 10px; }
-  .address { margin-top: 24px; font-size: 13px; line-height: 1.6; }
-</style></head><body>
-  <h1>${APP_NAME}</h1>
-  <div class="meta">Invoice #${order._id.toString().slice(-8).toUpperCase()} · ${new Date(order.createdAt).toLocaleDateString()}</div>
-  <p><strong>Bill To:</strong> ${customerName}<br/>${customerEmail}</p>
-  <table>
-    <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
-    <tbody>${rows}</tbody>
-  </table>
-  <div class="totals">
-    <div><span>Subtotal</span><span>${formatPrice(order.subtotal)}</span></div>
-    ${discountRow}${pointsRow}
-    <div><span>Shipping</span><span>${order.shippingFee === 0 ? 'Free' : formatPrice(order.shippingFee)}</span></div>
-    <div class="total"><span>Total</span><span>${formatPrice(order.total)}</span></div>
-  </div>
-  <div class="address">
-    <strong>Ship To:</strong><br/>
-    ${order.shippingAddress.name}<br/>
-    ${order.shippingAddress.landmark ? `Near: ${order.shippingAddress.landmark}<br/>` : ''}
-    ${order.shippingAddress.street}, ${order.shippingAddress.city}<br/>
-    ${order.shippingAddress.state} ${order.shippingAddress.postal}, ${order.shippingAddress.country}<br/>
-    ${formatShippingPhones(order.shippingAddress)}
-  </div>
-  <p style="margin-top:40px;font-size:12px;color:#71717a;">Payment: ${formatPaymentMethodLabel(order.paymentMethod)} · Status: ${order.status}</p>
-</body></html>`;
-};
-
-const renderPdf = async (
-  html: string,
-  options?: { landscape?: boolean; format?: 'A4' }
-): Promise<Buffer> => {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+/** Resolve a PDFKit Buffer from a stream */
+const streamToBuffer = (doc: PDFKit.PDFDocument): Promise<Buffer> =>
+  new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
+    doc.end();
   });
 
-  try {
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'domcontentloaded' });
-    const pdf = await page.pdf({
-      format: options?.format ?? 'A4',
-      landscape: options?.landscape ?? false,
-      printBackground: true,
-      margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' },
-    });
-    return Buffer.from(pdf);
-  } finally {
-    await browser.close();
-  }
+/** Horizontal rule helper */
+const hr = (doc: PDFKit.PDFDocument, y: number, color = '#e4e4e7') => {
+  doc.save().strokeColor(color).lineWidth(0.5).moveTo(40, y).lineTo(555, y).stroke().restore();
 };
 
-const buildDispatchReceiptHtml = (
-  order: IOrder,
-  customerName: string,
-  customerEmail: string
-): string => {
-  const orderRef = order._id.toString().slice(-8).toUpperCase();
-  const dispatchDate = new Date().toLocaleDateString('en-PK', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-  const itemRows = order.items
-    .map(
-      (item, index) => `
-      <tr>
-        <td>${index + 1}</td>
-        <td><strong>${item.name}</strong><br/><small>${item.size} · ${item.color}</small></td>
-        <td style="text-align:center;font-size:18px;font-weight:bold;">${item.qty}</td>
-        <td>${formatPrice(item.price * item.qty)}</td>
-      </tr>`
-    )
-    .join('');
-  const totalQty = order.items.reduce((sum, item) => sum + item.qty, 0);
-
-  return `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><style>
-  * { box-sizing: border-box; }
-  body { font-family: Arial, sans-serif; color: #171717; padding: 32px; font-size: 13px; }
-  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #18181b; padding-bottom: 16px; margin-bottom: 24px; }
-  .brand { font-size: 22px; font-weight: bold; }
-  .doc-title { font-size: 26px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; color: #f97316; }
-  .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
-  .box { border: 1px solid #e4e4e7; border-radius: 8px; padding: 14px; background: #fafafa; }
-  .box h3 { margin: 0 0 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #71717a; }
-  .ship-to { font-size: 15px; line-height: 1.7; }
-  .ship-to strong { font-size: 18px; display: block; margin-bottom: 4px; }
-  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-  th, td { border: 1px solid #e4e4e7; padding: 10px 8px; text-align: left; vertical-align: top; }
-  th { background: #f4f4f5; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
-  .summary { margin-top: 20px; display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: start; }
-  .cod-box { border: 2px dashed #f97316; border-radius: 8px; padding: 16px; background: #fff7ed; text-align: center; }
-  .cod-box .amount { font-size: 28px; font-weight: bold; color: #ea580c; margin-top: 8px; }
-  .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #e4e4e7; font-size: 11px; color: #71717a; }
-  .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #18181b; color: #fff; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-</style></head><body>
-  <div class="header">
-    <div>
-      <div class="brand">${APP_NAME}</div>
-      <div style="color:#71717a;margin-top:4px;">Dispatch &amp; delivery receipt</div>
-    </div>
-    <div style="text-align:right;">
-      <div class="doc-title">Dispatch Receipt</div>
-      <div style="margin-top:8px;font-family:monospace;font-size:16px;">#${orderRef}</div>
-    </div>
-  </div>
-
-  <div class="meta-grid">
-    <div class="box">
-      <h3>Order details</h3>
-      <div><strong>Order date:</strong> ${new Date(order.createdAt).toLocaleDateString()}</div>
-      <div><strong>Dispatch date:</strong> ${dispatchDate}</div>
-      <div><strong>Status:</strong> <span class="badge">${order.status}</span></div>
-      <div><strong>Payment:</strong> Cash on Delivery</div>
-    </div>
-    <div class="box">
-      <h3>Customer</h3>
-      <div><strong>${customerName}</strong></div>
-      <div>${customerEmail}</div>
-      <div style="margin-top:6px;"><strong>Phone:</strong> ${formatShippingPhones(order.shippingAddress)}</div>
-    </div>
-  </div>
-
-  <div class="box" style="background:#fff;border-width:2px;">
-    <h3>Ship to — attach to parcel</h3>
-    <div class="ship-to">
-      <strong>${order.shippingAddress.name}</strong>
-      ${order.shippingAddress.landmark ? `Near: ${order.shippingAddress.landmark}<br/>` : ''}
-      ${order.shippingAddress.street}<br/>
-      ${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.postal}<br/>
-      ${order.shippingAddress.country}<br/>
-      <strong>Mobile:</strong> ${formatShippingPhones(order.shippingAddress)}
-    </div>
-  </div>
-
-  <h3 style="margin:24px 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:0.08em;color:#71717a;">Items to dispatch (${totalQty} units)</h3>
-  <table>
-    <thead>
-      <tr>
-        <th style="width:36px">#</th>
-        <th>Product</th>
-        <th style="width:70px;text-align:center;">Qty</th>
-        <th style="width:100px;">Line total</th>
-      </tr>
-    </thead>
-    <tbody>${itemRows}</tbody>
-  </table>
-
-  <div class="summary">
-    <div>
-      ${order.notes ? `<div class="box"><h3>Order notes</h3><p style="margin:0;">${order.notes}</p></div>` : '<div class="box"><h3>Packing checklist</h3><p style="margin:0;">☐ Verify items &amp; quantities &nbsp; ☐ Seal package &nbsp; ☐ Attach this receipt</p></div>'}
-    </div>
-    <div>
-      <div class="cod-box">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#9a3412;">
-          ${order.paymentMethod === 'bank' ? 'Prepaid (Bank Transfer)' : 'Amount to collect (COD)'}
-        </div>
-        <div class="amount">${formatPrice(order.total)}</div>
-        ${order.shippingFee === 0 ? '<div style="font-size:11px;color:#71717a;margin-top:4px;">Includes free shipping</div>' : `<div style="font-size:11px;color:#71717a;margin-top:4px;">Shipping: ${formatPrice(order.shippingFee)}</div>`}
-      </div>
-      <div style="margin-top:12px;font-size:12px;line-height:1.6;">
-        <div>Subtotal: ${formatPrice(order.subtotal)}</div>
-        ${order.couponDiscount ? `<div>Coupon (${order.couponCode}): -${formatPrice(order.couponDiscount)}</div>` : ''}
-        ${order.loyaltyPointsRedeemed ? `<div>Points redeemed: -${formatPrice(order.loyaltyPointsRedeemed)}</div>` : ''}
-      </div>
-    </div>
-  </div>
-
-  <div class="footer">
-    Generated for dispatch by ${APP_NAME} admin · Order #${orderRef} · This receipt is for internal dispatch and courier handoff.
-  </div>
-</body></html>`;
-};
+// ─── INVOICE ─────────────────────────────────────────────────────────────────
 
 export const generateInvoicePdf = async (
   order: IOrder,
   customerName: string,
   customerEmail: string
 ): Promise<Buffer> => {
-  const html = buildInvoiceHtml(order, customerName, customerEmail);
-  return renderPdf(html);
+  const doc = new PDFDocument({ margin: 40, size: 'A4' });
+
+  // Header band
+  doc.rect(0, 0, doc.page.width, 70).fill(NAVY);
+  doc.fillColor(CREAM).fontSize(22).font('Helvetica-Bold').text(APP_NAME, 40, 20);
+  doc.fillColor(CREAM).fontSize(10).font('Helvetica').text('Invoice', 40, 46);
+
+  // Invoice meta
+  const orderRef = order._id.toString().slice(-8).toUpperCase();
+  doc
+    .fillColor(BLACK)
+    .fontSize(10)
+    .font('Helvetica')
+    .text(`Invoice #${orderRef}`, 40, 85)
+    .text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`, 40, 100)
+    .text(`Status: ${order.status}`, 40, 115);
+
+  // Bill / ship to
+  doc
+    .fillColor(NAVY)
+    .fontSize(9)
+    .font('Helvetica-Bold')
+    .text('BILL TO', 350, 85)
+    .fillColor(BLACK)
+    .font('Helvetica')
+    .text(customerName, 350, 98)
+    .text(customerEmail, 350, 111)
+    .text(
+      `${order.shippingAddress.street}, ${order.shippingAddress.city}`,
+      350, 124
+    );
+
+  hr(doc, 142);
+
+  // Table header
+  doc
+    .rect(40, 148, 515, 20)
+    .fill(LIGHT);
+
+  const cols = [40, 260, 330, 420, 480];
+  doc
+    .fillColor(NAVY)
+    .fontSize(9)
+    .font('Helvetica-Bold')
+    .text('ITEM', cols[0], 153)
+    .text('SIZE / COLOR', cols[1], 153)
+    .text('QTY', cols[2], 153)
+    .text('UNIT', cols[3], 153)
+    .text('TOTAL', cols[4], 153);
+
+  let y = 175;
+  order.items.forEach((item, idx) => {
+    if (idx % 2 === 1) doc.rect(40, y - 4, 515, 20).fill('#fafafa');
+    doc
+      .fillColor(BLACK)
+      .fontSize(9)
+      .font('Helvetica-Bold')
+      .text(item.name, cols[0], y, { width: 215, ellipsis: true });
+    doc
+      .font('Helvetica')
+      .text(`${item.size} / ${item.color}`, cols[1], y, { width: 65 })
+      .text(String(item.qty), cols[2], y)
+      .text(formatPrice(item.price), cols[3], y)
+      .text(formatPrice(item.price * item.qty), cols[4], y);
+    y += 22;
+  });
+
+  hr(doc, y + 4);
+
+  // Totals
+  y += 14;
+  const totalsX = 380;
+  const valueX = 480;
+
+  const totalsLine = (label: string, value: string, bold = false, color = BLACK) => {
+    doc
+      .fillColor(color)
+      .fontSize(9)
+      .font(bold ? 'Helvetica-Bold' : 'Helvetica')
+      .text(label, totalsX, y)
+      .text(value, valueX, y);
+    y += 16;
+  };
+
+  totalsLine('Subtotal', formatPrice(order.subtotal));
+  if (order.couponDiscount)
+    totalsLine(`Coupon (${order.couponCode})`, `-${formatPrice(order.couponDiscount)}`, false, RED);
+  if (order.loyaltyPointsRedeemed)
+    totalsLine('Loyalty points', `-${formatPrice(order.loyaltyPointsRedeemed)}`, false, RED);
+  totalsLine('Shipping', order.shippingFee === 0 ? 'Free' : formatPrice(order.shippingFee));
+
+  hr(doc, y + 2, NAVY);
+  y += 8;
+  totalsLine('TOTAL', formatPrice(order.total), true, NAVY);
+
+  // Payment info
+  y += 10;
+  doc
+    .fillColor(GRAY)
+    .fontSize(8)
+    .font('Helvetica')
+    .text(`Payment method: ${formatPaymentMethodLabel(order.paymentMethod)}`, 40, y);
+
+  // Footer
+  const footerY = doc.page.height - 40;
+  hr(doc, footerY - 8);
+  doc
+    .fillColor(GRAY)
+    .fontSize(8)
+    .text(`Thank you for shopping at ${APP_NAME}`, 40, footerY, { align: 'center', width: 515 });
+
+  return streamToBuffer(doc);
 };
+
+// ─── DISPATCH RECEIPT ─────────────────────────────────────────────────────────
 
 export const generateDispatchReceiptPdf = async (
   order: IOrder,
   customerName: string,
   customerEmail: string
 ): Promise<Buffer> => {
-  const html = buildDispatchReceiptHtml(order, customerName, customerEmail);
-  return renderPdf(html);
+  const doc = new PDFDocument({ margin: 40, size: 'A4' });
+  const orderRef = order._id.toString().slice(-8).toUpperCase();
+
+  // Header
+  doc.rect(0, 0, doc.page.width, 70).fill(NAVY);
+  doc.fillColor(CREAM).fontSize(22).font('Helvetica-Bold').text(APP_NAME, 40, 18);
+  doc.fillColor(CREAM).fontSize(10).font('Helvetica').text('Dispatch Receipt', 40, 44);
+  doc.fillColor(BROWN).fontSize(14).font('Helvetica-Bold').text(`#${orderRef}`, 430, 26);
+
+  // Ship-to box
+  doc.rect(40, 80, 515, 90).fill('#f0f4f8').stroke(NAVY);
+  doc
+    .fillColor(NAVY)
+    .fontSize(8)
+    .font('Helvetica-Bold')
+    .text('SHIP TO — ATTACH TO PARCEL', 52, 88);
+  doc
+    .fillColor(BLACK)
+    .fontSize(13)
+    .font('Helvetica-Bold')
+    .text(order.shippingAddress.name, 52, 102);
+  doc
+    .fontSize(10)
+    .font('Helvetica')
+    .text(
+      [
+        order.shippingAddress.landmark ? `Near: ${order.shippingAddress.landmark}` : '',
+        order.shippingAddress.street,
+        `${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.postal}`,
+        order.shippingAddress.country,
+        `Mobile: ${formatShippingPhones(order.shippingAddress)}`,
+      ]
+        .filter(Boolean)
+        .join('\n'),
+      52,
+      120,
+      { width: 490 }
+    );
+
+  // Order meta row
+  let y = 185;
+  doc.fillColor(GRAY).fontSize(8).font('Helvetica-Bold').text('ORDER DATE', 40, y);
+  doc.fillColor(GRAY).text('DISPATCH DATE', 170, y);
+  doc.fillColor(GRAY).text('PAYMENT', 310, y);
+  doc.fillColor(GRAY).text('CUSTOMER', 440, y);
+
+  y += 12;
+  doc
+    .fillColor(BLACK)
+    .fontSize(9)
+    .font('Helvetica')
+    .text(new Date(order.createdAt).toLocaleDateString(), 40, y)
+    .text(new Date().toLocaleDateString(), 170, y)
+    .text(
+      order.paymentMethod === 'bank' ? 'Bank Transfer (Prepaid)' : 'Cash on Delivery',
+      310, y, { width: 125 }
+    )
+    .text(customerName, 440, y, { width: 115, ellipsis: true });
+
+  y += 24;
+  hr(doc, y);
+
+  // Items table header
+  y += 8;
+  doc.rect(40, y, 515, 20).fill(NAVY);
+  doc
+    .fillColor(CREAM)
+    .fontSize(8)
+    .font('Helvetica-Bold')
+    .text('#', 48, y + 6)
+    .text('PRODUCT', 68, y + 6)
+    .text('SIZE / COLOR', 290, y + 6)
+    .text('QTY', 400, y + 6)
+    .text('LINE TOTAL', 455, y + 6);
+
+  y += 24;
+  order.items.forEach((item, idx) => {
+    if (idx % 2 === 0) doc.rect(40, y - 4, 515, 20).fill(LIGHT);
+    doc
+      .fillColor(BLACK)
+      .fontSize(9)
+      .font('Helvetica-Bold')
+      .text(String(idx + 1), 48, y)
+      .text(item.name, 68, y, { width: 218, ellipsis: true });
+    doc
+      .font('Helvetica')
+      .text(`${item.size} · ${item.color}`, 290, y, { width: 105 })
+      .fillColor(NAVY)
+      .font('Helvetica-Bold')
+      .text(String(item.qty), 400, y)
+      .fillColor(BLACK)
+      .font('Helvetica')
+      .text(formatPrice(item.price * item.qty), 455, y);
+    y += 22;
+  });
+
+  hr(doc, y + 4);
+
+  // COD amount box
+  y += 16;
+  doc.rect(350, y, 205, 70).fill('#fff7ed').stroke(BROWN);
+  doc
+    .fillColor(BROWN)
+    .fontSize(8)
+    .font('Helvetica-Bold')
+    .text(
+      order.paymentMethod === 'bank' ? 'PREPAID — DO NOT COLLECT' : 'AMOUNT TO COLLECT (COD)',
+      358, y + 8,
+      { width: 190, align: 'center' }
+    );
+  doc
+    .fillColor(NAVY)
+    .fontSize(22)
+    .font('Helvetica-Bold')
+    .text(formatPrice(order.total), 358, y + 24, { width: 190, align: 'center' });
+
+  // Checklist
+  doc
+    .fillColor(BLACK)
+    .fontSize(9)
+    .font('Helvetica-Bold')
+    .text('Packing checklist:', 40, y + 8);
+  ['Verify items & quantities', 'Seal package securely', 'Attach this receipt to parcel'].forEach(
+    (item, i) => {
+      doc
+        .font('Helvetica')
+        .fontSize(9)
+        .fillColor(BLACK)
+        .text(`☐  ${item}`, 40, y + 24 + i * 16);
+    }
+  );
+
+  // Footer
+  const footerY = doc.page.height - 40;
+  hr(doc, footerY - 8);
+  doc
+    .fillColor(GRAY)
+    .fontSize(8)
+    .text(
+      `${APP_NAME} · Dispatch document for Order #${orderRef} · Internal use only`,
+      40, footerY,
+      { align: 'center', width: 515 }
+    );
+
+  return streamToBuffer(doc);
 };
+
+// ─── ORDERS REPORT ────────────────────────────────────────────────────────────
 
 export const generateOrdersReportPdf = async (
   orders: IOrder[],
   title: string
 ): Promise<Buffer> => {
-  const rows = orders
-    .map(
-      (o) =>
-        `<tr><td>${o._id.toString().slice(-8)}</td><td>${new Date(o.createdAt).toLocaleDateString()}</td><td>${o.status}</td><td>${formatPrice(o.total)}</td></tr>`
-    )
-    .join('');
+  const doc = new PDFDocument({ margin: 40, size: 'A4', layout: 'landscape' });
+
+  // Header
+  doc.rect(0, 0, doc.page.width, 60).fill(NAVY);
+  doc.fillColor(CREAM).fontSize(20).font('Helvetica-Bold').text(`${APP_NAME} — ${title}`, 40, 16);
   const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
+  doc
+    .fillColor(CREAM)
+    .fontSize(9)
+    .font('Helvetica')
+    .text(`${orders.length} orders · Revenue: ${formatPrice(totalRevenue)}`, 40, 42);
 
-  const html = `<!DOCTYPE html><html><head><style>
-    body{font-family:Arial,sans-serif;padding:40px} table{width:100%;border-collapse:collapse;margin-top:20px}
-    th,td{border-bottom:1px solid #e4e4e7;padding:8px;text-align:left;font-size:13px}
-    th{background:#fafafa}
-  </style></head><body>
-    <h1>${APP_NAME} — ${title}</h1>
-    <p>Orders: ${orders.length} · Revenue: ${formatPrice(totalRevenue)}</p>
-    <table><thead><tr><th>Order</th><th>Date</th><th>Status</th><th>Total</th></tr></thead><tbody>${rows}</tbody></table>
-  </body></html>`;
+  // Table header
+  let y = 76;
+  doc.rect(40, y, doc.page.width - 80, 20).fill(LIGHT);
+  const cols = [40, 130, 250, 350, 470, 570];
+  doc
+    .fillColor(NAVY)
+    .fontSize(8)
+    .font('Helvetica-Bold')
+    .text('ORDER ID', cols[0], y + 6)
+    .text('DATE', cols[1], y + 6)
+    .text('CUSTOMER', cols[2], y + 6)
+    .text('STATUS', cols[3], y + 6)
+    .text('PAYMENT', cols[4], y + 6)
+    .text('TOTAL', cols[5], y + 6);
 
-  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
-  try {
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'domcontentloaded' });
-    const pdf = await page.pdf({ format: 'A4', landscape: true });
-    return Buffer.from(pdf);
-  } finally {
-    await browser.close();
-  }
+  y += 24;
+  orders.forEach((o, idx) => {
+    if (idx % 2 === 1) doc.rect(40, y - 4, doc.page.width - 80, 18).fill('#fafafa');
+    doc
+      .fillColor(BLACK)
+      .fontSize(8)
+      .font('Helvetica')
+      .text(o._id.toString().slice(-8).toUpperCase(), cols[0], y, { width: 85 })
+      .text(new Date(o.createdAt).toLocaleDateString(), cols[1], y, { width: 115 })
+      .text('—', cols[2], y, { width: 95 })
+      .text(o.status, cols[3], y, { width: 115 })
+      .text(o.paymentMethod === 'bank' ? 'Bank' : 'COD', cols[4], y, { width: 95 })
+      .fillColor(NAVY)
+      .font('Helvetica-Bold')
+      .text(formatPrice(o.total), cols[5], y, { width: 95 });
+    y += 18;
+
+    if (y > doc.page.height - 60) {
+      doc.addPage();
+      y = 40;
+    }
+  });
+
+  const footerY = doc.page.height - 30;
+  hr(doc, footerY - 8);
+  doc
+    .fillColor(GRAY)
+    .fontSize(8)
+    .text(`Generated by ${APP_NAME} · ${new Date().toLocaleString()}`, 40, footerY, {
+      align: 'center',
+      width: doc.page.width - 80,
+    });
+
+  return streamToBuffer(doc);
 };

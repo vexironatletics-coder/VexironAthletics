@@ -67,9 +67,9 @@ export default function AdminUsersPage() {
         {isLoading ? (
           <p className="mt-4">Loading...</p>
         ) : (
-          <div className="mt-6 overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
+          <div className="mt-6 overflow-x-auto rounded-lg border border-[var(--border)]">
             <table className="w-full text-sm">
-              <thead className="bg-zinc-50 dark:bg-zinc-900">
+              <thead className="bg-[var(--secondary)]/30">
                 <tr>
                   <th className="px-4 py-3 text-left">Name</th>
                   <th className="px-4 py-3 text-left">Email</th>
@@ -79,7 +79,7 @@ export default function AdminUsersPage() {
               </thead>
               <tbody>
                 {data?.users.map((user) => (
-                  <tr key={user.id} className="border-t border-zinc-200 dark:border-zinc-800">
+                  <tr key={user.id} className="border-t border-[var(--border)]">
                     <td className="px-4 py-3">{user.name}</td>
                     <td className="px-4 py-3">{user.email}</td>
                     <td className="px-4 py-3">

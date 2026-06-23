@@ -104,7 +104,7 @@ export default function AdminOrdersPage() {
         </div>
       </div>
       <select
-        className="mt-4 rounded-md border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+        className="mt-4 rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--foreground)]"
         value={statusFilter}
         onChange={(e) => {
           setStatusFilter(e.target.value);
@@ -121,9 +121,9 @@ export default function AdminOrdersPage() {
       {isLoading ? (
         <p className="mt-4">Loading...</p>
       ) : (
-        <div className="mt-6 overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
+        <div className="mt-6 overflow-x-auto rounded-lg border border-[var(--border)]">
           <table className="w-full text-sm">
-            <thead className="bg-zinc-50 dark:bg-zinc-900">
+            <thead className="bg-[var(--secondary)]/30">
               <tr>
                 <th className="px-4 py-3 text-left">ID</th>
                 <th className="px-4 py-3 text-left">Date</th>
@@ -136,7 +136,7 @@ export default function AdminOrdersPage() {
             </thead>
             <tbody>
               {data?.orders.map((order) => (
-                <tr key={order._id} className="border-t border-zinc-200 dark:border-zinc-800">
+                <tr key={order._id} className="border-t border-[var(--border)]">
                   <td className="px-4 py-3 font-mono text-xs">{order._id.slice(-8)}</td>
                   <td className="px-4 py-3">{new Date(order.createdAt).toLocaleDateString()}</td>
                   <td className="px-4 py-3">
@@ -158,7 +158,7 @@ export default function AdminOrdersPage() {
                   <td className="px-4 py-3">{formatPrice(order.total)}</td>
                   <td className="px-4 py-3">
                     <select
-                      className="rounded border px-2 py-1 text-xs dark:bg-zinc-950"
+                      className="rounded border border-[var(--border)] bg-[var(--card)] px-2 py-1 text-xs text-[var(--foreground)]"
                       value={order.status}
                       onChange={(e) =>
                         updateStatus({ id: order._id, status: e.target.value as OrderStatus })

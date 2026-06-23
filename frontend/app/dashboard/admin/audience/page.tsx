@@ -16,9 +16,9 @@ function BarRow({ label, count, max }: { label: string; count: number; max: numb
         <span className="truncate font-medium">{label}</span>
         <span className="text-zinc-500">{count}</span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+      <div className="h-2 overflow-hidden rounded-full bg-[var(--border)]">
         <div
-          className="h-full rounded-full bg-zinc-900 transition-all dark:bg-zinc-50"
+          className="h-full rounded-full bg-[var(--primary)] transition-all"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -45,7 +45,7 @@ export default function AdminAudiencePage() {
               </p>
             </div>
             <select
-              className="rounded-md border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+              className="rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--foreground)]"
               value={days}
               onChange={(e) => setDays(Number(e.target.value))}
             >

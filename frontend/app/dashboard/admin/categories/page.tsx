@@ -63,7 +63,7 @@ export default function AdminCategoriesPage() {
       <div>
           <h1 className="text-2xl font-bold">Categories</h1>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-6 flex flex-wrap gap-4 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
+          <form onSubmit={handleSubmit(onSubmit)} className="mt-6 flex flex-wrap gap-4 rounded-lg border border-[var(--border)] bg-[var(--card)] p-4">
             <div>
               <Label>Name</Label>
               <Input {...register('name')} />
@@ -71,7 +71,7 @@ export default function AdminCategoriesPage() {
             </div>
             <div>
               <Label>Parent</Label>
-              <select {...register('parent')} className="mt-1 rounded-md border border-zinc-200 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950">
+              <select {...register('parent')} className="mt-1 rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-[var(--foreground)]">
                 <option value="men">Men</option>
                 <option value="women">Women</option>
                 <option value="children">Children</option>
@@ -87,10 +87,10 @@ export default function AdminCategoriesPage() {
           ) : (
             <div className="mt-6 space-y-2">
               {categories?.map((cat) => (
-                <div key={cat._id} className="flex items-center justify-between rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
+                <div key={cat._id} className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--card)] p-4">
                   <div>
                     <span className="font-medium">{cat.name}</span>
-                    <span className="ml-2 text-sm text-zinc-500">/{cat.slug}</span>
+                    <span className="ml-2 text-sm text-[var(--muted)]">/{cat.slug}</span>
                   </div>
                   <Button
                     size="sm"

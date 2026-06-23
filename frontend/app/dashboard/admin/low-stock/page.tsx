@@ -113,8 +113,8 @@ export default function AdminLowStockPage() {
           {isLoading ? (
             <p className="mt-4">Loading...</p>
           ) : data?.products.length === 0 ? (
-            <div className="mt-6 rounded-lg border border-zinc-200 p-8 text-center dark:border-zinc-800">
-              <p className="text-zinc-500">No low stock products right now.</p>
+            <div className="mt-6 rounded-lg border border-[var(--border)] bg-[var(--card)] p-8 text-center">
+              <p className="text-[var(--muted)]">No low stock products right now.</p>
               <Link href="/dashboard/admin/products" className="mt-2 inline-block text-sm font-medium hover:underline">
                 Back to all products
               </Link>
