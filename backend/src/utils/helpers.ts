@@ -24,6 +24,7 @@ export const sanitizeUser = (user: IUser) => ({
   name: user.name,
   email: user.email,
   avatar: user.avatar,
+  banner: user.banner,
   role: user.role,
   provider: user.provider,
   addresses: user.addresses,

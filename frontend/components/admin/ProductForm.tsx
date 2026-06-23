@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
+import { Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -96,6 +97,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEditing = !!product;
   const [existingImages, setExistingImages] = useState<Product['images']>(product?.images ?? []);
+  const [newFilePreviews, setNewFilePreviews] = useState<string[]>([]);
   const [createProduct, { isLoading: isCreating }] = useCreateProductMutation();
   const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
   const isLoading = isCreating || isUpdating;
@@ -113,8 +115,16 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
   useEffect(() => {
     reset(getDefaultValues(product));
     setExistingImages(product?.images ?? []);
+    setNewFilePreviews([]);
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, [product, reset]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    const previews = Array.from(files).slice(0, 5).map((f) => URL.createObjectURL(f));
+    setNewFilePreviews(previews);
+  };
 
   const removeExistingImage = (index: number) => {
     setExistingImages((prev) => prev.filter((_, i) => i !== index));
@@ -153,6 +163,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
       }
 
       if (fileInputRef.current) fileInputRef.current.value = '';
+      setNewFilePreviews([]);
       onSuccess?.();
     } catch (err: unknown) {
       const apiErr = err as { data?: { message?: string } };
@@ -253,17 +264,61 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
       )}
 
       <div className="sm:col-span-2">
-        <Label htmlFor="images">
-          {isEditing ? 'Add more images (optional, up to 5)' : 'Product images (optional, up to 5)'}
-        </Label>
-        <Input
-          id="images"
+        <Label>{isEditing ? 'Add more images' : 'Product images'}</Label>
+        <p className="mb-2 text-xs text-zinc-500">
+          Images are uploaded to Cloudinary. Make sure{' '}
+          <code className="rounded bg-zinc-100 px-1 text-[11px] dark:bg-zinc-800">
+            CLOUDINARY_CLOUD_NAME / API_KEY / API_SECRET
+          </code>{' '}
+          are set in Hostinger environment variables.
+        </p>
+
+        {/* Drop zone */}
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="flex w-full flex-col items-center gap-2 rounded-lg border-2 border-dashed border-zinc-300 bg-zinc-50 px-4 py-8 text-zinc-500 transition hover:border-[#0A2947] hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-zinc-500"
+        >
+          <Upload className="h-8 w-8 opacity-60" />
+          <span className="text-sm font-medium">Click to choose images (up to 5)</span>
+          <span className="text-xs">PNG, JPG, WEBP — max 5 MB each</span>
+        </button>
+        <input
           ref={fileInputRef}
           type="file"
           accept="image/*"
           multiple
-          className="mt-1 cursor-pointer"
+          className="hidden"
+          onChange={handleFileChange}
         />
+
+        {/* New file previews */}
+        {newFilePreviews.length > 0 && (
+          <div className="mt-3">
+            <p className="mb-2 text-xs font-medium text-zinc-600 dark:text-zinc-400">
+              Selected ({newFilePreviews.length}):
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {newFilePreviews.map((src, i) => (
+                <div key={i} className="relative h-20 w-20 overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-700">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={src} alt="" className="h-full w-full object-cover" />
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setNewFilePreviews([]);
+                  if (fileInputRef.current) fileInputRef.current.value = '';
+                }}
+                className="flex h-20 w-20 items-center justify-center rounded-md border border-dashed border-red-300 text-red-400 hover:bg-red-50 dark:hover:bg-red-950"
+                aria-label="Clear selected files"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-2 sm:col-span-2">

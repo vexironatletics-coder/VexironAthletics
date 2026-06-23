@@ -152,7 +152,7 @@ export function ProductCard({ product, view = 'grid' }: ProductCardProps) {
           >
             <Heart className={cn('h-4 w-4', isWishlisted && 'fill-red-500 text-red-500')} />
           </button>
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
             <span className="translate-y-2 rounded-md bg-white px-4 py-2 text-sm font-medium text-zinc-900 transition-transform duration-300 group-hover:translate-y-0">
               Quick View
             </span>

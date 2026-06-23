@@ -39,6 +39,10 @@ export const userApi = createApi({
       query: (body) => ({ url: '/users/me', method: 'PUT', body }),
       invalidatesTags: ['User'],
     }),
+    updateMeFiles: builder.mutation<User, FormData>({
+      query: (body) => ({ url: '/users/me', method: 'PUT', body }),
+      invalidatesTags: ['User'],
+    }),
     changePassword: builder.mutation<
       { message: string },
       { currentPassword: string; newPassword: string }
@@ -127,6 +131,7 @@ export const userApi = createApi({
 export const {
   useGetMeQuery,
   useUpdateMeMutation,
+  useUpdateMeFilesMutation,
   useChangePasswordMutation,
   useGetAllUsersQuery,
   useUpdateUserRoleMutation,

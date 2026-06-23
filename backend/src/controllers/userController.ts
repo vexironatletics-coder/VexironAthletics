@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 import { User } from '../models/User';
 import { sanitizeUser } from '../utils/helpers';
+import { cloudinary, isCloudinaryConfigured } from '../config/cloudinary';
 
 export const getMe = async (req: Request, res: Response): Promise<void> => {
   const user = await User.findById(req.user!.id);
@@ -19,12 +20,33 @@ export const updateMe = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const allowedFields = ['name', 'phone', 'avatar', 'addresses'] as const;
+  const allowedFields = ['name', 'phone', 'avatar', 'banner', 'addresses'] as const;
   const updates: Record<string, unknown> = {};
 
   for (const field of allowedFields) {
     if (req.body[field] !== undefined) {
       updates[field] = req.body[field];
+    }
+  }
+
+  /* Handle file uploads (multipart form) */
+  const files = req.files as Record<string, Express.Multer.File[]> | undefined;
+  if (files && isCloudinaryConfigured()) {
+    if (files.avatar?.[0]) {
+      const f = files.avatar[0];
+      const result = await cloudinary.uploader.upload(
+        `data:${f.mimetype};base64,${f.buffer.toString('base64')}`,
+        { folder: 'ecom/avatars', transformation: [{ width: 400, height: 400, crop: 'fill' }] }
+      );
+      updates.avatar = result.secure_url;
+    }
+    if (files.banner?.[0]) {
+      const f = files.banner[0];
+      const result = await cloudinary.uploader.upload(
+        `data:${f.mimetype};base64,${f.buffer.toString('base64')}`,
+        { folder: 'ecom/banners', transformation: [{ width: 1200, height: 300, crop: 'fill' }] }
+      );
+      updates.banner = result.secure_url;
     }
   }
 

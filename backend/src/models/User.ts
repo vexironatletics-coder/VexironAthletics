@@ -20,6 +20,7 @@ export interface IUser extends Document {
   email: string;
   password?: string | null;
   avatar?: string;
+  banner?: string;
   provider: UserProvider;
   clerkId?: string;
   phone?: string;
@@ -56,6 +57,7 @@ const userSchema = new Schema<IUser>(
     email: { type: String, required: true, unique: true, lowercase: true },
     password: { type: String, select: false },
     avatar: { type: String },
+    banner: { type: String },
     provider: {
       type: String,
       enum: ['local', 'google', 'facebook'],
