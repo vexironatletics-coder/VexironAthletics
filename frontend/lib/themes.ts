@@ -3,7 +3,8 @@ export type ColorSchemeId =
   | 'ocean-breeze'
   | 'rose-elite'
   | 'forest-pro'
-  | 'royal-gold';
+  | 'royal-gold'
+  | 'vexiron-navy';
 
 /** @deprecated alias for ColorSchemeId */
 export type ThemeId = ColorSchemeId;
@@ -300,6 +301,46 @@ export const COLOR_SCHEME_PRESETS: ColorSchemePreset[] = [
       gradientEnd: '#eab308',
     }),
   },
+  {
+    id: 'vexiron-navy',
+    name: 'Vexiron Navy',
+    description: 'Deep navy background with cream & brown — official brand palette.',
+    preview: ['#0A2947', '#F3E4C9', '#8B5E3C'],
+    light: {
+      primary:            '#F3E4C9',
+      primaryForeground:  '#0A2947',
+      accent:             '#8B5E3C',
+      accentForeground:   '#F3E4C9',
+      secondary:          '#112b4a',
+      heroFrom:           '#0A2947',
+      heroTo:             '#1a3d6b',
+      gradientStart:      '#0A2947',
+      gradientEnd:        '#8B5E3C',
+      background:         '#0A2947',
+      foreground:         '#F3E4C9',
+      card:               '#0e3259',
+      muted:              '#D3D4C0',
+      border:             '#1e4a7a',
+      ring:               '#2a6099',
+    },
+    dark: {
+      primary:            '#F3E4C9',
+      primaryForeground:  '#0A2947',
+      accent:             '#a07850',
+      accentForeground:   '#ffffff',
+      secondary:          '#0A2947',
+      heroFrom:           '#040c17',
+      heroTo:             '#0A2947',
+      gradientStart:      '#0A2947',
+      gradientEnd:        '#8B5E3C',
+      background:         '#040c17',
+      foreground:         '#F3E4C9',
+      card:               '#0A2947',
+      muted:              '#D3D4C0',
+      border:             '#1a3050',
+      ring:               '#2a4a70',
+    },
+  },
 ];
 
 /** Maps legacy combined themeId to designId */
@@ -309,6 +350,7 @@ const LEGACY_THEME_TO_DESIGN: Record<ColorSchemeId, DesignId> = {
   'rose-elite': 'boutique',
   'forest-pro': 'nature',
   'royal-gold': 'premium',
+  'vexiron-navy': 'boutique',
 };
 
 export const DEFAULT_DESIGN_ID: DesignId = 'classic';
