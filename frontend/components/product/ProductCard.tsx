@@ -128,15 +128,16 @@ export function ProductCard({ product, view = 'grid' }: ProductCardProps) {
   }
 
   return (
-    <div className="group overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-950 dark:hover:shadow-zinc-900/50">
-      <Link href={`/products/${product._id}`} className="block">
+    <div className="group flex h-full flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-950 dark:hover:shadow-zinc-900/50">
+      {/* Fixed-ratio image */}
+      <Link href={`/products/${product._id}`} className="block shrink-0">
         <div className="relative aspect-[4/3] overflow-hidden">
           <Image
             src={imageUrl}
             alt={product.name}
             fill
             className="object-cover transition duration-300 group-hover:scale-105"
-            sizes="(max-width:768px) 50vw, 25vw"
+            sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw"
             onError={() => setImageUrl(PLACEHOLDER)}
           />
           {hasDiscount && (
@@ -147,7 +148,7 @@ export function ProductCard({ product, view = 'grid' }: ProductCardProps) {
           <button
             type="button"
             onClick={handleWishlist}
-            className="absolute right-2 top-2 rounded-full bg-white/90 p-2 shadow transition-transform duration-200 hover:scale-110 active:scale-95 dark:bg-zinc-900/90"
+            className="absolute right-2 top-2 z-10 rounded-full bg-white/90 p-2 shadow transition-transform duration-200 hover:scale-110 active:scale-95 dark:bg-zinc-900/90"
             aria-label="Toggle wishlist"
           >
             <Heart className={cn('h-4 w-4', isWishlisted && 'fill-red-500 text-red-500')} />
@@ -159,35 +160,42 @@ export function ProductCard({ product, view = 'grid' }: ProductCardProps) {
           </div>
         </div>
       </Link>
-      <div className="p-3 sm:p-4">
-        <Link href={`/products/${product._id}`}>
+
+      {/* Card body — always same height, buttons pinned to bottom */}
+      <div className="flex flex-1 flex-col p-3 sm:p-4">
+        <Link href={`/products/${product._id}`} className="flex-shrink-0">
           <Badge variant="secondary" className="mb-1 text-[10px] sm:text-xs capitalize">{product.category}</Badge>
-          <h3 className="text-sm sm:text-base font-semibold line-clamp-1 transition hover:text-[var(--accent)]">{product.name}</h3>
+          <h3 className="line-clamp-1 text-sm font-semibold sm:text-base transition hover:text-[var(--accent)]">{product.name}</h3>
         </Link>
-        <p className="mt-1 text-xs sm:text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
+
+        {/* Description — exactly 100 chars, fixed 2-line block */}
+        <p className="mt-1 line-clamp-2 min-h-[2.5rem] text-xs leading-relaxed text-zinc-500 sm:text-sm dark:text-zinc-400">
           {product.description.length > 100
             ? product.description.slice(0, 100) + '…'
             : product.description}
         </p>
+
+        {/* Stars */}
         <div className="mt-1.5 flex items-center gap-0.5 text-xs text-[#8B5E3C]">
           {Array.from({ length: 5 }).map((_, i) => (
             <Star
               key={i}
-              className={cn(
-                'h-3 w-3',
-                i < Math.round(product.ratings) ? 'fill-current' : 'text-zinc-300'
-              )}
+              className={cn('h-3 w-3', i < Math.round(product.ratings) ? 'fill-current' : 'text-zinc-300')}
             />
           ))}
           <span className="ml-1 text-zinc-500">({product.ratings.toFixed(1)})</span>
         </div>
-        <div className="mt-1.5 flex items-center gap-2">
-          {hasDiscount && (
-            <span className="text-xs text-zinc-400 line-through">{formatPrice(product.price)}</span>
-          )}
-          <span className="text-sm sm:text-base font-bold">{formatPrice(salePrice)}</span>
+
+        {/* Price + buttons pinned to bottom */}
+        <div className="mt-auto pt-2">
+          <div className="flex items-center gap-2">
+            {hasDiscount && (
+              <span className="text-xs text-zinc-400 line-through">{formatPrice(product.price)}</span>
+            )}
+            <span className="text-sm font-bold sm:text-base">{formatPrice(salePrice)}</span>
+          </div>
+          <div className="mt-2">{actionButtons}</div>
         </div>
-        <div className="mt-2">{actionButtons}</div>
       </div>
     </div>
   );
