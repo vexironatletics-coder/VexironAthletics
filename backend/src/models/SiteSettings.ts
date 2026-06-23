@@ -1,5 +1,19 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
+export interface IHeroSlide {
+  id: string;
+  tag: string;
+  title: string;
+  titleAccent: string;
+  subtitle: string;
+  image: string;
+  imagePublicId?: string;
+  ctaLabel: string;
+  ctaHref: string;
+  secondaryLabel: string;
+  secondaryHref: string;
+}
+
 export interface ISiteSettings extends Document {
   designId: string;
   colorSchemeId: string;
@@ -11,8 +25,26 @@ export interface ISiteSettings extends Document {
   siteTagline?: string;
   seoDescription?: string;
   seoKeywords?: string;
+  heroSlides: IHeroSlide[];
   updatedAt: Date;
 }
+
+const heroSlideSchema = new Schema<IHeroSlide>(
+  {
+    id: { type: String, required: true },
+    tag: { type: String, default: '' },
+    title: { type: String, default: '' },
+    titleAccent: { type: String, default: '' },
+    subtitle: { type: String, default: '' },
+    image: { type: String, default: '' },
+    imagePublicId: { type: String },
+    ctaLabel: { type: String, default: 'Shop Now' },
+    ctaHref: { type: String, default: '/products' },
+    secondaryLabel: { type: String, default: 'View All' },
+    secondaryHref: { type: String, default: '/products' },
+  },
+  { _id: false }
+);
 
 const siteSettingsSchema = new Schema<ISiteSettings>(
   {
@@ -31,6 +63,7 @@ const siteSettingsSchema = new Schema<ISiteSettings>(
       type: String,
       default: 'clothing, athletic wear, sportswear, fashion, Pakistan',
     },
+    heroSlides: { type: [heroSlideSchema], default: [] },
   },
   { timestamps: { createdAt: false, updatedAt: true } }
 );

@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { HeroProductCardStack } from '@/components/home/HeroProductCardStack';
 import { APP_NAME } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+import { useGetHeroSlidesQuery } from '@/store/api/settingsApi';
 
 import 'swiper/css';
 import 'swiper/css/effect-fade';
@@ -27,17 +28,18 @@ import 'swiper/css/pagination';
 
 import { heroBannerImages } from '@/lib/shirtImages';
 
-const heroSlides = [
+const DEFAULT_SLIDES = [
   {
     id: 'elevate',
     tag: 'Premium Collection',
     title: 'Elevate Your',
     titleAccent: 'Style',
-    subtitle:
-      'Discover premium clothing for men, women, and children. Quality fashion crafted for athletes and everyday champions.',
+    subtitle: 'Discover premium clothing for men, women, and children. Quality fashion crafted for athletes and everyday champions.',
     image: heroBannerImages.elevate,
-    cta: { label: 'Shop Men', href: '/category/men' },
-    secondary: { label: 'Shop Women', href: '/category/women' },
+    ctaLabel: 'Shop Men',
+    ctaHref: '/category/men',
+    secondaryLabel: 'Shop Women',
+    secondaryHref: '/category/women',
   },
   {
     id: 'summer',
@@ -46,8 +48,10 @@ const heroSlides = [
     titleAccent: 'Collection',
     subtitle: 'Light fabrics, bold colors, and effortless fits designed for heat, movement, and confidence.',
     image: heroBannerImages.summer,
-    cta: { label: 'Explore Collection', href: '/products' },
-    secondary: { label: 'View Sale', href: '/products?sort=price-desc' },
+    ctaLabel: 'Explore Collection',
+    ctaHref: '/products',
+    secondaryLabel: 'View Sale',
+    secondaryHref: '/products?sort=price-desc',
   },
   {
     id: 'kids',
@@ -56,8 +60,10 @@ const heroSlides = [
     titleAccent: 'Kids',
     subtitle: 'Durable, comfortable pieces built for school days, sports, and weekend adventures.',
     image: heroBannerImages.kids,
-    cta: { label: 'Shop Children', href: '/category/children' },
-    secondary: { label: 'All Products', href: '/products' },
+    ctaLabel: 'Shop Children',
+    ctaHref: '/category/children',
+    secondaryLabel: 'All Products',
+    secondaryHref: '/products',
   },
   {
     id: 'delivery',
@@ -66,8 +72,10 @@ const heroSlides = [
     titleAccent: '₨5,000',
     subtitle: 'Nationwide shipping with cash on delivery, secure checkout, and easy 30-day returns.',
     image: heroBannerImages.delivery,
-    cta: { label: 'Start Shopping', href: '/products' },
-    secondary: { label: 'Shipping Info', href: '/shipping' },
+    ctaLabel: 'Start Shopping',
+    ctaHref: '/products',
+    secondaryLabel: 'Shipping Info',
+    secondaryHref: '/shipping',
   },
 ];
 
@@ -83,6 +91,9 @@ export function HeroCarousel() {
   const [swiper, setSwiper] = useState<SwiperType | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [progressKey, setProgressKey] = useState(0);
+  const { data: apiSlides } = useGetHeroSlidesQuery();
+
+  const heroSlides = apiSlides && apiSlides.length > 0 ? apiSlides : DEFAULT_SLIDES;
 
   useEffect(() => {
     setProgressKey((k) => k + 1);
@@ -116,6 +127,7 @@ export function HeroCarousel() {
                   }}
                   priority={index === 0}
                   sizes="100vw"
+                  unoptimized={slide.image.startsWith('http')}
                 />
                 <div className="absolute inset-0 bg-gradient-to-br from-[var(--hero-from)]/95 via-[var(--hero-to)]/75 to-[var(--hero-from)]/40" />
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.12),transparent_55%)]" />
@@ -158,8 +170,8 @@ export function HeroCarousel() {
                       variant="accent"
                       className="group h-12 px-7 text-base shadow-lg shadow-black/20 transition hover:scale-[1.03] hover:shadow-xl"
                     >
-                      <Link href={slide.cta.href}>
-                        {slide.cta.label}
+                      <Link href={slide.ctaHref}>
+                        {slide.ctaLabel}
                         <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
                       </Link>
                     </Button>
@@ -169,7 +181,7 @@ export function HeroCarousel() {
                       variant="outline"
                       className="h-12 border-white/40 bg-white/5 px-7 text-base text-white backdrop-blur-sm transition hover:scale-[1.03] hover:border-white/60 hover:bg-white/15"
                     >
-                      <Link href={slide.secondary.href}>{slide.secondary.label}</Link>
+                      <Link href={slide.secondaryHref}>{slide.secondaryLabel}</Link>
                     </Button>
                   </div>
 

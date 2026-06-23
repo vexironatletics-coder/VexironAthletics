@@ -16,6 +16,7 @@ import {
   Settings,
   Heart,
   ClipboardList,
+  Images,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -242,6 +243,7 @@ const adminEntries: SidebarEntry[] = [
     icon: Palette,
     children: [
       { href: '/dashboard/admin/appearance', label: 'Appearance', icon: Palette },
+      { href: '/dashboard/admin/hero-slides', label: 'Hero Slider', icon: Images },
       { href: '/dashboard/admin/users', label: 'Users', icon: Users },
     ],
   },

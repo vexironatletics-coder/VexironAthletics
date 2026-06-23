@@ -265,13 +265,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
 
       <div className="sm:col-span-2">
         <Label>{isEditing ? 'Add more images' : 'Product images'}</Label>
-        {/* <p className="mb-2 text-xs text-zinc-500">
-          Images are uploaded to Cloudinary. Make sure{' '}
-          <code className="rounded bg-zinc-100 px-1 text-[11px] dark:bg-zinc-800">
-            CLOUDINARY_CLOUD_NAME / API_KEY / API_SECRET
-          </code>{' '}
-          are set in Hostinger environment variables.
-        </p> */}
+        
 
         {/* Drop zone */}
         <button
