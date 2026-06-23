@@ -82,9 +82,9 @@ export function AdminProductsTable({
   sortable = true,
 }: AdminProductsTableProps) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
+    <div className="overflow-x-auto rounded-lg border border-[var(--border)]">
       <table className="w-full text-sm">
-        <thead className="bg-zinc-50 dark:bg-zinc-900">
+        <thead className="bg-[var(--secondary)]/30">
           <tr>
             <th className="px-4 py-3 text-left">Image</th>
             {sortable ? (
@@ -114,14 +114,14 @@ export function AdminProductsTable({
               <tr
                 key={product._id}
                 className={cn(
-                  'border-t border-zinc-200 dark:border-zinc-800',
+                  'border-t border-[var(--border)]',
                   highlightLowStock &&
                     lowStock &&
                     'bg-amber-50/70 dark:bg-amber-950/20'
                 )}
               >
                 <td className="px-4 py-3">
-                  <div className="relative h-12 w-12 overflow-hidden rounded-md border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900">
+                  <div className="relative h-12 w-12 overflow-hidden rounded-md border border-[var(--border)] bg-[var(--card)]">
                     {imageUrl ? (
                       <Image
                         src={imageUrl}

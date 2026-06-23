@@ -88,7 +88,7 @@ export function ProductCard({ product, view = 'grid' }: ProductCardProps) {
 
   if (view === 'list') {
     return (
-      <div className="group flex gap-4 rounded-lg border border-zinc-200 p-4 transition hover:shadow-md dark:border-zinc-800">
+      <div className="group flex gap-4 rounded-lg border border-[var(--border)] bg-[var(--card)] p-4 transition hover:shadow-md">
         <Link href={`/products/${product._id}`} className="relative h-32 w-24 shrink-0 overflow-hidden rounded-md">
           <Image
             src={imageUrl}
@@ -105,7 +105,7 @@ export function ProductCard({ product, view = 'grid' }: ProductCardProps) {
               <Badge variant="secondary" className="mb-1 capitalize">{product.category}</Badge>
               <h3 className="font-semibold transition hover:text-[var(--accent)]">{product.name}</h3>
             </Link>
-            <p className="mt-1 line-clamp-2 text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="mt-1 line-clamp-2 text-sm text-[var(--muted)]">
               {product.description}
             </p>
             <div className="mt-2 flex items-center gap-1 text-sm text-[#8B5E3C]">
@@ -116,7 +116,7 @@ export function ProductCard({ product, view = 'grid' }: ProductCardProps) {
           <div className="mt-3 space-y-3">
             <div className="flex items-center gap-2">
               {hasDiscount && (
-                <span className="text-sm text-zinc-400 line-through">{formatPrice(product.price)}</span>
+                <span className="text-sm text-[var(--muted)] line-through">{formatPrice(product.price)}</span>
               )}
               <span className="font-bold">{formatPrice(salePrice)}</span>
             </div>
@@ -128,7 +128,7 @@ export function ProductCard({ product, view = 'grid' }: ProductCardProps) {
   }
 
   return (
-    <div className="group flex h-full flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-950 dark:hover:shadow-zinc-900/50">
+    <div className="group flex h-full flex-col overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--card)] shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
       {/* Fixed-ratio image */}
       <Link href={`/products/${product._id}`} className="block shrink-0">
         <div className="relative aspect-[4/3] overflow-hidden">
@@ -148,13 +148,13 @@ export function ProductCard({ product, view = 'grid' }: ProductCardProps) {
           <button
             type="button"
             onClick={handleWishlist}
-            className="absolute right-2 top-2 z-10 rounded-full bg-white/90 p-2 shadow transition-transform duration-200 hover:scale-110 active:scale-95 dark:bg-zinc-900/90"
+            className="absolute right-2 top-2 z-10 rounded-full bg-[var(--card)]/90 p-2 shadow transition-transform duration-200 hover:scale-110 active:scale-95"
             aria-label="Toggle wishlist"
           >
             <Heart className={cn('h-4 w-4', isWishlisted && 'fill-red-500 text-red-500')} />
           </button>
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-            <span className="translate-y-2 rounded-md bg-white px-4 py-2 text-sm font-medium text-zinc-900 transition-transform duration-300 group-hover:translate-y-0">
+            <span className="translate-y-2 rounded-md bg-[var(--card)] px-4 py-2 text-sm font-medium text-[var(--foreground)] transition-transform duration-300 group-hover:translate-y-0">
               Quick View
             </span>
           </div>
@@ -169,7 +169,7 @@ export function ProductCard({ product, view = 'grid' }: ProductCardProps) {
         </Link>
 
         {/* Description — exactly 100 chars, fixed 2-line block */}
-        <p className="mt-1 line-clamp-2 min-h-[2.5rem] text-xs leading-relaxed text-zinc-500 sm:text-sm dark:text-zinc-400">
+        <p className="mt-1 line-clamp-2 min-h-[2.5rem] text-xs leading-relaxed text-[var(--muted)] sm:text-sm">
           {product.description.length > 100
             ? product.description.slice(0, 100) + '…'
             : product.description}
@@ -180,17 +180,17 @@ export function ProductCard({ product, view = 'grid' }: ProductCardProps) {
           {Array.from({ length: 5 }).map((_, i) => (
             <Star
               key={i}
-              className={cn('h-3 w-3', i < Math.round(product.ratings) ? 'fill-current' : 'text-zinc-300')}
+              className={cn('h-3 w-3', i < Math.round(product.ratings) ? 'fill-current' : 'opacity-30')}
             />
           ))}
-          <span className="ml-1 text-zinc-500">({product.ratings.toFixed(1)})</span>
+          <span className="ml-1 text-[var(--muted)]">({product.ratings.toFixed(1)})</span>
         </div>
 
         {/* Price + buttons pinned to bottom */}
         <div className="mt-auto pt-2">
           <div className="flex items-center gap-2">
             {hasDiscount && (
-              <span className="text-xs text-zinc-400 line-through">{formatPrice(product.price)}</span>
+              <span className="text-xs text-[var(--muted)] line-through">{formatPrice(product.price)}</span>
             )}
             <span className="text-sm font-bold sm:text-base">{formatPrice(salePrice)}</span>
           </div>
