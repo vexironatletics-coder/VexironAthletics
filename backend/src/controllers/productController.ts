@@ -5,6 +5,9 @@ import { Product, ProductCategory } from '../models/Product';
 import { Review } from '../models/Review';
 import { cloudinary, isCloudinaryConfigured } from '../config/cloudinary';
 import { syncProductToSearch } from '../services/searchService';
+import { cacheAside, cacheInvalidatePrefix } from '../config/cache';
+
+const PRODUCTS_TTL = 60; // 1 minute for product listings
 
 const SORT_MAP: Record<string, Record<string, 1 | -1>> = {
   'price-asc': { price: 1 },
@@ -80,23 +83,33 @@ export const getProducts = async (req: Request, res: Response): Promise<void> =>
   const pageNum = Math.max(1, parseInt(page as string, 10) || 1);
   const limitNum = Math.min(50, Math.max(1, parseInt(limit as string, 10) || 12));
   const skip = (pageNum - 1) * limitNum;
-
   const sortOption = SORT_MAP[sort as string] ?? SORT_MAP.newest;
 
-  const [products, total] = await Promise.all([
-    Product.find(filter).sort(sortOption).skip(skip).limit(limitNum),
-    Product.countDocuments(filter),
-  ]);
+  // Only cache simple public listing requests (no admin filters like maxStock)
+  const isSimpleQuery = !maxStock && !search;
+  const cacheKey = isSimpleQuery
+    ? `products:${category ?? 'all'}:${sort}:${page}:${limit}:${minPrice ?? ''}:${maxPrice ?? ''}:${minRating ?? ''}`
+    : null;
 
-  res.json({
-    products,
-    pagination: {
-      page: pageNum,
-      limit: limitNum,
-      total,
-      pages: Math.ceil(total / limitNum),
-    },
-  });
+  const result = await cacheAside(
+    cacheKey ?? `products:nocache:${Date.now()}`,
+    cacheKey ? PRODUCTS_TTL : 0,
+    async () => {
+      const [products, total] = await Promise.all([
+        Product.find(filter).sort(sortOption).skip(skip).limit(limitNum).lean(),
+        Product.countDocuments(filter),
+      ]);
+      return {
+        products,
+        pagination: { page: pageNum, limit: limitNum, total, pages: Math.ceil(total / limitNum) },
+      };
+    }
+  );
+
+  if (isSimpleQuery) {
+    res.setHeader('Cache-Control', 'public, max-age=30');
+  }
+  res.json(result);
 };
 
 export const getProductById = async (req: Request, res: Response): Promise<void> => {
@@ -156,6 +169,7 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
   });
 
   await syncProductToSearch(product);
+  cacheInvalidatePrefix('products:');
 
   res.status(201).json(product);
 };
@@ -232,6 +246,7 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
   }
 
   await syncProductToSearch(product);
+  cacheInvalidatePrefix('products:');
 
   res.json(product);
 };
@@ -251,6 +266,7 @@ export const deleteProduct = async (req: Request, res: Response): Promise<void> 
   }
 
   await syncProductToSearch(product);
+  cacheInvalidatePrefix('products:');
 
   res.json({ message: 'Product deactivated', product });
 };

@@ -2,6 +2,11 @@ import { Request, Response } from 'express';
 import { isDbConnected } from '../config/db';
 import { getOrCreateSiteSettings, IHeroSlide } from '../models/SiteSettings';
 import { cloudinary, isCloudinaryConfigured } from '../config/cloudinary';
+import { cacheAside, cacheDelete } from '../config/cache';
+
+const SETTINGS_CACHE_KEY = 'settings:public';
+const HERO_SLIDES_CACHE_KEY = 'settings:hero-slides';
+const SETTINGS_TTL = 120; // 2 minutes
 
 export const DEFAULT_PUBLIC_SETTINGS = {
   designId: 'classic',
@@ -28,13 +33,18 @@ const toPublicSettings = (settings: Awaited<ReturnType<typeof getOrCreateSiteSet
 
 export const getPublicSettings = async (_req: Request, res: Response): Promise<void> => {
   if (!isDbConnected()) {
+    res.setHeader('Cache-Control', 'public, max-age=60');
     res.json(DEFAULT_PUBLIC_SETTINGS);
     return;
   }
 
   try {
-    const settings = await getOrCreateSiteSettings();
-    res.json(toPublicSettings(settings));
+    const data = await cacheAside(SETTINGS_CACHE_KEY, SETTINGS_TTL, async () => {
+      const settings = await getOrCreateSiteSettings();
+      return toPublicSettings(settings);
+    });
+    res.setHeader('Cache-Control', 'public, max-age=60');
+    res.json(data);
   } catch (err) {
     console.warn('[Settings] public fallback:', err instanceof Error ? err.message : err);
     res.json(DEFAULT_PUBLIC_SETTINGS);
@@ -47,6 +57,7 @@ export const getSettings = async (_req: Request, res: Response): Promise<void> =
 };
 
 export const updateSettings = async (req: Request, res: Response): Promise<void> => {
+  cacheDelete(SETTINGS_CACHE_KEY);
   const settings = await getOrCreateSiteSettings();
   const allowed = [
     'designId',
@@ -114,11 +125,15 @@ const DEFAULT_HERO_SLIDES: IHeroSlide[] = [
 export const getHeroSlides = async (_req: Request, res: Response): Promise<void> => {
   try {
     if (!isDbConnected()) {
+      res.setHeader('Cache-Control', 'public, max-age=60');
       res.json(DEFAULT_HERO_SLIDES);
       return;
     }
-    const settings = await getOrCreateSiteSettings();
-    const slides = settings.heroSlides.length > 0 ? settings.heroSlides : DEFAULT_HERO_SLIDES;
+    const slides = await cacheAside(HERO_SLIDES_CACHE_KEY, SETTINGS_TTL, async () => {
+      const settings = await getOrCreateSiteSettings();
+      return settings.heroSlides.length > 0 ? settings.heroSlides : DEFAULT_HERO_SLIDES;
+    });
+    res.setHeader('Cache-Control', 'public, max-age=60');
     res.json(slides);
   } catch {
     res.json(DEFAULT_HERO_SLIDES);
@@ -126,6 +141,7 @@ export const getHeroSlides = async (_req: Request, res: Response): Promise<void>
 };
 
 export const updateHeroSlides = async (req: Request, res: Response): Promise<void> => {
+  cacheDelete(HERO_SLIDES_CACHE_KEY);
   try {
     const settings = await getOrCreateSiteSettings();
     const slides: IHeroSlide[] = req.body.slides;

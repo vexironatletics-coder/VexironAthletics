@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import compression from 'compression';
 import dotenv from 'dotenv';
 import path from 'path';
 import { isDbConnected, isMongoConfigured } from './config/db';
@@ -73,6 +74,9 @@ export const createApp = (options: CreateAppOptions = {}): express.Application =
     })
   );
 
+  // ── Gzip compression (reduces bandwidth & response time) ──────────────────
+  app.use(compression());
+
   // ── Request logging ────────────────────────────────────────────────────────
   app.use(morgan(isProd ? 'combined' : 'dev'));
 
@@ -113,6 +117,7 @@ export const createApp = (options: CreateAppOptions = {}): express.Application =
   app.use('/api', (req, res, next) => {
     if (req.path === '/health') return next();
     if (req.path === '/settings/public') return next();
+    if (req.path === '/settings/hero-slides' && req.method === 'GET') return next();
     if (req.path === '/promotions/active' && req.method === 'GET') return next();
     if (req.path === '/payments/bank-details' && req.method === 'GET') return next();
     if (req.path === '/analytics/track' && req.method === 'POST') return next();
