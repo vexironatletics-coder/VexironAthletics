@@ -14,6 +14,14 @@ export interface IHeroSlide {
   secondaryHref: string;
 }
 
+export interface ICategoryImage {
+  slug: string;   // e.g. 'men' | 'women' | 'children' or custom
+  label: string;
+  image: string;
+  imagePublicId?: string;
+  href: string;
+}
+
 export interface ISiteSettings extends Document {
   designId: string;
   colorSchemeId: string;
@@ -26,6 +34,7 @@ export interface ISiteSettings extends Document {
   seoDescription?: string;
   seoKeywords?: string;
   heroSlides: IHeroSlide[];
+  categoryImages: ICategoryImage[];
   updatedAt: Date;
 }
 
@@ -42,6 +51,17 @@ const heroSlideSchema = new Schema<IHeroSlide>(
     ctaHref: { type: String, default: '/products' },
     secondaryLabel: { type: String, default: 'View All' },
     secondaryHref: { type: String, default: '/products' },
+  },
+  { _id: false }
+);
+
+const categoryImageSchema = new Schema<ICategoryImage>(
+  {
+    slug: { type: String, required: true },
+    label: { type: String, required: true },
+    image: { type: String, default: '' },
+    imagePublicId: { type: String },
+    href: { type: String, default: '' },
   },
   { _id: false }
 );
@@ -64,6 +84,7 @@ const siteSettingsSchema = new Schema<ISiteSettings>(
       default: 'clothing, athletic wear, sportswear, fashion, Pakistan',
     },
     heroSlides: { type: [heroSlideSchema], default: [] },
+    categoryImages: { type: [categoryImageSchema], default: [] },
   },
   { timestamps: { createdAt: false, updatedAt: true } }
 );

@@ -510,6 +510,43 @@ export const updateOrderStatus = async (req: Request, res: Response): Promise<vo
   res.json(order);
 };
 
+export const cancelMyOrder = async (req: Request, res: Response): Promise<void> => {
+  const userId = req.user!.id;
+  const order = await Order.findById(req.params.id);
+
+  if (!order) { res.status(404).json({ message: 'Order not found' }); return; }
+  if (order.user.toString() !== userId) { res.status(403).json({ message: 'Not your order' }); return; }
+  if (!['pending', 'processing'].includes(order.status)) {
+    res.status(400).json({ message: `Cannot cancel an order that is already "${order.status}"` });
+    return;
+  }
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    for (const item of order.items) {
+      await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.qty, sold: -item.qty } }, { session });
+    }
+    if (order.loyaltyPointsRedeemed) {
+      await User.findByIdAndUpdate(order.user, { $inc: { loyaltyPoints: order.loyaltyPointsRedeemed } }, { session });
+    }
+    if (order.couponCode) {
+      await Coupon.findOneAndUpdate({ code: order.couponCode }, { $inc: { usedCount: -1 } }, { session });
+    }
+    order.status = 'cancelled';
+    await order.save({ session });
+    await session.commitTransaction();
+  } catch {
+    await session.abortTransaction();
+    res.status(500).json({ message: 'Failed to cancel order' });
+    return;
+  } finally {
+    session.endSession();
+  }
+
+  res.json({ message: 'Order cancelled successfully', order });
+};
+
 export const getAnalytics = async (_req: Request, res: Response): Promise<void> => {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);

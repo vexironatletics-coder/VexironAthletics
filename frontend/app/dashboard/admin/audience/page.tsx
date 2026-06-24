@@ -1,12 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { useGetAudienceAnalyticsQuery } from '@/store/api/analyticsApi';
-import { Globe, MapPin, Users, Monitor } from 'lucide-react';
+import { useGetUserStatsQuery } from '@/store/api/userApi';
+import { formatPrice } from '@/lib/utils';
+import { Globe, MapPin, Users, Monitor, UserCheck, ShoppingBag, TrendingUp, UserPlus } from 'lucide-react';
 
 function BarRow({ label, count, max }: { label: string; count: number; max: number }) {
   const pct = max > 0 ? (count / max) * 100 : 0;
@@ -29,6 +32,7 @@ function BarRow({ label, count, max }: { label: string; count: number; max: numb
 export default function AdminAudiencePage() {
   const [days, setDays] = useState(30);
   const { data, isLoading } = useGetAudienceAnalyticsQuery({ days, page: 1 });
+  const { data: userStats, isLoading: loadingUsers } = useGetUserStatsQuery();
 
   const maxCountry = data?.byCountry[0]?.count ?? 1;
   const maxReferrer = data?.byReferrer[0]?.count ?? 1;
@@ -200,6 +204,112 @@ export default function AdminAudiencePage() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* ── Registered Users Section ── */}
+              <div>
+                <h2 className="mb-4 text-xl font-bold">Registered Users</h2>
+                {loadingUsers ? (
+                  <Skeleton className="h-40 w-full" />
+                ) : (
+                  <>
+                    <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                      {[
+                        { label: 'Total Registered', value: userStats?.totalUsers ?? 0, icon: Users },
+                        { label: 'New This Week', value: userStats?.newThisWeek ?? 0, icon: UserPlus },
+                        { label: 'Active Buyers', value: userStats?.users.filter((u) => u.totalOrders > 0).length ?? 0, icon: ShoppingBag },
+                        { label: 'Avg. Spend / Buyer', value: (() => {
+                            const buyers = userStats?.users.filter((u) => u.totalOrders > 0) ?? [];
+                            if (!buyers.length) return formatPrice(0);
+                            return formatPrice(buyers.reduce((s, u) => s + u.totalSpent, 0) / buyers.length);
+                          })(), icon: TrendingUp, isPrice: true },
+                      ].map(({ label, value, icon: Icon }) => (
+                        <Card key={label}>
+                          <CardContent className="flex items-center gap-4 pt-6">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--secondary)]/30">
+                              <Icon className="h-5 w-5 text-[var(--primary)]" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-zinc-500">{label}</p>
+                              <p className="text-2xl font-bold">{value}</p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+
+                    <Card>
+                      <CardHeader><CardTitle>User Details</CardTitle></CardHeader>
+                      <CardContent>
+                        <div className="overflow-x-auto">
+                          <table className="w-full min-w-[800px] text-sm">
+                            <thead>
+                              <tr className="border-b border-[var(--border)] text-left text-xs uppercase text-zinc-500">
+                                <th className="py-2 pr-4">User</th>
+                                <th className="py-2 pr-4">Role</th>
+                                <th className="py-2 pr-4">Status</th>
+                                <th className="py-2 pr-4">Joined</th>
+                                <th className="py-2 pr-4">Orders</th>
+                                <th className="py-2 pr-4">Total Spent</th>
+                                <th className="py-2 pr-4">Last Order</th>
+                                <th className="py-2">Points</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {userStats?.users.map((u) => (
+                                <tr key={u.id} className="border-b border-[var(--border)]">
+                                  <td className="py-3 pr-4">
+                                    <div className="flex items-center gap-3">
+                                      <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-[var(--secondary)]/40">
+                                        {u.avatar ? (
+                                          <Image src={u.avatar} alt={u.name} fill className="object-cover" sizes="32px" unoptimized />
+                                        ) : (
+                                          <UserCheck className="m-auto h-4 w-4 text-zinc-400" />
+                                        )}
+                                      </div>
+                                      <div className="min-w-0">
+                                        <p className="truncate font-medium">{u.name}</p>
+                                        <p className="truncate text-xs text-zinc-500">{u.email}</p>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="py-3 pr-4">
+                                    <Badge variant={u.role === 'admin' ? 'default' : 'secondary'}>
+                                      {u.role}
+                                    </Badge>
+                                  </td>
+                                  <td className="py-3 pr-4">
+                                    <span className={`inline-flex h-5 items-center rounded-full px-2 text-xs font-medium ${u.isActive ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
+                                      {u.isActive ? 'Active' : 'Inactive'}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 pr-4 text-xs text-zinc-500">
+                                    {new Date(u.joinedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                                  </td>
+                                  <td className="py-3 pr-4">
+                                    <span className="font-semibold">{u.totalOrders}</span>
+                                  </td>
+                                  <td className="py-3 pr-4 font-medium">{formatPrice(u.totalSpent)}</td>
+                                  <td className="py-3 pr-4 text-xs text-zinc-500">
+                                    {u.lastOrderAt ? new Date(u.lastOrderAt).toLocaleDateString() : '—'}
+                                  </td>
+                                  <td className="py-3 text-xs font-medium text-[var(--accent)]">
+                                    {u.loyaltyPoints} pts
+                                  </td>
+                                </tr>
+                              ))}
+                              {!userStats?.users.length && (
+                                <tr>
+                                  <td colSpan={8} className="py-8 text-center text-zinc-500">No registered users yet.</td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </>
+                )}
+              </div>
             </>
           )}
       </div>

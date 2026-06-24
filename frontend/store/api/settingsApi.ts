@@ -1,6 +1,14 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { SiteThemeSettings } from '@/lib/themes';
 
+export interface CategoryImage {
+  slug: string;
+  label: string;
+  image: string;
+  imagePublicId?: string;
+  href: string;
+}
+
 export interface HeroSlide {
   id: string;
   tag: string;
@@ -29,7 +37,7 @@ export const settingsApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ['Settings', 'HeroSlides'],
+  tagTypes: ['Settings', 'HeroSlides', 'CategoryImages'],
   endpoints: (builder) => ({
     getPublicSettings: builder.query<SiteThemeSettings, void>({
       query: () => '/settings/public',
@@ -58,6 +66,21 @@ export const settingsApi = createApi({
         body: formData,
       }),
     }),
+    getCategoryImages: builder.query<CategoryImage[], void>({
+      query: () => '/settings/category-images',
+      providesTags: ['CategoryImages'],
+    }),
+    updateCategoryImages: builder.mutation<CategoryImage[], { categories: CategoryImage[] }>({
+      query: (body) => ({ url: '/settings/category-images', method: 'PUT', body }),
+      invalidatesTags: ['CategoryImages'],
+    }),
+    uploadCategoryImage: builder.mutation<{ url: string; publicId: string }, FormData>({
+      query: (formData) => ({
+        url: '/settings/category-images/upload-image',
+        method: 'POST',
+        body: formData,
+      }),
+    }),
   }),
 });
 
@@ -68,4 +91,7 @@ export const {
   useGetHeroSlidesQuery,
   useUpdateHeroSlidesMutation,
   useUploadHeroSlideImageMutation,
+  useGetCategoryImagesQuery,
+  useUpdateCategoryImagesMutation,
+  useUploadCategoryImageMutation,
 } = settingsApi;

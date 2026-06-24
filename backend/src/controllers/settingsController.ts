@@ -3,10 +3,18 @@ import { isDbConnected } from '../config/db';
 import { getOrCreateSiteSettings, IHeroSlide } from '../models/SiteSettings';
 import { cloudinary, isCloudinaryConfigured } from '../config/cloudinary';
 import { cacheAside, cacheDelete } from '../config/cache';
+import { ICategoryImage } from '../models/SiteSettings';
 
 const SETTINGS_CACHE_KEY = 'settings:public';
 const HERO_SLIDES_CACHE_KEY = 'settings:hero-slides';
+const CATEGORY_IMAGES_CACHE_KEY = 'settings:category-images';
 const SETTINGS_TTL = 120; // 2 minutes
+
+const DEFAULT_CATEGORY_IMAGES: ICategoryImage[] = [
+  { slug: 'men', label: "Men's", image: '', href: '/category/men' },
+  { slug: 'women', label: "Women's", image: '', href: '/category/women' },
+  { slug: 'children', label: "Children's", image: '', href: '/category/children' },
+];
 
 export const DEFAULT_PUBLIC_SETTINGS = {
   designId: 'classic',
@@ -181,6 +189,61 @@ export const uploadHeroSlideImage = async (req: Request, res: Response): Promise
     res.json({ url: result.secure_url, publicId: result.public_id });
   } catch (err) {
     console.error('[Hero Upload]', err);
+    res.status(500).json({ message: 'Image upload failed' });
+  }
+};
+
+// ─── CATEGORY IMAGES ─────────────────────────────────────────────────────────
+
+export const getCategoryImages = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    if (!isDbConnected()) {
+      res.setHeader('Cache-Control', 'public, max-age=60');
+      res.json(DEFAULT_CATEGORY_IMAGES);
+      return;
+    }
+    const data = await cacheAside(CATEGORY_IMAGES_CACHE_KEY, SETTINGS_TTL, async () => {
+      const settings = await getOrCreateSiteSettings();
+      return settings.categoryImages.length > 0 ? settings.categoryImages : DEFAULT_CATEGORY_IMAGES;
+    });
+    res.setHeader('Cache-Control', 'public, max-age=60');
+    res.json(data);
+  } catch {
+    res.json(DEFAULT_CATEGORY_IMAGES);
+  }
+};
+
+export const updateCategoryImages = async (req: Request, res: Response): Promise<void> => {
+  cacheDelete(CATEGORY_IMAGES_CACHE_KEY);
+  try {
+    const settings = await getOrCreateSiteSettings();
+    const categories: ICategoryImage[] = req.body.categories;
+    if (!Array.isArray(categories) || categories.length === 0) {
+      res.status(400).json({ message: 'categories array is required' });
+      return;
+    }
+    settings.categoryImages = categories;
+    await settings.save();
+    res.json(settings.categoryImages);
+  } catch {
+    res.status(500).json({ message: 'Failed to update category images' });
+  }
+};
+
+export const uploadCategoryImage = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const file = req.file;
+    if (!file) { res.status(400).json({ message: 'No image file provided' }); return; }
+    if (!isCloudinaryConfigured()) {
+      res.status(500).json({ message: 'Cloudinary env vars missing' }); return;
+    }
+    const result = await cloudinary.uploader.upload(
+      `data:${file.mimetype};base64,${file.buffer.toString('base64')}`,
+      { folder: 'ecom/categories', transformation: [{ width: 800, height: 1000, crop: 'fill', quality: 'auto' }] }
+    );
+    res.json({ url: result.secure_url, publicId: result.public_id });
+  } catch (err) {
+    console.error('[Category Upload]', err);
     res.status(500).json({ message: 'Image upload failed' });
   }
 };

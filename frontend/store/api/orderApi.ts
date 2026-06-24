@@ -141,6 +141,10 @@ export const orderApi = createApi({
         responseHandler: (response) => response.blob(),
       }),
     }),
+    cancelMyOrder: builder.mutation<{ message: string; order: Order }, string>({
+      query: (id) => ({ url: `/orders/${id}/cancel`, method: 'PUT' }),
+      invalidatesTags: ['Order'],
+    }),
     exportOrdersReport: builder.query<Blob, { startDate?: string; endDate?: string }>({
       query: (params) => ({
         url: `/orders/export/pdf?${new URLSearchParams(params as Record<string, string>).toString()}`,
@@ -161,4 +165,5 @@ export const {
   useLazyDownloadInvoiceQuery,
   useLazyDownloadDispatchReceiptQuery,
   useLazyExportOrdersReportQuery,
+  useCancelMyOrderMutation,
 } = orderApi;

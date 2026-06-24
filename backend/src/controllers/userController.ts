@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 import { User } from '../models/User';
+import { Order } from '../models/Order';
 import { sanitizeUser } from '../utils/helpers';
 import { cloudinary, isCloudinaryConfigured } from '../config/cloudinary';
 
@@ -77,6 +78,39 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
     users: users.map(sanitizeUser),
     pagination: { page, limit, total, pages: Math.ceil(total / limit) },
   });
+};
+
+export const getUserStats = async (_req: Request, res: Response): Promise<void> => {
+  const [users, totalUsers, newThisWeek, orderStats] = await Promise.all([
+    User.find().select('name email role isActive createdAt avatar loyaltyPoints').sort({ createdAt: -1 }).limit(50).lean(),
+    User.countDocuments(),
+    User.countDocuments({ createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } }),
+    Order.aggregate([
+      { $match: { status: { $ne: 'cancelled' } } },
+      { $group: { _id: '$user', totalOrders: { $sum: 1 }, totalSpent: { $sum: '$total' }, lastOrder: { $max: '$createdAt' } } },
+    ]),
+  ]);
+
+  const statsMap = new Map(orderStats.map((s: { _id: unknown; totalOrders: number; totalSpent: number; lastOrder: Date }) => [s._id?.toString(), s]));
+
+  const enriched = users.map((u) => {
+    const stats = statsMap.get(u._id?.toString()) as { totalOrders: number; totalSpent: number; lastOrder: Date } | undefined;
+    return {
+      id: u._id,
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      isActive: u.isActive,
+      avatar: u.avatar,
+      loyaltyPoints: u.loyaltyPoints ?? 0,
+      joinedAt: u.createdAt,
+      totalOrders: stats?.totalOrders ?? 0,
+      totalSpent: stats?.totalSpent ?? 0,
+      lastOrderAt: stats?.lastOrder ?? null,
+    };
+  });
+
+  res.json({ totalUsers, newThisWeek, users: enriched });
 };
 
 export const updateUserRole = async (req: Request, res: Response): Promise<void> => {

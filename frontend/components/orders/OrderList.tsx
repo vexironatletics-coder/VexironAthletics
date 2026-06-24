@@ -2,11 +2,15 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { CreditCard, Package } from 'lucide-react';
+import { CreditCard, Package, XCircle } from 'lucide-react';
+import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { formatPrice } from '@/lib/utils';
 import type { OrderStatus } from '@/lib/utils';
 import type { Order } from '@/lib/types';
+import { useCancelMyOrderMutation } from '@/store/api/orderApi';
 
 const PAYMENT_LABELS: Record<string, string> = {
   cod: 'Cash on Delivery',
@@ -22,9 +26,25 @@ export function formatPaymentMethod(method: string): string {
 interface OrderListProps {
   orders: Order[];
   showViewLink?: boolean;
+  allowCancel?: boolean;
 }
 
-export function OrderList({ orders, showViewLink = false }: OrderListProps) {
+export function OrderList({ orders, showViewLink = false, allowCancel = false }: OrderListProps) {
+  const [cancelMyOrder, { isLoading: cancelling }] = useCancelMyOrderMutation();
+  const [cancelTarget, setCancelTarget] = useState<string | null>(null);
+
+  const handleCancel = async () => {
+    if (!cancelTarget) return;
+    try {
+      await cancelMyOrder(cancelTarget).unwrap();
+      toast.success('Order cancelled successfully');
+      setCancelTarget(null);
+    } catch (err: unknown) {
+      const msg = (err as { data?: { message?: string } })?.data?.message ?? 'Failed to cancel order';
+      toast.error(msg);
+    }
+  };
+
   if (orders.length === 0) {
     return (
       <div className="mt-8 flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--accent)]/30 bg-[var(--accent)]/5 py-16">
@@ -111,11 +131,31 @@ export function OrderList({ orders, showViewLink = false }: OrderListProps) {
                     View Details
                   </Link>
                 )}
+                {allowCancel && ['pending', 'processing'].includes(order.status) && (
+                  <button
+                    onClick={() => setCancelTarget(order._id)}
+                    disabled={cancelling}
+                    className="inline-flex items-center gap-1 text-sm font-medium text-red-500 hover:text-red-700 disabled:opacity-50"
+                  >
+                    <XCircle className="h-4 w-4" />
+                    Cancel Order
+                  </button>
+                )}
               </div>
             </div>
           </article>
         );
       })}
     </div>
+
+      <ConfirmDialog
+        open={!!cancelTarget}
+        onOpenChange={(open) => !open && setCancelTarget(null)}
+        title="Cancel this order?"
+        message="Are you sure you want to cancel this order? This action cannot be undone."
+        confirmLabel="Yes, cancel order"
+        onConfirm={handleCancel}
+        loading={cancelling}
+      />
   );
 }

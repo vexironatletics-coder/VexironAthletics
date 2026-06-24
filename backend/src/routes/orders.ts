@@ -9,6 +9,7 @@ import {
   getOrderDispatchReceipt,
   exportOrdersReport,
   updateOrderStatus,
+  cancelMyOrder,
   getAnalytics,
 } from '../controllers/orderController';
 import { verifyToken } from '../middleware/auth';
@@ -66,6 +67,7 @@ router.post(
 );
 
 router.get('/my', verifyToken, getMyOrders);
+router.put('/:id/cancel', verifyToken, cancelMyOrder);
 router.get('/', verifyToken, adminOnly, getAllOrders);
 router.get('/:id/invoice', verifyToken, getOrderInvoice);
 router.get('/:id/dispatch-receipt', verifyToken, adminOnly, getOrderDispatchReceipt);

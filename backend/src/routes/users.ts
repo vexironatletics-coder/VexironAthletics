@@ -4,6 +4,7 @@ import {
   getMe,
   updateMe,
   getAllUsers,
+  getUserStats,
   updateUserRole,
   updateUserStatus,
   changePassword,
@@ -40,6 +41,7 @@ router.put(
   changePassword
 );
 
+router.get('/stats', verifyToken, adminOnly, getUserStats);
 router.get('/', verifyToken, adminOnly, getAllUsers);
 router.put('/:id/role', verifyToken, adminOnly, updateUserRole);
 router.put('/:id/status', verifyToken, adminOnly, updateUserStatus);

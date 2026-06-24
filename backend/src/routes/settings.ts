@@ -6,6 +6,9 @@ import {
   getHeroSlides,
   updateHeroSlides,
   uploadHeroSlideImage,
+  getCategoryImages,
+  updateCategoryImages,
+  uploadCategoryImage,
 } from '../controllers/settingsController';
 import { verifyToken } from '../middleware/auth';
 import { adminOnly } from '../middleware/adminOnly';
@@ -19,5 +22,8 @@ router.get('/', verifyToken, adminOnly, getSettings);
 router.put('/', verifyToken, adminOnly, updateSettings);
 router.put('/hero-slides', verifyToken, adminOnly, updateHeroSlides);
 router.post('/hero-slides/upload-image', verifyToken, adminOnly, upload.single('image'), uploadHeroSlideImage);
+router.get('/category-images', getCategoryImages);
+router.put('/category-images', verifyToken, adminOnly, updateCategoryImages);
+router.post('/category-images/upload-image', verifyToken, adminOnly, upload.single('image'), uploadCategoryImage);
 
 export default router;

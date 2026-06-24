@@ -26,7 +26,7 @@ export default function OrdersPage() {
           <Skeleton className="h-64 w-full rounded-xl" />
         ) : (
           <>
-            <OrderList orders={data?.orders ?? []} showViewLink />
+            <OrderList orders={data?.orders ?? []} showViewLink allowCancel />
             {data?.pagination && data.pagination.pages > 1 && (
               <Pagination pagination={data.pagination} onPageChange={setPage} />
             )}

@@ -6,6 +6,26 @@ interface UsersResponse {
   pagination: { page: number; limit: number; total: number; pages: number };
 }
 
+export interface UserStat {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+  avatar?: string;
+  loyaltyPoints: number;
+  joinedAt: string;
+  totalOrders: number;
+  totalSpent: number;
+  lastOrderAt: string | null;
+}
+
+interface UserStatsResponse {
+  totalUsers: number;
+  newThisWeek: number;
+  users: UserStat[];
+}
+
 interface Category {
   _id: string;
   name: string;
@@ -51,6 +71,10 @@ export const userApi = createApi({
     }),
     getAllUsers: builder.query<UsersResponse, { page?: number } | void>({
       query: (params = {}) => `/users?page=${params?.page ?? 1}`,
+      providesTags: ['User'],
+    }),
+    getUserStats: builder.query<UserStatsResponse, void>({
+      query: () => '/users/stats',
       providesTags: ['User'],
     }),
     updateUserRole: builder.mutation<User, { id: string; role: 'user' | 'admin' }>({
@@ -134,6 +158,7 @@ export const {
   useUpdateMeFilesMutation,
   useChangePasswordMutation,
   useGetAllUsersQuery,
+  useGetUserStatsQuery,
   useUpdateUserRoleMutation,
   useUpdateUserStatusMutation,
   useLoginMutation,

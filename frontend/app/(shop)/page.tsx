@@ -17,18 +17,23 @@ import {
   ThemedSection,
 } from '@/components/ui/themed-section';
 import { useGetProductsQuery } from '@/store/api/productApi';
+import { useGetCategoryImagesQuery } from '@/store/api/settingsApi';
 import Image from 'next/image';
 
 import { categoryShirtImages } from '@/lib/shirtImages';
 
-const categories = [
-  { slug: 'men', label: 'Men', image: categoryShirtImages.men },
-  { slug: 'women', label: 'Women', image: categoryShirtImages.women },
-  { slug: 'children', label: 'Children', image: categoryShirtImages.children },
+const DEFAULT_CATEGORIES = [
+  { slug: 'men', label: "Men's", image: categoryShirtImages.men, href: '/category/men' },
+  { slug: 'women', label: "Women's", image: categoryShirtImages.women, href: '/category/women' },
+  { slug: 'children', label: "Children's", image: categoryShirtImages.children, href: '/category/children' },
 ];
 
 export default function LandingPage() {
   const { data, isLoading, isError } = useGetProductsQuery({ limit: 8, sort: 'newest' });
+  const { data: categoryData } = useGetCategoryImagesQuery();
+  const categories = categoryData && categoryData.length > 0
+    ? categoryData.map((c) => ({ ...c, image: c.image || categoryShirtImages[c.slug as keyof typeof categoryShirtImages] || categoryShirtImages.men }))
+    : DEFAULT_CATEGORIES;
 
   return (
     <ErrorBoundary>
@@ -45,7 +50,7 @@ export default function LandingPage() {
           {categories.map((cat, i) => (
             <SlideUp key={cat.slug} delay={i * 100}>
               <Link
-                href={`/category/${cat.slug}`}
+                href={cat.href || `/category/${cat.slug}`}
                 className="group relative block aspect-[4/5] overflow-hidden rounded-2xl shadow-lg ring-1 ring-[var(--border)] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
               >
                 <Image

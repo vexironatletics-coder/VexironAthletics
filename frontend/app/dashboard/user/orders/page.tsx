@@ -29,7 +29,7 @@ export default function UserOrdersPage() {
               <Skeleton className="h-48 w-full rounded-xl" />
             ) : (
               <>
-                <OrderList orders={data?.orders ?? []} />
+                <OrderList orders={data?.orders ?? []} allowCancel />
                 {data?.pagination && data.pagination.pages > 1 && (
                   <Pagination pagination={data.pagination} onPageChange={setPage} />
                 )}

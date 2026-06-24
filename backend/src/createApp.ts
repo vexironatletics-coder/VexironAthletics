@@ -118,6 +118,7 @@ export const createApp = (options: CreateAppOptions = {}): express.Application =
     if (req.path === '/health') return next();
     if (req.path === '/settings/public') return next();
     if (req.path === '/settings/hero-slides' && req.method === 'GET') return next();
+    if (req.path === '/settings/category-images' && req.method === 'GET') return next();
     if (req.path === '/promotions/active' && req.method === 'GET') return next();
     if (req.path === '/payments/bank-details' && req.method === 'GET') return next();
     if (req.path === '/analytics/track' && req.method === 'POST') return next();
