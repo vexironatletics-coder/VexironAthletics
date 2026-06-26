@@ -40,23 +40,6 @@ const nextConfig: NextConfig = {
   // Don't expose source maps to the browser in production
   productionBrowserSourceMaps: false,
 
-  // Tree-shake large icon/UI libraries — only import what's used
-  optimizePackageImports: [
-    'lucide-react',
-    '@radix-ui/react-avatar',
-    '@radix-ui/react-checkbox',
-    '@radix-ui/react-dialog',
-    '@radix-ui/react-dropdown-menu',
-    '@radix-ui/react-label',
-    '@radix-ui/react-select',
-    '@radix-ui/react-separator',
-    '@radix-ui/react-slider',
-    '@radix-ui/react-slot',
-    '@radix-ui/react-tabs',
-    'react-hot-toast',
-    'swiper',
-  ],
-
   images: {
     // Use WebP/AVIF for all remote images
     formats: ['image/avif', 'image/webp'],
@@ -79,17 +62,17 @@ const nextConfig: NextConfig = {
         source: '/:path*',
         headers: securityHeaders,
       },
-      // Long-term cache for static assets (_next/static is hashed)
-      {
-        source: '/_next/static/:path*',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
-      },
       // Cache public images for 1 day
       {
         source: '/images/:path*',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=86400' }],
       },
     ];
+  },
+
+  // Tell Turbopack the project root is the frontend folder
+  turbopack: {
+    root: __dirname,
   },
 };
 

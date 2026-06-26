@@ -55,6 +55,7 @@ export function OrderList({ orders, showViewLink = false, allowCancel = false }:
   }
 
   return (
+    <>
     <div className="mt-6 space-y-4">
       {orders.map((order) => {
         const previewItems = order.items.slice(0, 3);
@@ -157,5 +158,6 @@ export function OrderList({ orders, showViewLink = false, allowCancel = false }:
         onConfirm={handleCancel}
         loading={cancelling}
       />
+    </>
   );
 }
