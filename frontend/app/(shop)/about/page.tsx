@@ -1,5 +1,17 @@
 import type { Metadata } from 'next';
-import { InfoPageLayout, InfoSection } from '@/components/pages/InfoPageLayout';
+import Link from 'next/link';
+import {
+  ArrowRight,
+  ShieldCheck,
+  Sparkles,
+  Heart,
+  Leaf,
+  Users,
+  Package,
+  Star,
+  MapPin,
+  Mail,
+} from 'lucide-react';
 import { APP_NAME } from '@/lib/constants';
 
 export const metadata: Metadata = {
@@ -7,36 +19,239 @@ export const metadata: Metadata = {
   description: 'Learn about VexironAthletics — premium clothing for every lifestyle.',
 };
 
+const stats = [
+  { label: 'Founded', value: '2024' },
+  { label: 'Collections', value: '3+' },
+  { label: 'Happy Customers', value: '500+' },
+  { label: 'Products', value: '100+' },
+];
+
+const values = [
+  {
+    icon: ShieldCheck,
+    title: 'Quality First',
+    desc: 'Durable fabrics and thoughtful construction in every piece we make.',
+  },
+  {
+    icon: Users,
+    title: 'Inclusive Sizing',
+    desc: 'Styles crafted for men, women, and children — every body, every age.',
+  },
+  {
+    icon: Heart,
+    title: 'Customer Care',
+    desc: 'Responsive support, easy returns, and a 30-day satisfaction guarantee.',
+  },
+  {
+    icon: Leaf,
+    title: 'Sustainable Growth',
+    desc: 'Responsible sourcing and smarter packaging — step by step.',
+  },
+  {
+    icon: Sparkles,
+    title: 'Seasonal Collections',
+    desc: 'Fresh arrivals every season with exclusive online-only drops.',
+  },
+  {
+    icon: Package,
+    title: 'Fast Delivery',
+    desc: 'Free nationwide delivery on orders above ₨5,000. Always on time.',
+  },
+];
+
+const collections = [
+  { slug: 'men', label: "Men's Collection", color: 'from-[#0A2947] to-[#1a4a7a]' },
+  { slug: 'women', label: "Women's Collection", color: 'from-[#8B5E3C] to-[#b07d52]' },
+  { slug: 'children', label: "Kids' Collection", color: 'from-[#4a6741] to-[#6b9464]' },
+];
+
 export default function AboutPage() {
   return (
-    <InfoPageLayout
-      title="About Us"
-      subtitle={`${APP_NAME} is built for people who value quality, comfort, and style.`}
-    >
-      <InfoSection title="Our story">
-        <p>
-          Founded in 2024, {APP_NAME} started with a simple idea: make premium fashion
-          accessible for families across Pakistan. From everyday essentials to statement
-          pieces, we curate collections for men, women, and children that balance quality
-          craftsmanship with fair pricing.
-        </p>
-      </InfoSection>
-      <InfoSection title="What we stand for">
-        <ul className="list-disc space-y-2 pl-5">
-          <li><strong>Quality first</strong> — durable fabrics and thoughtful construction</li>
-          <li><strong>Inclusive sizing</strong> — styles for every body and every age</li>
-          <li><strong>Customer care</strong> — responsive support and hassle-free returns</li>
-          <li><strong>Sustainable growth</strong> — responsible sourcing and packaging improvements</li>
-        </ul>
-      </InfoSection>
-      <InfoSection title="Our collections">
-        <p>
-          Browse curated lines for <a href="/category/men">Men</a>,{' '}
-          <a href="/category/women">Women</a>, and{' '}
-          <a href="/category/children">Children</a> — updated seasonally with new arrivals
-          and exclusive online offers.
-        </p>
-      </InfoSection>
-    </InfoPageLayout>
+    <div className="min-h-screen">
+
+      {/* ── Hero ── */}
+      <section className="relative overflow-hidden bg-[#0A2947] py-20 text-white">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: `radial-gradient(circle at 20% 50%, #F3E4C9 0%, transparent 60%),
+                              radial-gradient(circle at 80% 20%, #8B5E3C 0%, transparent 50%)`,
+          }}
+        />
+        <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm font-medium text-white/80 backdrop-blur-sm">
+            <Star className="h-3.5 w-3.5 text-[#F3E4C9]" />
+            Established 2024 · Lahore, Pakistan
+          </div>
+          <h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+            We dress every{' '}
+            <span className="text-[#F3E4C9]">story</span>.
+          </h1>
+          <p className="mt-6 max-w-2xl text-lg text-white/75 leading-relaxed">
+            {APP_NAME} started with a simple belief — premium fashion should be accessible
+            to every family across Pakistan. From everyday essentials to statement pieces,
+            we build collections that last.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-4">
+            <Link
+              href="/products"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#F3E4C9] px-6 py-3 font-semibold text-[#0A2947] shadow-lg transition hover:bg-white"
+            >
+              Shop Now <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-6 py-3 font-medium text-white backdrop-blur-sm transition hover:bg-white/20"
+            >
+              Contact Us
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Stats bar ── */}
+      <section className="border-b border-[var(--border)] bg-[var(--card)]">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 divide-x divide-[var(--border)] sm:grid-cols-4">
+            {stats.map((s) => (
+              <div key={s.label} className="px-6 py-8 text-center">
+                <p className="text-3xl font-bold text-[var(--primary)]">{s.value}</p>
+                <p className="mt-1 text-sm text-[var(--muted)]">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Our Story ── */}
+      <section className="py-20">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">Our Story</span>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+                From a local dream to a growing brand
+              </h2>
+              <div className="mt-6 space-y-4 text-[var(--muted)] leading-relaxed">
+                <p>
+                  Founded in 2024, {APP_NAME} was born out of a desire to make premium athletic
+                  and everyday fashion accessible for families across Pakistan. We noticed a gap
+                  in the market — quality clothing that didn&apos;t break the bank.
+                </p>
+                <p>
+                  We curate collections for men, women, and children that balance quality
+                  craftsmanship with fair pricing. Every product is selected with care,
+                  tested for durability, and designed to make you feel confident.
+                </p>
+                <p>
+                  Based in Lahore, we serve customers nationwide with fast delivery and
+                  a commitment to making every shopping experience seamless.
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { icon: MapPin, title: 'Lahore, Pakistan', sub: 'Our home base' },
+                { icon: Package, title: '100+ Products', sub: 'Curated catalog' },
+                { icon: Star, title: '5-star Service', sub: 'Customer rated' },
+                { icon: Users, title: 'Family First', sub: 'For every age' },
+              ].map(({ icon: Icon, title, sub }) => (
+                <div
+                  key={title}
+                  className="flex flex-col gap-2 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary)]/10">
+                    <Icon className="h-5 w-5 text-[var(--primary)]" />
+                  </div>
+                  <p className="font-semibold">{title}</p>
+                  <p className="text-xs text-[var(--muted)]">{sub}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Values ── */}
+      <section className="bg-[var(--secondary)]/20 py-20">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <span className="text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">What We Stand For</span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Our core values</h2>
+            <p className="mt-4 text-[var(--muted)]">
+              Every decision we make comes back to these six principles.
+            </p>
+          </div>
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {values.map(({ icon: Icon, title, desc }) => (
+              <div
+                key={title}
+                className="group rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--primary)]/10 transition group-hover:bg-[var(--primary)]/20">
+                  <Icon className="h-6 w-6 text-[var(--primary)]" />
+                </div>
+                <h3 className="mt-4 font-semibold">{title}</h3>
+                <p className="mt-2 text-sm text-[var(--muted)] leading-relaxed">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Collections CTA ── */}
+      <section className="py-20">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <span className="text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">Collections</span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Shop our range</h2>
+            <p className="mt-4 text-[var(--muted)]">
+              Curated lines for the whole family — updated every season.
+            </p>
+          </div>
+          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+            {collections.map((c) => (
+              <Link
+                key={c.slug}
+                href={`/category/${c.slug}`}
+                className={`group relative flex min-h-[140px] items-end overflow-hidden rounded-2xl bg-gradient-to-br ${c.color} p-6 shadow-lg transition hover:-translate-y-1 hover:shadow-xl`}
+              >
+                <div>
+                  <p className="font-bold text-white text-lg">{c.label}</p>
+                  <span className="mt-1 inline-flex items-center gap-1 text-sm text-white/80 transition group-hover:gap-2">
+                    Shop Now <ArrowRight className="h-3.5 w-3.5" />
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Contact CTA ── */}
+      <section className="border-t border-[var(--border)] bg-[var(--card)] py-14">
+        <div className="mx-auto max-w-2xl px-4 text-center sm:px-6">
+          <Mail className="mx-auto h-10 w-10 text-[var(--primary)]" />
+          <h2 className="mt-4 text-2xl font-bold">Have a question?</h2>
+          <p className="mt-2 text-[var(--muted)]">
+            Reach our team at{' '}
+            <a
+              href="mailto:contact@vexironathletics.com"
+              className="font-semibold text-[var(--primary)] hover:underline"
+            >
+              contact@vexironathletics.com
+            </a>
+            {' '}or{' '}
+            <Link href="/contact" className="font-semibold text-[var(--accent)] hover:underline">
+              send us a message
+            </Link>
+            .
+          </p>
+          <p className="mt-6 text-xs text-[var(--muted)]">
+            © 2026 {APP_NAME}. All rights reserved.
+          </p>
+        </div>
+      </section>
+    </div>
   );
 }

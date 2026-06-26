@@ -34,38 +34,41 @@ export function ContactForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="not-prose mt-8 space-y-4 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+    <form onSubmit={handleSubmit(onSubmit)} className="not-prose space-y-5 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="name">Name</Label>
-          <Input id="name" placeholder="Your name" {...register('name')} />
-          {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
+        <div className="space-y-1.5">
+          <Label htmlFor="name">Your Name</Label>
+          <Input id="name" placeholder="Ali Raza" {...register('name')} />
+          {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="email">Email Address</Label>
           <Input id="email" type="email" placeholder="you@example.com" {...register('email')} />
-          {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
+          {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
         </div>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <Label htmlFor="subject">Subject</Label>
-        <Input id="subject" placeholder="How can we help?" {...register('subject')} />
-        {errors.subject && <p className="text-sm text-red-500">{errors.subject.message}</p>}
+        <Input id="subject" placeholder="Order issue, sizing question, return request…" {...register('subject')} />
+        {errors.subject && <p className="text-xs text-red-500">{errors.subject.message}</p>}
       </div>
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <Label htmlFor="message">Message</Label>
         <textarea
           id="message"
-          rows={5}
-          className="flex w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm transition-all duration-200 placeholder:text-zinc-500 focus-visible:border-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 dark:border-zinc-800 dark:bg-zinc-950 dark:focus-visible:ring-zinc-300"
-          placeholder="Tell us more..."
+          rows={6}
+          className="flex w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm transition-all placeholder:text-[var(--muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40"
+          placeholder="Describe your question or issue in detail…"
           {...register('message')}
         />
-        {errors.message && <p className="text-sm text-red-500">{errors.message.message}</p>}
+        {errors.message && <p className="text-xs text-red-500">{errors.message.message}</p>}
       </div>
-      <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
-        {isSubmitting ? 'Sending...' : 'Send Message'}
+      <Button type="submit" disabled={isSubmitting} className="w-full">
+        {isSubmitting ? 'Sending…' : 'Send Message'}
       </Button>
+      <p className="text-center text-xs text-[var(--muted)]">
+        We typically reply within 24 hours · Mon–Sat
+      </p>
     </form>
   );
 }

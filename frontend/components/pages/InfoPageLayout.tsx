@@ -39,8 +39,8 @@ export function InfoPageLayout({
       <SlideUp delay={120} className="mt-12 rounded-xl border border-zinc-200 bg-zinc-50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/50">
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           Questions? Reach us at{' '}
-          <a href="mailto:support@vexironathletics.com" className="font-medium text-zinc-900 dark:text-zinc-50">
-            support@vexironathletics.com
+          <a href="mailto:contact@vexironathletics.com" className="font-medium text-zinc-900 dark:text-zinc-50">
+            contact@vexironathletics.com
           </a>
         </p>
         <p className="mt-2 text-xs text-zinc-500">
