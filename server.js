@@ -2,6 +2,13 @@
  * Production entry for Hostinger / single-host deployment.
  * Serves the Next.js storefront and Express API on one port.
  */
+
+// Ensure production mode — prevents Next.js from running in slow dev mode
+// and stops pino from requiring pino-pretty on the server
+if (!process.env.NODE_ENV) {
+  process.env.NODE_ENV = 'production';
+}
+
 const path = require('path');
 const express = require('express');
 const next = require('next');
