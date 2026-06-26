@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --webpack",
+    "dev": "next dev --turbo",
+    "analyze": "ANALYZE=true next build",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -46,6 +47,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.2.9",
     "eslint": "^9",
     "eslint-config-next": "16.2.9"
   }

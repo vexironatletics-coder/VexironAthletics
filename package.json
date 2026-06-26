@@ -10,9 +10,11 @@
     "dev": "concurrently -n backend,frontend -c blue,green \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
     "dev:backend": "npm run dev --prefix backend",
     "dev:frontend": "npm run dev --prefix frontend",
-    "build": "npm run build --prefix backend && npm run build --prefix frontend",
+    "build": "npm run build --prefix backend; npm run build --prefix frontend",
     "start": "node server.js",
-    "postinstall": "npm install --prefix backend && npm install --prefix frontend"
+    "postinstall": "npm install --prefix backend; npm install --prefix frontend",
+    "knip": "knip",
+    "typecheck": "npm run typecheck --prefix backend"
   },
   "dependencies": {
     "express": "^5.2.1",
@@ -20,6 +22,7 @@
     "typescript": "^5.8.3"
   },
   "devDependencies": {
-    "concurrently": "^9.2.0"
+    "concurrently": "^9.2.0",
+    "knip": "^6.20.0"
   }
 }

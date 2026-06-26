@@ -1,0 +1,23 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": ["server.js"],
+      "project": ["*.{js,ts}"]
+    },
+    "backend": {
+      "entry": ["src/index.ts", "src/seed.ts", "src/scripts/**/*.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "frontend": {
+      "entry": [
+        "app/**/{page,layout,loading,error,not-found,route}.tsx",
+        "app/**/{page,layout,loading,error,not-found,route}.ts",
+        "next.config.ts",
+        "tailwind.config.ts"
+      ],
+      "project": ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}", "lib/**/*.{ts,tsx}", "store/**/*.{ts,tsx}"]
+    }
+  },
+  "ignore": ["**/node_modules/**", "**/.next/**", "**/dist/**"]
+}

@@ -1,7 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import morgan from 'morgan';
+import pinoHttp from 'pino-http';
+import logger from './config/logger';
 import compression from 'compression';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -78,7 +79,18 @@ export const createApp = (options: CreateAppOptions = {}): express.Application =
   app.use(compression());
 
   // ── Request logging ────────────────────────────────────────────────────────
-  app.use(morgan(isProd ? 'combined' : 'dev'));
+  app.use(
+    pinoHttp({
+      logger,
+      // Skip health-check noise
+      autoLogging: { ignore: (req) => req.url === '/api/health' },
+      customLogLevel: (_req, res) => (res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info'),
+      serializers: {
+        req: (req) => ({ method: req.method, url: req.url }),
+        res: (res) => ({ statusCode: res.statusCode }),
+      },
+    })
+  );
 
   // ── Body parsing ───────────────────────────────────────────────────────────
   app.use(express.json({ limit: '10mb' }));

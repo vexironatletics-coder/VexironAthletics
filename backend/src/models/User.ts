@@ -65,7 +65,7 @@ const userSchema = new Schema<IUser>(
     },
     clerkId: { type: String },
     phone: { type: String },
-    role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    role: { type: String, enum: ['user', 'editor',  'manager', 'admin','superadmin'], default: 'user' },
     addresses: [addressSchema],
     isActive: { type: Boolean, default: true },
     loyaltyPoints: { type: Number, default: 0 },
