@@ -220,7 +220,7 @@ const adminEntries: SidebarEntry[] = [
     children: [
       { href: '/dashboard/admin/products', label: 'All Products', icon: Package, match: 'exact' },
       { href: '/dashboard/admin/low-stock', label: 'Low Stock', icon: AlertTriangle },
-      { href: '/dashboard/admin/categories', label: 'Categories', icon: Tags },
+      { href: '/dashboard/admin/categories', label: 'Sub-Categories', icon: Tags },
     ],
   },
   {
@@ -244,6 +244,7 @@ const adminEntries: SidebarEntry[] = [
     children: [
       { href: '/dashboard/admin/appearance', label: 'Appearance', icon: Palette },
       { href: '/dashboard/admin/hero-slides', label: 'Hero Slider', icon: Images },
+      { href: '/dashboard/admin/categories', label: 'Collections', icon: Tags },
       { href: '/dashboard/admin/users', label: 'Users', icon: Users },
     ],
   },

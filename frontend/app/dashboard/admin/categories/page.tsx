@@ -52,7 +52,7 @@ function CategoryImageCard({ cat, onUpdated }: { cat: CategoryImage; onUpdated: 
     <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
       <div className="flex items-start gap-4">
         <div
-          className="relative h-28 w-24 shrink-0 cursor-pointer overflow-hidden rounded-lg bg-[var(--secondary)]/30"
+          className="group relative h-28 w-24 shrink-0 cursor-pointer overflow-hidden rounded-lg bg-[var(--secondary)]/30"
           onClick={() => fileRef.current?.click()}
         >
           {cat.image ? (
@@ -63,14 +63,15 @@ function CategoryImageCard({ cat, onUpdated }: { cat: CategoryImage; onUpdated: 
               <span className="text-xs">No image</span>
             </div>
           )}
-          {uploading && (
+          {uploading ? (
             <div className="absolute inset-0 flex items-center justify-center bg-black/50">
               <span className="text-xs text-white">Uploading…</span>
             </div>
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/40">
+              <Upload className="h-5 w-5 text-white opacity-0 transition group-hover:opacity-100" />
+            </div>
           )}
-          <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition hover:bg-black/30">
-            <Upload className="h-5 w-5 text-white opacity-0 transition group-hover:opacity-100" />
-          </div>
         </div>
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
 
@@ -201,9 +202,9 @@ export default function AdminCategoriesPage() {
         <section>
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">Shop by Category</h1>
+              <h1 className="text-2xl font-bold">Collections</h1>
               <p className="mt-1 text-sm text-[var(--muted)]">
-                These images appear on the homepage. Upload images and set the link for each category card.
+                These cards appear in the "Shop by Category" section on the homepage. Upload images, set labels and links, add or remove categories.
               </p>
             </div>
             <div className="flex gap-2">
@@ -219,16 +220,14 @@ export default function AdminCategoriesPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {categoryImages.map((cat) => (
               <div key={cat.slug} className="relative">
-                <CategoryImageCard cat={cat} onUpdated={handleCategoryImageUpdated} />
-                {/* Only allow removing custom categories (non-default) */}
-                {!['men', 'women', 'children'].includes(cat.slug) && (
-                  <button
-                    onClick={() => removeShopCategory(cat.slug)}
-                    className="absolute right-2 top-2 rounded-full bg-red-500/90 p-1 text-white hover:bg-red-600"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                )}
+                <CategoryImageCard key={cat.slug + cat.image} cat={cat} onUpdated={handleCategoryImageUpdated} />
+                <button
+                  onClick={() => removeShopCategory(cat.slug)}
+                  title="Remove this category"
+                  className="absolute right-2 top-2 rounded-full bg-red-500/90 p-1 text-white hover:bg-red-600"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
               </div>
             ))}
           </div>
