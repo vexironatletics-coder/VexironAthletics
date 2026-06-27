@@ -2,7 +2,7 @@ name: Keep Alive — Auto-restart if down
 
 on:
   schedule:
-    - cron: '0 */6 * * *'   # every 6 hours
+    - cron: '0 */6 * * *'
   workflow_dispatch:
 
 jobs:
@@ -28,7 +28,12 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           command_timeout: 3m
           script: |
-            cd ~/domains/vexironathletics.com/public_html
-            echo "Site was down (HTTP ${{ steps.health.outputs.status }}), restarting..."
-            mkdir -p tmp && touch tmp/restart.txt
+            for dir in \
+              "$HOME/domains/vexironathletics.com/public_html/.builds/source/repository" \
+              "$HOME/domains/vexironathletics.com/public_html"; do
+              if [ -f "$dir/server.js" ]; then
+                echo "Restarting app in $dir"
+                mkdir -p "$dir/tmp" && touch "$dir/tmp/restart.txt"
+              fi
+            done
             echo "Restart triggered at $(date)"
