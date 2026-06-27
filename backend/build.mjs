@@ -1,10 +1,13 @@
 /**
  * esbuild build script for the backend.
- * Transpiles TypeScript → CommonJS, bundles all internal source files,
- * and marks every node_modules package as external (they stay in node_modules,
- * not embedded in the bundle). This is ~80-100x faster than tsc.
  *
- * Type-checking is still available via: npm run typecheck
+ * Outputs three entry-point files so server.js can require them:
+ *   dist/index.js       — standalone server (node dist/index.js)
+ *   dist/createApp.js   — Express app factory (used by root server.js)
+ *   dist/startServices.js — DB / background services (used by root server.js)
+ *
+ * All node_modules are marked external — they stay in node_modules.
+ * ~80-100x faster than tsc.
  */
 import { build } from 'esbuild';
 import { readFileSync } from 'fs';
@@ -18,8 +21,12 @@ const external = [
 const isProd = process.env.NODE_ENV === 'production';
 
 await build({
-  entryPoints: ['src/index.ts'],
-  outfile: 'dist/index.js',
+  entryPoints: [
+    'src/index.ts',
+    'src/createApp.ts',
+    'src/startServices.ts',
+  ],
+  outdir: 'dist',         // outputs dist/index.js, dist/createApp.js, dist/startServices.js
   bundle: true,
   platform: 'node',
   target: 'node20',
@@ -27,11 +34,7 @@ await build({
   external,
   sourcemap: true,
   minify: isProd,
-  // Tree-shake dead code
   treeShaking: true,
-  // Inject a banner so source maps work with Node
-  banner: {
-    js: '/* VexironAthletics Backend – built with esbuild */',
-  },
+  banner: { js: '/* VexironAthletics Backend – built with esbuild */' },
   logLevel: 'info',
 });
