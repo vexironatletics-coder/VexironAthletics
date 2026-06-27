@@ -22,12 +22,26 @@ try {
   // Hostinger injects env vars via hPanel — dotenv is optional
 }
 
-const { createApp } = require('./backend/dist/createApp');
-const { startBackendServices } = require('./backend/dist/startServices');
-
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const dev = process.env.NODE_ENV !== 'production';
 const frontendDir = path.join(__dirname, 'frontend');
+
+// ── Validate required build artifacts exist before starting ──────────────────
+const fs = require('fs');
+const nextBuildDir = path.join(frontendDir, '.next');
+const backendDistDir = path.join(__dirname, 'backend', 'dist', 'createApp.js');
+
+if (!fs.existsSync(nextBuildDir)) {
+  console.error('[Startup] FATAL: frontend/.next not found — run "npm run build" first');
+  process.exit(1);
+}
+if (!fs.existsSync(backendDistDir)) {
+  console.error('[Startup] FATAL: backend/dist/createApp.js not found — run "npm run build" first');
+  process.exit(1);
+}
+
+const { createApp } = require('./backend/dist/createApp');
+const { startBackendServices } = require('./backend/dist/startServices');
 
 async function main() {
   console.log('[Startup] NODE_ENV:', process.env.NODE_ENV || '(unset)');
@@ -38,6 +52,7 @@ async function main() {
   const handle = nextApp.getRequestHandler();
 
   await nextApp.prepare();
+  console.log('[Startup] Next.js prepared successfully');
 
   const apiApp = createApp({ catchAll: false });
   const server = express();
@@ -58,9 +73,9 @@ async function main() {
   });
 
   server.listen(PORT, () => {
-    console.log(`VexironAthletics running on port ${PORT}`);
-    console.log(`Storefront: http://localhost:${PORT}`);
-    console.log(`API health: http://localhost:${PORT}/api/health`);
+    console.log(`[Startup] VexironAthletics running on port ${PORT}`);
+    console.log(`[Startup] Storefront: http://localhost:${PORT}`);
+    console.log(`[Startup] API health: http://localhost:${PORT}/api/health`);
   });
 
   startBackendServices()
@@ -74,6 +89,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error('Failed to start server:', err);
+  console.error('[Startup] FATAL startup error:', err?.message || err);
   process.exit(1);
 });
