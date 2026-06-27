@@ -1,0 +1,48 @@
+name: Deploy to Hostinger
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:   # allow manual trigger from GitHub UI
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          command_timeout: 25m
+          script: |
+            set -e
+            echo "=== Navigating to project ==="
+            cd ~/domains/vexironathletics.com/public_html
+
+            echo "=== Pulling latest code ==="
+            git pull origin main
+
+            echo "=== Cleaning stale build artifacts ==="
+            node -e "const fs=require('fs');['frontend/.next','backend/dist'].forEach(p=>{try{fs.rmSync(p,{recursive:true,force:true});console.log('Removed '+p);}catch(e){}})"
+
+            echo "=== Installing backend dependencies ==="
+            npm install --prefix backend --omit=dev
+
+            echo "=== Installing frontend dependencies ==="
+            npm install --prefix frontend --omit=dev
+
+            echo "=== Building backend ==="
+            npm run build --prefix backend
+
+            echo "=== Building frontend ==="
+            npm run build --prefix frontend
+
+            echo "=== Restarting Node.js app ==="
+            touch tmp/restart.txt 2>/dev/null || true
+
+            echo "=== Done! ==="
