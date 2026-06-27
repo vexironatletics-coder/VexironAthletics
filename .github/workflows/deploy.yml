@@ -21,28 +21,23 @@ jobs:
           command_timeout: 25m
           script: |
             set -e
-            echo "=== Navigating to project ==="
             cd ~/domains/vexironathletics.com/public_html
 
             echo "=== Pulling latest code ==="
             git pull origin main
 
-            echo "=== Cleaning stale build artifacts ==="
-            node -e "const fs=require('fs');['frontend/.next','backend/dist'].forEach(p=>{try{fs.rmSync(p,{recursive:true,force:true});console.log('Removed '+p);}catch(e){}})"
+            echo "=== Cleaning old frontend build ==="
+            rm -rf frontend/.next
 
-            echo "=== Installing backend dependencies ==="
+            echo "=== Installing dependencies ==="
             npm install --prefix backend --omit=dev
-
-            echo "=== Installing frontend dependencies ==="
             npm install --prefix frontend --omit=dev
 
-            echo "=== Building backend ==="
-            npm run build --prefix backend
-
-            echo "=== Building frontend ==="
+            echo "=== Building frontend (Next.js) ==="
             npm run build --prefix frontend
 
-            echo "=== Restarting Node.js app ==="
+            echo "=== Restarting app ==="
             touch tmp/restart.txt 2>/dev/null || true
+            mkdir -p tmp && touch tmp/restart.txt
 
-            echo "=== Done! ==="
+            echo "=== Deploy complete ==="
