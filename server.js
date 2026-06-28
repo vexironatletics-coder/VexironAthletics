@@ -1,8 +1,8 @@
 /**
  * Production entry for Hostinger / single-host deployment.
  * Serves the Next.js storefront and Express API on one port.
- * If the frontend build is missing, serves a branded maintenance page
- * so the server stays up and the API still works.
+ * Starts listening immediately so Hostinger health checks pass,
+ * then loads Next.js in the background.
  */
 
 if (!process.env.NODE_ENV) {
@@ -10,7 +10,7 @@ if (!process.env.NODE_ENV) {
 }
 
 const path = require('path');
-const fs   = require('fs');
+const fs = require('fs');
 const express = require('express');
 const next = require('next');
 
@@ -23,20 +23,23 @@ try {
   // Hostinger injects env vars via hPanel — dotenv is optional
 }
 
-const PORT        = parseInt(process.env.PORT || '3000', 10);
-const dev         = process.env.NODE_ENV !== 'production';
+const PORT = parseInt(process.env.PORT || '3000', 10);
+const dev = process.env.NODE_ENV !== 'production';
 const frontendDir = path.join(__dirname, 'frontend');
 const nextBuildDir = path.join(frontendDir, '.next');
 const hasFrontendBuild = fs.existsSync(nextBuildDir);
 
-if (!hasFrontendBuild) {
-  console.warn('[Startup] frontend/.next not found — maintenance page will be shown until build completes');
+let createApp;
+let startBackendServices;
+try {
+  ({ createApp } = require('./backend/dist/createApp'));
+  ({ startBackendServices } = require('./backend/dist/startServices'));
+} catch (err) {
+  console.error('[Startup] FATAL: backend/dist missing — run "npm run build --prefix backend"');
+  console.error('[Startup]', err?.message || err);
+  process.exit(1);
 }
 
-const { createApp }          = require('./backend/dist/createApp');
-const { startBackendServices } = require('./backend/dist/startServices');
-
-// ── Branded maintenance page shown when .next build is missing ────────────────
 const MAINTENANCE_HTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -76,51 +79,62 @@ async function main() {
   console.log('[Startup] MONGODB_URI configured:', Boolean(process.env.MONGODB_URI?.trim()));
   console.log('[Startup] CLIENT_URL:', process.env.CLIENT_URL || '(unset)');
   console.log('[Startup] Frontend build present:', hasFrontendBuild);
+  console.log('[Startup] Working directory:', process.cwd());
 
   const apiApp = createApp({ catchAll: false });
   const server = express();
 
-  // ── Prepare Next.js only if build exists ─────────────────────────────────
+  // Next.js handler — set after prepare() completes
   let handle = null;
-  if (hasFrontendBuild) {
-    const nextApp = next({ dev, dir: frontendDir });
-    handle = nextApp.getRequestHandler();
-    await nextApp.prepare();
-    console.log('[Startup] Next.js prepared successfully');
-  }
+  let nextReady = false;
 
-  // ── Manifest ─────────────────────────────────────────────────────────────
   const manifestPath = path.join(frontendDir, 'public', 'manifest.json');
   server.get(['/manifest.json', '/manifest.webmanifest'], (_req, res) => {
     res.type('application/manifest+json');
     res.sendFile(manifestPath);
   });
 
-  // ── API ───────────────────────────────────────────────────────────────────
   server.use(apiApp);
 
-  // ── Storefront / maintenance ──────────────────────────────────────────────
   server.all('{*path}', (req, res) => {
     if (req.path.startsWith('/api')) {
       return res.status(404).json({ message: 'Route not found' });
     }
-    if (!handle) {
+    if (!nextReady || !handle) {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       return res.status(503).send(MAINTENANCE_HTML);
     }
     return handle(req, res);
   });
 
+  // Listen FIRST — Hostinger health checks time out if we wait for next.prepare()
   server.listen(PORT, () => {
-    console.log(`[Startup] VexironAthletics running on port ${PORT}`);
+    console.log(`[Startup] VexironAthletics listening on port ${PORT}`);
     console.log(`[Startup] API health: http://localhost:${PORT}/api/health`);
   });
 
-  // ── DB & background services (non-blocking) ───────────────────────────────
+  // Load Next.js in background (can take 30–60s on shared hosting)
+  if (hasFrontendBuild) {
+    const nextApp = next({ dev, dir: frontendDir });
+    nextApp
+      .prepare()
+      .then(() => {
+        handle = nextApp.getRequestHandler();
+        nextReady = true;
+        console.log('[Startup] Next.js ready — storefront is live');
+      })
+      .catch((err) => {
+        console.error('[Startup] Next.js prepare failed — maintenance page stays active');
+        console.error('[Startup]', err?.message || err);
+      });
+  } else {
+    console.warn('[Startup] frontend/.next not found — run "npm run build --prefix frontend" on Hostinger');
+  }
+
   startBackendServices()
     .then((ok) => {
       if (ok) console.log('[Startup] MongoDB connected — products and orders ready');
-      else     console.warn('[Startup] MongoDB not connected — DB-dependent routes return 503');
+      else console.warn('[Startup] MongoDB not connected — DB routes return 503 until connected');
     })
     .catch((err) => {
       console.error('[Startup] Backend services error:', err?.message || err);
