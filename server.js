@@ -32,10 +32,9 @@ const hasFrontendBuild = fs.existsSync(nextBuildDir);
 let createApp;
 let startBackendServices;
 try {
-  ({ createApp } = require('./backend/dist/createApp'));
-  ({ startBackendServices } = require('./backend/dist/startServices'));
+  ({ createApp, startBackendServices } = require('./backend/dist/hostEntry'));
 } catch (err) {
-  console.error('[Startup] FATAL: backend/dist missing — run "npm run build --prefix backend"');
+  console.error('[Startup] FATAL: backend/dist/hostEntry.js missing or failed to load');
   console.error('[Startup]', err?.message || err);
   process.exit(1);
 }
