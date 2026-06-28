@@ -4068,9 +4068,21 @@ var createApp = (options = {}) => {
       message: dbConnected ? "API is ready" : mongoConfigured ? "Database not connected \u2014 check MongoDB Atlas Network Access (allow 0.0.0.0/0)" : "MONGODB_URI is missing \u2014 add it in Hostinger Environment variables"
     });
   });
+  app2.get("/api/ready", (_req, res) => {
+    const fs2 = require("fs");
+    const path3 = require("path");
+    const nextBuild = path3.join(process.cwd(), "frontend", ".next", "BUILD_ID");
+    const hasBuild = fs2.existsSync(nextBuild);
+    res.status(hasBuild ? 200 : 503).json({
+      ready: hasBuild,
+      frontendBuild: hasBuild ? "present" : "missing \u2014 run npm run build on Hostinger",
+      cwd: process.cwd()
+    });
+  });
   app2.use("/api", globalApiRateLimit);
   app2.use("/api", (req, res, next) => {
     if (req.path === "/health") return next();
+    if (req.path === "/ready") return next();
     if (req.path === "/settings/public") return next();
     if (req.path === "/settings/hero-slides" && req.method === "GET") return next();
     if (req.path === "/settings/category-images" && req.method === "GET") return next();

@@ -88,6 +88,9 @@ async function main() {
   let handle = null;
   let nextReady = false;
 
+  // Serve public assets (favicon, images) even while Next.js is loading
+  server.use(express.static(path.join(frontendDir, 'public'), { maxAge: '1d' }));
+
   const manifestPath = path.join(frontendDir, 'public', 'manifest.json');
   server.get(['/manifest.json', '/manifest.webmanifest'], (_req, res) => {
     res.type('application/manifest+json');
@@ -102,7 +105,8 @@ async function main() {
     }
     if (!nextReady || !handle) {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      return res.status(503).send(MAINTENANCE_HTML);
+      // Return 200 (not 503) so browsers/CDN don't treat the site as permanently down
+      return res.status(200).send(MAINTENANCE_HTML);
     }
     return handle(req, res);
   });

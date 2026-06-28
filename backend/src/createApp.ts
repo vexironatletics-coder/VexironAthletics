@@ -122,12 +122,26 @@ export const createApp = (options: CreateAppOptions = {}): express.Application =
     });
   });
 
+  // ── Deploy readiness (checks frontend build exists on disk) ───────────────
+  app.get('/api/ready', (_req, res) => {
+    const fs = require('fs');
+    const path = require('path');
+    const nextBuild = path.join(process.cwd(), 'frontend', '.next', 'BUILD_ID');
+    const hasBuild = fs.existsSync(nextBuild);
+    res.status(hasBuild ? 200 : 503).json({
+      ready: hasBuild,
+      frontendBuild: hasBuild ? 'present' : 'missing — run npm run build on Hostinger',
+      cwd: process.cwd(),
+    });
+  });
+
   // ── Global rate limit for all /api routes ──────────────────────────────────
   app.use('/api', globalApiRateLimit);
 
   // ── Block DB-dependent routes until MongoDB is connected ───────────────────
   app.use('/api', (req, res, next) => {
     if (req.path === '/health') return next();
+    if (req.path === '/ready') return next();
     if (req.path === '/settings/public') return next();
     if (req.path === '/settings/hero-slides' && req.method === 'GET') return next();
     if (req.path === '/settings/category-images' && req.method === 'GET') return next();
