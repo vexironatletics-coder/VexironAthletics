@@ -64,6 +64,8 @@ const MAINTENANCE_HTML = `<!DOCTYPE html>
   <div>
     <h1>VEXIRON ATHLETICS</h1>
     <p>We're deploying an update and will be back in just a few minutes. Thank you for your patience.</p>
+    <p style="margin-top:1rem;font-size:.85rem;opacity:.5">This page refreshes automatically…</p>
+    <meta http-equiv="refresh" content="8">
     <div class="dots">
       <span class="dot"></span>
       <span class="dot"></span>

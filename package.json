@@ -11,6 +11,8 @@
     "dev:backend": "npm run dev --prefix backend",
     "dev:frontend": "npm run dev --prefix frontend",
     "build": "npm run build --prefix backend && npm run build --prefix frontend",
+    "build:hostinger": "npm run build --prefix backend && cd frontend && NEXT_BUILD_WORKERS=1 NODE_OPTIONS=--max-old-space-size=768 npx next build && cd .. && node scripts/verify-build.js",
+    "postbuild": "node scripts/verify-build.js",
     "clean": "node -e \"const fs=require('fs');['frontend/.next','backend/dist'].forEach(p=>{try{fs.rmSync(p,{recursive:true,force:true});console.log('Removed '+p);}catch(e){}})\"",
     "start": "node server.js",
     "postinstall": "npm install --prefix backend && npm install --prefix frontend",
