@@ -70,7 +70,6 @@ export async function generateMetadata(): Promise<Metadata> {
     alternates: {
       canonical: getSiteUrl(),
     },
-    manifest: '/manifest.json',
     icons: {
       icon: [
         { url: '/favicon.svg', type: 'image/svg+xml' },

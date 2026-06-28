@@ -64,8 +64,6 @@ const MAINTENANCE_HTML = `<!DOCTYPE html>
   <div>
     <h1>VEXIRON ATHLETICS</h1>
     <p>We're deploying an update and will be back in just a few minutes. Thank you for your patience.</p>
-    <p style="margin-top:1rem;font-size:.85rem;opacity:.5">This page refreshes automatically…</p>
-    <meta http-equiv="refresh" content="8">
     <div class="dots">
       <span class="dot"></span>
       <span class="dot"></span>
@@ -89,14 +87,22 @@ async function main() {
   let handle = null;
   let nextReady = false;
 
-  // Serve public assets (favicon, images) even while Next.js is loading
-  server.use(express.static(path.join(frontendDir, 'public'), { maxAge: '1d' }));
+  // Serve built static assets directly (correct MIME types, no HTML fallback)
+  if (hasFrontendBuild) {
+    server.use(
+      '/_next/static',
+      express.static(path.join(frontendDir, '.next/static'), {
+        maxAge: '1y',
+        immutable: true,
+        setHeaders: (res) => {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        },
+      })
+    );
+  }
 
-  const manifestPath = path.join(frontendDir, 'public', 'manifest.json');
-  server.get(['/manifest.json', '/manifest.webmanifest'], (_req, res) => {
-    res.type('application/manifest+json');
-    res.sendFile(manifestPath);
-  });
+  // Public assets (favicon, etc.)
+  server.use(express.static(path.join(frontendDir, 'public'), { maxAge: '1d' }));
 
   server.use(apiApp);
 
@@ -104,9 +110,13 @@ async function main() {
     if (req.path.startsWith('/api')) {
       return res.status(404).json({ message: 'Route not found' });
     }
+    // Never return HTML for Next.js asset paths — causes MIME type errors
+    if (req.path.startsWith('/_next')) {
+      if (!nextReady || !handle) return res.status(503).end();
+      return handle(req, res);
+    }
     if (!nextReady || !handle) {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      // Return 200 (not 503) so browsers/CDN don't treat the site as permanently down
       return res.status(200).send(MAINTENANCE_HTML);
     }
     return handle(req, res);

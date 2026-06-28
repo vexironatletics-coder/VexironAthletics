@@ -41,7 +41,8 @@ const nextConfig: NextConfig = {
   productionBrowserSourceMaps: false,
 
   images: {
-    // Use WebP/AVIF for all remote images
+    // Hostinger shared hosting cannot run the image optimizer reliably (503 errors)
+    unoptimized: true,
     formats: ['image/avif', 'image/webp'],
     // Cache remote images for 1 week
     minimumCacheTTL: 604800,
