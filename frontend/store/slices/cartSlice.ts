@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { CartItem, CartState } from '@/lib/types';
 import { MAX_QTY_PER_LINE } from '@/lib/constants';
 import { calculateShipping } from '@/lib/utils';
+import { sameCartLine } from '@/lib/clothQuality';
 
 export const GUEST_CART_KEY = 'guest_cart';
 
@@ -57,12 +58,7 @@ const cartSlice = createSlice({
     },
     addItem: (state, action: PayloadAction<CartItem>) => {
       const maxStock = action.payload.maxStock;
-      const existing = state.items.find(
-        (item) =>
-          item.productId === action.payload.productId &&
-          item.size === action.payload.size &&
-          item.color === action.payload.color
-      );
+      const existing = state.items.find((item) => sameCartLine(item, action.payload));
 
       if (existing) {
         existing.maxStock = maxStock ?? existing.maxStock;
@@ -79,16 +75,9 @@ const cartSlice = createSlice({
     },
     removeItem: (
       state,
-      action: PayloadAction<{ productId: string; size: string; color: string }>
+      action: PayloadAction<{ productId: string; size: string; color: string; clothQuality?: CartItem['clothQuality'] }>
     ) => {
-      state.items = state.items.filter(
-        (item) =>
-          !(
-            item.productId === action.payload.productId &&
-            item.size === action.payload.size &&
-            item.color === action.payload.color
-          )
-      );
+      state.items = state.items.filter((item) => !sameCartLine(item, action.payload));
       state.total = calcTotal(state.items);
     },
     updateQty: (
@@ -97,15 +86,11 @@ const cartSlice = createSlice({
         productId: string;
         size: string;
         color: string;
+        clothQuality?: CartItem['clothQuality'];
         qty: number;
       }>
     ) => {
-      const item = state.items.find(
-        (i) =>
-          i.productId === action.payload.productId &&
-          i.size === action.payload.size &&
-          i.color === action.payload.color
-      );
+      const item = state.items.find((i) => sameCartLine(i, action.payload));
       if (item) {
         item.qty = capQty(action.payload.qty, item.maxStock);
       }

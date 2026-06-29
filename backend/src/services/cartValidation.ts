@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { Product } from '../models/Product';
 import { MAX_ORDER_LINE_ITEMS, MAX_QTY_PER_LINE } from '../utils/constants';
+import { getClothQualityPrice, normalizeClothQuality } from '../utils/clothQuality';
 
 export interface CartItemInput {
   productId: string;
@@ -9,6 +10,7 @@ export interface CartItemInput {
   image: string;
   size: string;
   color: string;
+  clothQuality?: string;
   qty: number;
 }
 
@@ -19,6 +21,7 @@ export interface ValidatedCartItem {
   image: string;
   size: string;
   color: string;
+  clothQuality: string;
   qty: number;
 }
 
@@ -67,7 +70,9 @@ export const validateAndNormalizeCartItems = async (
       throw new Error(`${product.name} is out of stock`);
     }
 
-    const price = product.discountPrice ?? product.price;
+    const clothQuality = normalizeClothQuality(item.clothQuality);
+    const basePrice = product.discountPrice ?? product.price;
+    const price = getClothQualityPrice(basePrice, clothQuality);
     const image = product.images[0]?.url ?? '';
 
     normalized.push({
@@ -77,6 +82,7 @@ export const validateAndNormalizeCartItems = async (
       image,
       size: item.size,
       color: item.color,
+      clothQuality,
       qty: safeQty,
     });
   }

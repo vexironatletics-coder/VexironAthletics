@@ -35,6 +35,13 @@ import { cn, formatPrice, COLORS } from '@/lib/utils';
 import { APP_NAME, MAX_QTY_PER_LINE } from '@/lib/constants';
 import { addRecentlyViewed } from '@/lib/recentlyViewed';
 import { buildCartItemFromProduct, getCheckoutRedirectUrl } from '@/lib/productCart';
+import {
+  CLOTH_QUALITIES,
+  DEFAULT_CLOTH_QUALITY,
+  getProductQualityListPrice,
+  getProductQualityPrice,
+  type ClothQuality,
+} from '@/lib/clothQuality';
 
 const trustBadges = [
   { icon: Truck, label: 'Free delivery ₨5k+' },
@@ -62,6 +69,7 @@ export function ProductDetailClient({ id }: { id: string }) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [size, setSize] = useState('');
   const [color, setColor] = useState('');
+  const [clothQuality, setClothQuality] = useState<ClothQuality>(DEFAULT_CLOTH_QUALITY);
   const [qty, setQty] = useState(1);
 
   useEffect(() => {
@@ -95,7 +103,8 @@ export function ProductDetailClient({ id }: { id: string }) {
   }
 
   const { product } = data;
-  const salePrice = product.discountPrice ?? product.price;
+  const salePrice = getProductQualityPrice(product, clothQuality);
+  const listPrice = getProductQualityListPrice(product, clothQuality);
   const isWishlisted = wishlist.includes(product._id);
   const related = relatedData?.products.filter((p) => p._id !== product._id).slice(0, 4) ?? [];
   const heroImage = product.images[selectedImage]?.url ?? product.images[0]?.url ?? '';
@@ -119,6 +128,7 @@ export function ProductDetailClient({ id }: { id: string }) {
     return buildCartItemFromProduct(product, {
       size: selectedSize,
       color: selectedColor,
+      clothQuality,
       qty,
     });
   };
@@ -221,12 +231,12 @@ export function ProductDetailClient({ id }: { id: string }) {
 
               <div className="mt-5 flex flex-wrap items-end gap-3 border-b border-white/10 pb-6">
                 {product.discountPrice && (
-                  <span className="text-lg text-white/45 line-through">{formatPrice(product.price)}</span>
+                  <span className="text-lg text-white/45 line-through">{formatPrice(listPrice)}</span>
                 )}
                 <span className="text-4xl font-bold tracking-tight">{formatPrice(salePrice)}</span>
                 {product.discountPrice && (
                   <span className="rounded-full bg-[var(--accent)]/25 px-2.5 py-1 text-xs font-semibold text-[var(--accent)]">
-                    Save {formatPrice(product.price - product.discountPrice)}
+                    Save {formatPrice(listPrice - salePrice)}
                   </span>
                 )}
               </div>
@@ -267,6 +277,22 @@ export function ProductDetailClient({ id }: { id: string }) {
                       </button>
                     ))}
                   </div>
+                </div>
+
+                <div>
+                  <p className="mb-2.5 text-sm font-medium text-white/90">Quality of Cloth</p>
+                  <select
+                    value={clothQuality}
+                    onChange={(e) => setClothQuality(e.target.value as ClothQuality)}
+                    disabled={product.stock === 0}
+                    className="h-11 w-full max-w-xs rounded-lg border border-white/20 bg-white/5 px-4 text-sm font-medium text-white backdrop-blur-sm transition focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {CLOTH_QUALITIES.map((q) => (
+                      <option key={q.value} value={q.value} className="bg-zinc-900 text-white">
+                        {q.label} — {formatPrice(getProductQualityPrice(product, q.value))}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>

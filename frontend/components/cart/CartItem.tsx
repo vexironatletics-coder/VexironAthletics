@@ -8,6 +8,7 @@ import { removeItem, updateQty } from '@/store/slices/cartSlice';
 import type { CartItem as CartItemType } from '@/lib/types';
 import { MAX_QTY_PER_LINE } from '@/lib/constants';
 import { formatPrice } from '@/lib/utils';
+import { getClothQualityLabel } from '@/lib/clothQuality';
 
 interface CartItemProps {
   item: CartItemType;
@@ -26,7 +27,7 @@ export function CartItem({ item }: CartItemProps) {
         <div>
           <h3 className="font-semibold">{item.name}</h3>
           <p className="text-sm text-zinc-500">
-            Size: {item.size} | Color: {item.color}
+            Size: {item.size} | Color: {item.color} | Cloth: {getClothQualityLabel(item.clothQuality ?? 'normal')}
           </p>
         </div>
         <div className="flex items-center justify-between">
@@ -39,6 +40,7 @@ export function CartItem({ item }: CartItemProps) {
                     productId: item.productId,
                     size: item.size,
                     color: item.color,
+                    clothQuality: item.clothQuality,
                     qty: item.qty - 1,
                   })
                 )
@@ -57,6 +59,7 @@ export function CartItem({ item }: CartItemProps) {
                     productId: item.productId,
                     size: item.size,
                     color: item.color,
+                    clothQuality: item.clothQuality,
                     qty: item.qty + 1,
                   })
                 )
@@ -77,6 +80,7 @@ export function CartItem({ item }: CartItemProps) {
                     productId: item.productId,
                     size: item.size,
                     color: item.color,
+                    clothQuality: item.clothQuality,
                   })
                 )
               }

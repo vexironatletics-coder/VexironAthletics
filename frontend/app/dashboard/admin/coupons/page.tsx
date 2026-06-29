@@ -94,7 +94,7 @@ export default function AdminCouponsPage() {
     setIsDeletingPromo(true);
     try {
       await deletePromotion(deletePromoTarget.id).unwrap();
-      toast.success(`Banner "${deletePromoTarget.title}" removed from homepage`);
+      toast.success(`Banner "${deletePromoTarget.title}" deleted`);
       setDeletePromoTarget(null);
     } catch {
       toast.error('Failed to remove banner');
@@ -188,6 +188,9 @@ export default function AdminCouponsPage() {
                       </div>
                     </div>
                   ))}
+                  {promotions.length === 0 && (
+                    <p className="text-sm text-zinc-500">No banner messages yet.</p>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -280,13 +283,13 @@ export default function AdminCouponsPage() {
       <ConfirmDialog
         open={!!deletePromoTarget}
         onOpenChange={(open) => !open && setDeletePromoTarget(null)}
-        title="Remove banner?"
+        title="Delete banner?"
         message={
           deletePromoTarget
-            ? `Remove "${deletePromoTarget.title}" from the homepage scrolling banner?`
+            ? `Permanently delete "${deletePromoTarget.title}"? This cannot be undone.`
             : ''
         }
-        confirmLabel="Yes, remove"
+        confirmLabel="Yes, delete"
         onConfirm={handleDeactivatePromotion}
         loading={isDeletingPromo}
       />

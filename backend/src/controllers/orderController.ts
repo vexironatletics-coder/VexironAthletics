@@ -7,6 +7,7 @@ import { User } from '../models/User';
 import { Coupon } from '../models/Coupon';
 import { calculateShippingFee } from '../utils/helpers';
 import { calculateCouponDiscount } from '../services/couponService';
+import { getClothQualityPrice, normalizeClothQuality } from '../utils/clothQuality';
 import {
   calculatePointsDiscount,
   calculatePointsEarned,
@@ -25,6 +26,7 @@ interface OrderItemInput {
   productId: string;
   size: string;
   color: string;
+  clothQuality?: string;
   qty: number;
 }
 
@@ -113,7 +115,9 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
         throw new Error(`Color ${item.color} not available for ${product.name}`);
       }
 
-      const price = product.discountPrice ?? product.price;
+      const clothQuality = normalizeClothQuality(item.clothQuality);
+      const basePrice = product.discountPrice ?? product.price;
+      const price = getClothQualityPrice(basePrice, clothQuality);
       subtotal += price * item.qty;
 
       orderItems.push({
@@ -123,6 +127,7 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
         price,
         size: item.size,
         color: item.color,
+        clothQuality,
         qty: item.qty,
       });
 

@@ -19,6 +19,7 @@ export interface CartItem {
   image: string;
   size: string;
   color: string;
+  clothQuality?: 'normal' | 'medium' | 'premium';
   qty: number;
   /** Stock cap at time of add — used to limit quantity in cart UI */
   maxStock?: number;
@@ -86,6 +87,7 @@ export interface Order {
     price: number;
     size: string;
     color: string;
+    clothQuality?: 'normal' | 'medium' | 'premium';
     qty: number;
   }[];
   shippingAddress: ShippingAddress;

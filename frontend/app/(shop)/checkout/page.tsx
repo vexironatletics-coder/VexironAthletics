@@ -22,6 +22,7 @@ import { useValidateCouponMutation } from '@/store/api/couponApi';
 import { useGetLoyaltyProfileQuery } from '@/store/api/loyaltyApi';
 import { clearCart, selectCartSubtotal, selectShippingFee } from '@/store/slices/cartSlice';
 import type { RootState } from '@/store';
+import { cartLineKey, getClothQualityLabel } from '@/lib/clothQuality';
 import { formatPrice } from '@/lib/utils';
 import { formatShippingPhones } from '@/lib/shippingAddress';
 import { formatPaymentMethod } from '@/components/orders/OrderList';
@@ -167,6 +168,7 @@ export default function CheckoutPage() {
           productId: item.productId,
           size: item.size,
           color: item.color,
+          clothQuality: item.clothQuality ?? 'normal',
           qty: item.qty,
         })),
         shippingAddress,
@@ -347,8 +349,11 @@ export default function CheckoutPage() {
                 </p>
               </div>
               {items.map((item) => (
-                <div key={`${item.productId}-${item.size}`} className="flex justify-between text-sm">
-                  <span>{item.name} x{item.qty} ({item.size}, {item.color})</span>
+                <div key={cartLineKey(item)} className="flex justify-between text-sm">
+                  <span>
+                    {item.name} x{item.qty} ({item.size}, {item.color},{' '}
+                    {getClothQualityLabel(item.clothQuality ?? 'normal')})
+                  </span>
                   <span>{formatPrice(item.price * item.qty)}</span>
                 </div>
               ))}

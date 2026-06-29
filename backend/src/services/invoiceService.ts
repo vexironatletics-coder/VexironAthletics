@@ -6,6 +6,12 @@ import { formatPaymentMethodLabel } from '../config/bankTransfer';
 
 const formatPrice = (n: number) => `Rs ${n.toLocaleString('en-PK')}`;
 
+const clothQualityLabel = (quality?: string): string => {
+  if (quality === 'premium') return 'Premium';
+  if (quality === 'medium') return 'Medium';
+  return 'Normal';
+};
+
 const NAVY   = '#0A2947';
 const CREAM  = '#F3E4C9';
 const BROWN  = '#8B5E3C';
@@ -96,7 +102,7 @@ export const generateInvoicePdf = async (
       .text(item.name, cols[0], y, { width: 215, ellipsis: true });
     doc
       .font('Helvetica')
-      .text(`${item.size} / ${item.color}`, cols[1], y, { width: 65 })
+      .text(`${item.size} / ${item.color} / ${clothQualityLabel(item.clothQuality)}`, cols[1], y, { width: 65 })
       .text(String(item.qty), cols[2], y)
       .text(formatPrice(item.price), cols[3], y)
       .text(formatPrice(item.price * item.qty), cols[4], y);
@@ -243,7 +249,7 @@ export const generateDispatchReceiptPdf = async (
       .text(item.name, 68, y, { width: 218, ellipsis: true });
     doc
       .font('Helvetica')
-      .text(`${item.size} · ${item.color}`, 290, y, { width: 105 })
+      .text(`${item.size} · ${item.color} · ${clothQualityLabel(item.clothQuality)}`, 290, y, { width: 105 })
       .fillColor(NAVY)
       .font('Helvetica-Bold')
       .text(String(item.qty), 400, y)

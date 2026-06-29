@@ -51,10 +51,10 @@ export const updatePromotion = async (req: Request, res: Response): Promise<void
 };
 
 export const deletePromotion = async (req: Request, res: Response): Promise<void> => {
-  const promotion = await Promotion.findByIdAndUpdate(req.params.id, { active: false }, { new: true });
+  const promotion = await Promotion.findByIdAndDelete(req.params.id);
   if (!promotion) {
     res.status(404).json({ message: 'Promotion not found' });
     return;
   }
-  res.json({ message: 'Promotion deactivated' });
+  res.json({ message: 'Promotion deleted' });
 };

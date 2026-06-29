@@ -7,6 +7,7 @@ export interface ICartItem {
   image: string;
   size: string;
   color: string;
+  clothQuality?: string;
   qty: number;
 }
 
@@ -25,6 +26,7 @@ const cartItemSchema = new Schema<ICartItem>(
     image: { type: String, required: true },
     size: { type: String, required: true },
     color: { type: String, required: true },
+    clothQuality: { type: String, enum: ['normal', 'medium', 'premium'], default: 'normal' },
     qty: { type: Number, required: true, min: 1 },
   },
   { _id: false }

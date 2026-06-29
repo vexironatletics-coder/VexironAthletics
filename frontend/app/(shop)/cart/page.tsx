@@ -15,6 +15,7 @@ import {
   selectShippingFee,
   selectCartTotal,
 } from '@/store/slices/cartSlice';
+import { cartLineKey } from '@/lib/clothQuality';
 import { formatPrice } from '@/lib/utils';
 
 export default function CartPage() {
@@ -64,7 +65,7 @@ export default function CartPage() {
         <div className="grid gap-8 lg:grid-cols-3">
           <div className="space-y-4 lg:col-span-2">
             {items.map((item) => (
-              <CartItem key={`${item.productId}-${item.size}-${item.color}`} item={item} />
+              <CartItem key={cartLineKey(item)} item={item} />
             ))}
           </div>
           <Card className="theme-border-accent h-fit border shadow-sm">
