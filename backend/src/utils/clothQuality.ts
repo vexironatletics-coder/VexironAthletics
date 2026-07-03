@@ -18,3 +18,26 @@ export const getClothQualityMultiplier = (quality: ClothQuality): number =>
 
 export const getClothQualityPrice = (basePrice: number, quality: ClothQuality): number =>
   Math.round(basePrice * getClothQualityMultiplier(quality));
+
+type ProductQualitySource = {
+  price: number;
+  discountPrice?: number | null;
+  mediumPrice?: number | null;
+  premiumPrice?: number | null;
+};
+
+/** Resolve sale price for a product + quality tier (admin-set or auto multiplier). */
+export const getProductQualityPriceForProduct = (
+  product: ProductQualitySource,
+  quality: ClothQuality
+): number => {
+  const normalBase = product.discountPrice ?? product.price;
+  if (quality === 'normal') return normalBase;
+  if (quality === 'medium' && product.mediumPrice != null && product.mediumPrice > 0) {
+    return product.mediumPrice;
+  }
+  if (quality === 'premium' && product.premiumPrice != null && product.premiumPrice > 0) {
+    return product.premiumPrice;
+  }
+  return getClothQualityPrice(normalBase, quality);
+};

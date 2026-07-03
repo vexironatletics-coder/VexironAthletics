@@ -17,14 +17,34 @@ export const getClothQualityLabel = (quality: ClothQuality): string =>
   CLOTH_QUALITIES.find((q) => q.value === quality)?.label ?? 'Normal';
 
 /** Sale price for a product at the selected cloth quality tier. */
-export const getProductQualityPrice = (product: Product, quality: ClothQuality = DEFAULT_CLOTH_QUALITY): number => {
-  const base = product.discountPrice ?? product.price;
-  return Math.round(base * getClothQualityMultiplier(quality));
+export const getProductQualityPrice = (
+  product: Product,
+  quality: ClothQuality = DEFAULT_CLOTH_QUALITY
+): number => {
+  const normalBase = product.discountPrice ?? product.price;
+  if (quality === 'normal') return normalBase;
+  if (quality === 'medium' && product.mediumPrice != null && product.mediumPrice > 0) {
+    return product.mediumPrice;
+  }
+  if (quality === 'premium' && product.premiumPrice != null && product.premiumPrice > 0) {
+    return product.premiumPrice;
+  }
+  return Math.round(normalBase * getClothQualityMultiplier(quality));
 };
 
 /** Original list price at quality tier (for strikethrough when discounted). */
-export const getProductQualityListPrice = (product: Product, quality: ClothQuality = DEFAULT_CLOTH_QUALITY): number =>
-  Math.round(product.price * getClothQualityMultiplier(quality));
+export const getProductQualityListPrice = (
+  product: Product,
+  quality: ClothQuality = DEFAULT_CLOTH_QUALITY
+): number => {
+  if (quality === 'medium' && product.mediumPrice != null && product.mediumPrice > 0) {
+    return product.mediumPrice;
+  }
+  if (quality === 'premium' && product.premiumPrice != null && product.premiumPrice > 0) {
+    return product.premiumPrice;
+  }
+  return Math.round(product.price * getClothQualityMultiplier(quality));
+};
 
 export const cartLineKey = (item: {
   productId: string;

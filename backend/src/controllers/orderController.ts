@@ -7,7 +7,7 @@ import { User } from '../models/User';
 import { Coupon } from '../models/Coupon';
 import { calculateShippingFee } from '../utils/helpers';
 import { calculateCouponDiscount } from '../services/couponService';
-import { getClothQualityPrice, normalizeClothQuality } from '../utils/clothQuality';
+import { getProductQualityPriceForProduct, normalizeClothQuality } from '../utils/clothQuality';
 import {
   calculatePointsDiscount,
   calculatePointsEarned,
@@ -116,8 +116,7 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
       }
 
       const clothQuality = normalizeClothQuality(item.clothQuality);
-      const basePrice = product.discountPrice ?? product.price;
-      const price = getClothQualityPrice(basePrice, clothQuality);
+      const price = getProductQualityPriceForProduct(product, clothQuality);
       subtotal += price * item.qty;
 
       orderItems.push({

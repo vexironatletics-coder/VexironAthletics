@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { Product } from '../models/Product';
 import { MAX_ORDER_LINE_ITEMS, MAX_QTY_PER_LINE } from '../utils/constants';
-import { getClothQualityPrice, normalizeClothQuality } from '../utils/clothQuality';
+import { getProductQualityPriceForProduct, normalizeClothQuality } from '../utils/clothQuality';
 
 export interface CartItemInput {
   productId: string;
@@ -71,8 +71,7 @@ export const validateAndNormalizeCartItems = async (
     }
 
     const clothQuality = normalizeClothQuality(item.clothQuality);
-    const basePrice = product.discountPrice ?? product.price;
-    const price = getClothQualityPrice(basePrice, clothQuality);
+    const price = getProductQualityPriceForProduct(product, clothQuality);
     const image = product.images[0]?.url ?? '';
 
     normalized.push({

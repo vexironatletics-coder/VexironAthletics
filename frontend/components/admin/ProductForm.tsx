@@ -16,8 +16,10 @@ import type { Product } from '@/lib/types';
 const productSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
-  price: z.string().min(1, 'Price is required'),
+  price: z.string().min(1, 'Normal quality price is required'),
   discountPrice: z.string().optional(),
+  mediumPrice: z.string().optional(),
+  premiumPrice: z.string().optional(),
   category: z.enum(['men', 'women', 'children']),
   stock: z.string().min(1, 'Stock is required'),
   sizes: z.string().min(1, 'Add at least one size (comma-separated)'),
@@ -39,6 +41,8 @@ function getDefaultValues(product?: Product): ProductFormData {
       description: '',
       price: '',
       discountPrice: '',
+      mediumPrice: '',
+      premiumPrice: '',
       category: 'men',
       stock: '10',
       sizes: 'S,M,L,XL',
@@ -51,6 +55,8 @@ function getDefaultValues(product?: Product): ProductFormData {
     description: product.description,
     price: String(product.price),
     discountPrice: product.discountPrice != null ? String(product.discountPrice) : '',
+    mediumPrice: product.mediumPrice != null ? String(product.mediumPrice) : '',
+    premiumPrice: product.premiumPrice != null ? String(product.premiumPrice) : '',
     category: product.category,
     stock: String(product.stock),
     sizes: product.sizes.join(','),
@@ -78,6 +84,18 @@ function buildFormData(
     formData.append('discountPrice', String(discountPrice));
   } else {
     formData.append('discountPrice', '');
+  }
+
+  if (data.mediumPrice?.trim()) {
+    formData.append('mediumPrice', String(Number(data.mediumPrice)));
+  } else {
+    formData.append('mediumPrice', '');
+  }
+
+  if (data.premiumPrice?.trim()) {
+    formData.append('premiumPrice', String(Number(data.premiumPrice)));
+  } else {
+    formData.append('premiumPrice', '');
   }
 
   const sizes = data.sizes.split(',').map((s) => s.trim()).filter(Boolean);
@@ -147,6 +165,20 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
       toast.error('Enter a valid discount price');
       return;
     }
+    if (data.mediumPrice?.trim()) {
+      const medium = Number(data.mediumPrice);
+      if (Number.isNaN(medium) || medium < 0) {
+        toast.error('Enter a valid Medium quality price');
+        return;
+      }
+    }
+    if (data.premiumPrice?.trim()) {
+      const premium = Number(data.premiumPrice);
+      if (Number.isNaN(premium) || premium < 0) {
+        toast.error('Enter a valid Premium quality price');
+        return;
+      }
+    }
 
     const files = fileInputRef.current?.files;
     const formData = buildFormData(data, files, existingImages);
@@ -197,15 +229,32 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
         {errors.description && <p className="text-sm text-red-500">{errors.description.message}</p>}
       </div>
 
+      <div className="sm:col-span-2">
+        <p className="text-sm font-semibold text-[var(--foreground)]">Cloth quality pricing</p>
+        <p className="mt-1 text-xs text-[var(--muted)]">
+          Normal price is required. Leave Medium / Premium empty to auto-calculate (+15% / +30%).
+        </p>
+      </div>
+
       <div>
-        <Label htmlFor="price">Price (₨)</Label>
-        <Input id="price" type="number" step="0.01" {...register('price')} />
+        <Label htmlFor="price">Normal quality price (₨)</Label>
+        <Input id="price" type="number" step="1" min="0" {...register('price')} />
         {errors.price && <p className="text-sm text-red-500">{errors.price.message}</p>}
       </div>
 
       <div>
-        <Label htmlFor="discountPrice">Discount price (optional)</Label>
-        <Input id="discountPrice" type="number" step="0.01" {...register('discountPrice')} />
+        <Label htmlFor="discountPrice">Normal discount price (optional)</Label>
+        <Input id="discountPrice" type="number" step="1" min="0" {...register('discountPrice')} />
+      </div>
+
+      <div>
+        <Label htmlFor="mediumPrice">Medium quality price (₨)</Label>
+        <Input id="mediumPrice" type="number" step="1" min="0" placeholder="Auto +15%" {...register('mediumPrice')} />
+      </div>
+
+      <div>
+        <Label htmlFor="premiumPrice">Premium quality price (₨)</Label>
+        <Input id="premiumPrice" type="number" step="1" min="0" placeholder="Auto +30%" {...register('premiumPrice')} />
       </div>
 
       <div>

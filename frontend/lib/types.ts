@@ -40,6 +40,8 @@ export interface Product {
   description: string;
   price: number;
   discountPrice?: number;
+  mediumPrice?: number;
+  premiumPrice?: number;
   category: 'men' | 'women' | 'children';
   images: { url: string; public_id: string }[];
   sizes: string[];

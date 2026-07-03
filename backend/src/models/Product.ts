@@ -12,6 +12,10 @@ export interface IProduct extends Document {
   description: string;
   price: number;
   discountPrice?: number;
+  /** Optional fixed price for Medium cloth quality; falls back to +15% if unset */
+  mediumPrice?: number;
+  /** Optional fixed price for Premium cloth quality; falls back to +30% if unset */
+  premiumPrice?: number;
   category: ProductCategory;
   images: IProductImage[];
   sizes: string[];
@@ -39,6 +43,8 @@ const productSchema = new Schema<IProduct>(
     description: { type: String, required: true },
     price: { type: Number, required: true, min: 0 },
     discountPrice: { type: Number, min: 0 },
+    mediumPrice: { type: Number, min: 0 },
+    premiumPrice: { type: Number, min: 0 },
     category: {
       type: String,
       enum: ['men', 'women', 'children'],

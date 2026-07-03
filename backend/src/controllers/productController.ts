@@ -161,6 +161,8 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
     ...req.body,
     price: Number(req.body.price),
     discountPrice: req.body.discountPrice ? Number(req.body.discountPrice) : undefined,
+    mediumPrice: req.body.mediumPrice ? Number(req.body.mediumPrice) : undefined,
+    premiumPrice: req.body.premiumPrice ? Number(req.body.premiumPrice) : undefined,
     stock: Number(req.body.stock),
     sizes: typeof req.body.sizes === 'string' ? JSON.parse(req.body.sizes) : req.body.sizes,
     colors: typeof req.body.colors === 'string' ? JSON.parse(req.body.colors) : req.body.colors,
@@ -197,6 +199,16 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
     updateData.discountPrice = Number(updateData.discountPrice);
   } else if ('discountPrice' in req.body && req.body.discountPrice === '') {
     updateData.discountPrice = undefined;
+  }
+  if (updateData.mediumPrice !== undefined && updateData.mediumPrice !== '') {
+    updateData.mediumPrice = Number(updateData.mediumPrice);
+  } else if ('mediumPrice' in req.body && req.body.mediumPrice === '') {
+    updateData.mediumPrice = undefined;
+  }
+  if (updateData.premiumPrice !== undefined && updateData.premiumPrice !== '') {
+    updateData.premiumPrice = Number(updateData.premiumPrice);
+  } else if ('premiumPrice' in req.body && req.body.premiumPrice === '') {
+    updateData.premiumPrice = undefined;
   }
   if (updateData.stock !== undefined && updateData.stock !== '') {
     updateData.stock = Number(updateData.stock);
