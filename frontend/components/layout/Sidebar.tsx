@@ -216,6 +216,12 @@ const adminEntries: SidebarEntry[] = [
     match: 'exact',
   },
   {
+    href: '/dashboard/admin/chat',
+    label: 'Live Chat',
+    icon: MessageSquare,
+    match: 'prefix',
+  },
+  {
     label: 'Catalog',
     icon: Package,
     children: [
@@ -230,7 +236,6 @@ const adminEntries: SidebarEntry[] = [
     children: [
       { href: '/dashboard/admin/orders', label: 'Orders', icon: ClipboardList },
       { href: '/dashboard/admin/coupons', label: 'Coupons', icon: Ticket },
-      { href: '/dashboard/admin/chat', label: 'Live Chat', icon: MessageSquare },
     ],
   },
   {

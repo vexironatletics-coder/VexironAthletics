@@ -104,7 +104,7 @@ export function ChatWidget() {
   const startConversation = async () => {
     try {
       const { conversation } = await createConversation({
-        guestName: user?.name ?? guestName.trim() || 'Guest',
+        guestName: user?.name ?? (guestName.trim() || 'Guest'),
       }).unwrap();
       dispatch(setActiveConversationId(conversation._id));
       setNeedsName(false);
@@ -115,6 +115,15 @@ export function ChatWidget() {
       console.error('Failed to start chat', err);
     }
   };
+
+  useEffect(() => {
+    if (!widgetOpen || activeConversationId || starting) return;
+    if (user) {
+      void startConversation();
+    } else if (!needsName) {
+      setNeedsName(true);
+    }
+  }, [widgetOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!widgetOpen || !activeConversationId) return;
@@ -156,16 +165,18 @@ export function ChatWidget() {
       <button
         type="button"
         onClick={openChat}
-        className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#0A2947] text-[#F3E4C9] shadow-xl transition hover:scale-105 hover:shadow-2xl"
+        className="fixed bottom-24 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#0A2947] text-[#F3E4C9] shadow-xl transition hover:scale-105 hover:shadow-2xl"
         aria-label="Open live chat"
+        title="Live Chat"
       >
         <MessageCircle className="h-6 w-6" />
+        <span className="sr-only">Live Chat</span>
       </button>
     );
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-40 flex w-[min(100vw-2rem,380px)] flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-2xl">
+    <div className="fixed bottom-24 right-6 z-50 flex w-[min(100vw-2rem,380px)] flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-2xl">
       {/* Header */}
       <div className="flex items-center justify-between bg-[#0A2947] px-4 py-3 text-[#F3E4C9]">
         <div className="flex items-center gap-2">

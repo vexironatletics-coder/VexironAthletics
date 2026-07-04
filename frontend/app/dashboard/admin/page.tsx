@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, MessageSquare } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
@@ -18,6 +18,22 @@ export default function AdminDashboardPage() {
   return (
     <ErrorBoundary>
           <h1 className="text-2xl font-bold">Admin Overview</h1>
+
+          <Link
+            href="/dashboard/admin/chat"
+            className="mt-4 flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm transition hover:border-[var(--accent)] hover:shadow-md"
+          >
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0A2947] text-[#F3E4C9]">
+              <MessageSquare className="h-6 w-6" />
+            </span>
+            <span>
+              <span className="block font-semibold text-[var(--foreground)]">Live Chat Inbox</span>
+              <span className="text-sm text-[var(--muted)]">
+                Reply to customer messages in real time
+              </span>
+            </span>
+          </Link>
+
           {isLoading ? (
             <Skeleton className="mt-6 h-48 w-full" />
           ) : (
