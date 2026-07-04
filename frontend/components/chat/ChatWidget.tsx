@@ -22,7 +22,7 @@ import { getGuestSessionId, newClientMessageId } from '@/lib/chatSession';
 import { ChatComposer, ChatMessageList, OnlineDot } from '@/components/chat/ChatMessageList';
 
 /** Floating live-chat widget for customers (logged in or guest) */
-export function ChatWidget() {
+export function ChatWidget({ inline = false }: { inline?: boolean }) {
   const dispatch = useDispatch<AppDispatch>();
   const { user, token } = useSelector((state: RootState) => state.auth);
   const {
@@ -160,12 +160,15 @@ export function ChatWidget() {
     }, 300);
   };
 
+  const btnClass =
+    'flex h-14 w-14 items-center justify-center rounded-full bg-[#0A2947] text-[#F3E4C9] shadow-xl transition hover:scale-105 hover:shadow-2xl';
+
   if (!widgetOpen) {
     return (
       <button
         type="button"
         onClick={openChat}
-        className="fixed bottom-24 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#0A2947] text-[#F3E4C9] shadow-xl transition hover:scale-105 hover:shadow-2xl"
+        className={inline ? btnClass : `fixed bottom-24 right-6 z-50 ${btnClass}`}
         aria-label="Open live chat"
         title="Live Chat"
       >
@@ -175,8 +178,13 @@ export function ChatWidget() {
     );
   }
 
+  const panelClass = inline
+    ? 'absolute bottom-full right-0 mb-3 flex w-[min(calc(100vw-3rem),380px)] flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-2xl'
+    : 'fixed bottom-24 right-6 z-50 flex w-[min(100vw-2rem,380px)] flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-2xl';
+
   return (
-    <div className="fixed bottom-24 right-6 z-50 flex w-[min(100vw-2rem,380px)] flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-2xl">
+    <div className={inline ? 'relative min-h-14 w-14' : undefined}>
+    <div className={panelClass}>
       {/* Header */}
       <div className="flex items-center justify-between bg-[#0A2947] px-4 py-3 text-[#F3E4C9]">
         <div className="flex items-center gap-2">
@@ -263,6 +271,7 @@ export function ChatWidget() {
       {!needsName && !activeConversationId && starting && (
         <p className="p-6 text-center text-sm text-[var(--muted)]">Connecting…</p>
       )}
+    </div>
     </div>
   );
 }

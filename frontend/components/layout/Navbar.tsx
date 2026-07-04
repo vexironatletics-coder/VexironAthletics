@@ -20,14 +20,12 @@ import {
   LayoutDashboard,
   ShieldCheck,
   ChevronRight,
-  MessageCircle,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { SearchAutocomplete } from '@/components/search/SearchAutocomplete';
 import { selectCartCount } from '@/store/slices/cartSlice';
 import { clearCart, clearGuestCartStorage } from '@/store/slices/cartSlice';
 import { logout } from '@/store/slices/authSlice';
-import { setWidgetOpen } from '@/store/slices/chatSlice';
 import type { RootState } from '@/store';
 import { useRouter } from 'next/navigation';
 import { useClerk } from '@clerk/nextjs';
@@ -150,14 +148,6 @@ export function Navbar() {
                   </Link>
                 );
               })}
-              <button
-                type="button"
-                onClick={() => dispatch(setWidgetOpen(true))}
-                className={cn(navLinkClass, 'inline-flex items-center gap-1.5')}
-              >
-                <MessageCircle className="h-4 w-4" />
-                Live Chat
-              </button>
               {user?.role === 'admin' && (
                 <Link
                   href="/dashboard/admin"
@@ -352,17 +342,6 @@ export function Navbar() {
                   </Link>
                 );
               })}
-              <button
-                type="button"
-                onClick={() => {
-                  dispatch(setWidgetOpen(true));
-                  setMobileOpen(false);
-                }}
-                className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-medium text-[#F3E4C9] opacity-75 transition hover:bg-white/10 hover:opacity-100"
-              >
-                <MessageCircle className="h-4 w-4" />
-                Live Chat
-              </button>
               {user?.role === 'admin' && (
                 <Link
                   href="/dashboard/admin"
