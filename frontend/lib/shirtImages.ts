@@ -34,6 +34,7 @@ export const heroBannerImages = {
 export const categoryShirtImages = {
   men:      unsplash('1602810318383-e386cc2a3ccf', 600, 800),
   women:    unsplash('1558618666-fcd25c85cd64',   600, 800),
+  common:   unsplash('1489987707849-d955c6a53e7e', 600, 800),
   children: unsplash('1503341504253-dff481548365', 600, 800),
 } as const;
 

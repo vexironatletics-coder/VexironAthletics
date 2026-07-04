@@ -131,3 +131,38 @@ export interface ProductFilters {
   maxStock?: number;
   ids?: string;
 }
+
+export interface ChatConversation {
+  _id: string;
+  customerUserId?: string;
+  guestSessionId?: string;
+  customerName: string;
+  customerEmail?: string;
+  lastMessage?: string;
+  lastMessageAt: string;
+  unreadCustomer: number;
+  unreadAdmin: number;
+  status: 'open' | 'closed';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChatMessage {
+  _id: string;
+  conversationId: string;
+  sender: 'customer' | 'admin';
+  senderUserId?: string;
+  body: string;
+  clientMessageId: string;
+  readByCustomer: boolean;
+  readByAdmin: boolean;
+  deliveredAt?: string;
+  createdAt: string;
+}
+
+export interface ChatPresence {
+  conversationId: string;
+  customerOnline: boolean;
+  adminOnline: boolean;
+}
+

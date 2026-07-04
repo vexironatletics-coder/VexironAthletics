@@ -11,6 +11,7 @@ if (!process.env.NODE_ENV) {
 
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
 const express = require('express');
 const next = require('next');
 
@@ -31,8 +32,9 @@ const hasFrontendBuild = fs.existsSync(nextBuildDir);
 
 let createApp;
 let startBackendServices;
+let initSocketServer;
 try {
-  ({ createApp, startBackendServices } = require('./backend/dist/hostEntry'));
+  ({ createApp, startBackendServices, initSocketServer } = require('./backend/dist/hostEntry'));
 } catch (err) {
   console.error('[Startup] FATAL: backend/dist/hostEntry.js missing or failed to load');
   console.error('[Startup]', err?.message || err);
@@ -82,6 +84,10 @@ async function main() {
 
   const apiApp = createApp({ catchAll: false });
   const server = express();
+  const httpServer = http.createServer(server);
+
+  // Real-time live chat (Socket.IO on same port as storefront + API)
+  initSocketServer(httpServer);
 
   // Next.js handler — set after prepare() completes
   let handle = null;
@@ -123,9 +129,10 @@ async function main() {
   });
 
   // Listen FIRST — Hostinger health checks time out if we wait for next.prepare()
-  server.listen(PORT, () => {
+  httpServer.listen(PORT, () => {
     console.log(`[Startup] VexironAthletics listening on port ${PORT}`);
     console.log(`[Startup] API health: http://localhost:${PORT}/api/health`);
+    console.log(`[Startup] Socket.IO: ws://localhost:${PORT}/socket.io`);
   });
 
   // Load Next.js in background (can take 30–60s on shared hosting)

@@ -24,6 +24,7 @@ import promotionRoutes from './routes/promotions';
 import settingsRoutes from './routes/settings';
 import loyaltyRoutes from './routes/loyalty';
 import analyticsRoutes from './routes/analytics';
+import chatRoutes from './routes/chat';
 
 dotenv.config();
 dotenv.config({ path: path.join(process.cwd(), 'backend', '.env') });
@@ -57,7 +58,7 @@ export const createApp = (options: CreateAppOptions = {}): express.Application =
           styleSrc: ["'self'", "'unsafe-inline'", 'https:'],
           imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
           fontSrc: ["'self'", 'https:', 'data:'],
-          connectSrc: ["'self'", 'https:'],
+          connectSrc: ["'self'", 'https:', 'wss:', 'ws:'],
           frameSrc: ["'self'", 'https://*.clerk.com', 'https://*.clerk.accounts.dev'],
           objectSrc: ["'none'"],
           ...(isProd ? { upgradeInsecureRequests: [] } : {}),
@@ -165,6 +166,7 @@ export const createApp = (options: CreateAppOptions = {}): express.Application =
   app.use('/api/settings', settingsRoutes);
   app.use('/api/loyalty', loyaltyRoutes);
   app.use('/api/analytics', analyticsRoutes);
+  app.use('/api/chat', chatRoutes);
 
   if (options.catchAll !== false) {
     app.use(notFound);

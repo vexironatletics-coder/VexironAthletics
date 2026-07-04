@@ -4,3 +4,4 @@
  */
 export { createApp } from './createApp';
 export { startBackendServices } from './startServices';
+export { initSocketServer } from './socket';

@@ -13,8 +13,14 @@ const SETTINGS_TTL = 120; // 2 minutes
 const DEFAULT_CATEGORY_IMAGES: ICategoryImage[] = [
   { slug: 'men', label: "Men's", image: '', href: '/category/men' },
   { slug: 'women', label: "Women's", image: '', href: '/category/women' },
+  { slug: 'common', label: 'Common', image: '', href: '/category/common' },
   { slug: 'children', label: "Children's", image: '', href: '/category/children' },
 ];
+
+const mergeCategoryImages = (saved: ICategoryImage[]): ICategoryImage[] => {
+  const bySlug = new Map(saved.map((c) => [c.slug, c]));
+  return DEFAULT_CATEGORY_IMAGES.map((def) => ({ ...def, ...bySlug.get(def.slug) }));
+};
 
 export const DEFAULT_PUBLIC_SETTINGS = {
   designId: 'classic',
@@ -204,7 +210,8 @@ export const getCategoryImages = async (_req: Request, res: Response): Promise<v
     }
     const data = await cacheAside(CATEGORY_IMAGES_CACHE_KEY, SETTINGS_TTL, async () => {
       const settings = await getOrCreateSiteSettings();
-      return settings.categoryImages.length > 0 ? settings.categoryImages : DEFAULT_CATEGORY_IMAGES;
+      const saved = settings.categoryImages.length > 0 ? settings.categoryImages : DEFAULT_CATEGORY_IMAGES;
+      return mergeCategoryImages(saved);
     });
     res.setHeader('Cache-Control', 'public, max-age=60');
     res.json(data);

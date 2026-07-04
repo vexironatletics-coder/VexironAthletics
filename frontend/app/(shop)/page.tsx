@@ -21,12 +21,14 @@ import { useGetCategoryImagesQuery } from '@/store/api/settingsApi';
 import Image from 'next/image';
 
 import { categoryShirtImages } from '@/lib/shirtImages';
+import { SHOP_CATEGORY_NAV_LINKS } from '@/lib/categories';
 
-const DEFAULT_CATEGORIES = [
-  { slug: 'men', label: "Men's", image: categoryShirtImages.men, href: '/category/men' },
-  { slug: 'women', label: "Women's", image: categoryShirtImages.women, href: '/category/women' },
-  { slug: 'children', label: "Children's", image: categoryShirtImages.children, href: '/category/children' },
-];
+const DEFAULT_CATEGORIES = SHOP_CATEGORY_NAV_LINKS.map(({ slug, href, label }) => ({
+  slug,
+  label: slug === 'men' ? "Men's" : slug === 'women' ? "Women's" : slug === 'children' ? "Children's" : label,
+  image: categoryShirtImages[slug],
+  href,
+}));
 
 export default function LandingPage() {
   const { data, isLoading, isError } = useGetProductsQuery({ limit: 8, sort: 'newest' });
@@ -44,9 +46,9 @@ export default function LandingPage() {
         badge="Collections"
         badgeIcon={Sparkles}
         title="Shop by Category"
-        description="Explore curated styles for men, women, and children — built for performance and everyday wear."
+        description="Explore curated styles for men, women, common unisex pieces, and children — built for performance and everyday wear."
       >
-        <div className="grid gap-6 sm:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {categories.map((cat, i) => (
             <SlideUp key={cat.slug} delay={i * 100}>
               <Link

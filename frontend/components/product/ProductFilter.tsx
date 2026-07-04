@@ -2,6 +2,7 @@
 
 import { SIZES, COLORS } from '@/lib/utils';
 import type { ProductFilters } from '@/lib/types';
+import { SHOP_CATEGORY_SLUGS, SHOP_CATEGORY_LABELS } from '@/lib/categories';
 
 interface ProductFilterProps {
   filters: ProductFilters;
@@ -31,8 +32,8 @@ export function ProductFilter({ filters, onFilterChange }: ProductFilterProps) {
       <div>
         <h3 className="mb-3 font-semibold">Category</h3>
         <div className="space-y-2">
-          {(['men', 'women', 'children'] as const).map((cat) => (
-            <label key={cat} className="flex items-center gap-2 text-sm capitalize">
+          {SHOP_CATEGORY_SLUGS.map((cat) => (
+            <label key={cat} className="flex items-center gap-2 text-sm">
               <input
                 type="radio"
                 name="category"
@@ -40,7 +41,7 @@ export function ProductFilter({ filters, onFilterChange }: ProductFilterProps) {
                 onChange={() => onFilterChange({ category: cat })}
                 className="rounded"
               />
-              {cat}
+              {SHOP_CATEGORY_LABELS[cat]}
             </label>
           ))}
           <button

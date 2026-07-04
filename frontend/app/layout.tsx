@@ -10,7 +10,7 @@ import { StoreHydrator } from '@/components/providers/StoreHydrator';
 import { CartSync } from '@/components/providers/CartSync';
 import { ClerkAuthSync } from '@/components/providers/ClerkAuthSync';
 import { AudienceTracker } from '@/components/providers/AudienceTracker';
-import { ShopNavbar, ShopFooter, ShopWhatsApp } from '@/components/layout/ShopChrome';
+import { ShopNavbar, ShopFooter, ShopWhatsApp, ShopChatWidget } from '@/components/layout/ShopChrome';
 import { CookieConsent } from '@/components/layout/CookieConsent';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { APP_NAME } from '@/lib/constants';
@@ -120,6 +120,7 @@ export default async function RootLayout({
                 <main className="flex-1">{children}</main>
                 <ShopFooter />
                 <ShopWhatsApp />
+                <ShopChatWidget />
                 <CookieConsent />
                 <Toaster
                   position="top-right"

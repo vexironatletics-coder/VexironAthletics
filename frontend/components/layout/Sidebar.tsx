@@ -17,6 +17,7 @@ import {
   Heart,
   ClipboardList,
   Images,
+  MessageSquare,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -229,6 +230,7 @@ const adminEntries: SidebarEntry[] = [
     children: [
       { href: '/dashboard/admin/orders', label: 'Orders', icon: ClipboardList },
       { href: '/dashboard/admin/coupons', label: 'Coupons', icon: Ticket },
+      { href: '/dashboard/admin/chat', label: 'Live Chat', icon: MessageSquare },
     ],
   },
   {

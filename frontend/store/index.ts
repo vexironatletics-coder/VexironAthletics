@@ -3,6 +3,7 @@ import authReducer from './slices/authSlice';
 import cartReducer from './slices/cartSlice';
 import wishlistReducer from './slices/wishlistSlice';
 import themePreviewReducer from './slices/themePreviewSlice';
+import chatReducer from './slices/chatSlice';
 import { productApi } from './api/productApi';
 import { orderApi } from './api/orderApi';
 import { userApi } from './api/userApi';
@@ -13,6 +14,7 @@ import { promotionApi } from './api/promotionApi';
 import { settingsApi } from './api/settingsApi';
 import { loyaltyApi } from './api/loyaltyApi';
 import { analyticsApi } from './api/analyticsApi';
+import { chatApi } from './api/chatApi';
 
 const apiReducers = [
   productApi,
@@ -25,6 +27,7 @@ const apiReducers = [
   settingsApi,
   loyaltyApi,
   analyticsApi,
+  chatApi,
 ] as const;
 
 export const makeStore = () =>
@@ -34,6 +37,7 @@ export const makeStore = () =>
       cart: cartReducer,
       wishlist: wishlistReducer,
       themePreview: themePreviewReducer,
+      chat: chatReducer,
       [productApi.reducerPath]: productApi.reducer,
       [orderApi.reducerPath]: orderApi.reducer,
       [userApi.reducerPath]: userApi.reducer,
@@ -44,6 +48,7 @@ export const makeStore = () =>
       [settingsApi.reducerPath]: settingsApi.reducer,
       [loyaltyApi.reducerPath]: loyaltyApi.reducer,
       [analyticsApi.reducerPath]: analyticsApi.reducer,
+      [chatApi.reducerPath]: chatApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({
@@ -65,7 +70,8 @@ export const makeStore = () =>
         promotionApi.middleware,
         settingsApi.middleware,
         loyaltyApi.middleware,
-        analyticsApi.middleware
+        analyticsApi.middleware,
+        chatApi.middleware
       ),
   });
 

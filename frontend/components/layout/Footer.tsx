@@ -6,6 +6,7 @@ const footerLinks = {
   shop: [
     { href: '/category/men', label: 'Men' },
     { href: '/category/women', label: 'Women' },
+    { href: '/category/common', label: 'Common' },
     { href: '/category/children', label: 'Children' },
     { href: '/products', label: 'All Products' },
   ],

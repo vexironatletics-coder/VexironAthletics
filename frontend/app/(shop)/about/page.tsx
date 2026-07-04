@@ -92,6 +92,7 @@ const values = [
 const collections = [
   { slug: 'men', label: "Men's Collection", color: 'from-[#0A2947] to-[#1a4a7a]' },
   { slug: 'women', label: "Women's Collection", color: 'from-[#8B5E3C] to-[#b07d52]' },
+  { slug: 'common', label: 'Common Collection', color: 'from-[#5c4d7a] to-[#7a6b99]' },
   { slug: 'children', label: "Kids' Collection", color: 'from-[#4a6741] to-[#6b9464]' },
 ];
 
@@ -239,7 +240,7 @@ export default function AboutPage() {
               Curated lines for the whole family — updated every season.
             </p>
           </div>
-          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {collections.map((c) => (
               <Link
                 key={c.slug}

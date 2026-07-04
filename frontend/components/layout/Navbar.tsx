@@ -36,6 +36,7 @@ const navLinks = [
   { href: '/', label: 'Home', match: 'home' as const },
   { href: '/category/men', label: 'Men' },
   { href: '/category/women', label: 'Women' },
+  { href: '/category/common', label: 'Common' },
   { href: '/category/children', label: 'Children' },
   { href: '/products?sort=price-desc&minPrice=0&maxPrice=5000', label: 'Sale' },
 ];

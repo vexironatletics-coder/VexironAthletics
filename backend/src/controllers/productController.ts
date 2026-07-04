@@ -1,11 +1,12 @@
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 import mongoose from 'mongoose';
-import { Product, ProductCategory } from '../models/Product';
+import { Product } from '../models/Product';
 import { Review } from '../models/Review';
 import { cloudinary, isCloudinaryConfigured } from '../config/cloudinary';
 import { syncProductToSearch } from '../services/searchService';
 import { cacheAside, cacheInvalidatePrefix } from '../config/cache';
+import { categoryFilterForSlug } from '../utils/categories';
 
 const PRODUCTS_TTL = 60; // 1 minute for product listings
 
@@ -40,7 +41,10 @@ export const getProducts = async (req: Request, res: Response): Promise<void> =>
   const filter: Record<string, unknown> = { active: true };
 
   if (category && typeof category === 'string') {
-    filter.category = category as ProductCategory;
+    const categoryFilter = categoryFilterForSlug(category);
+    if (categoryFilter) {
+      filter.category = categoryFilter;
+    }
   }
 
   if (minPrice || maxPrice) {

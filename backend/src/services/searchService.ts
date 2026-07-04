@@ -1,6 +1,7 @@
 import { MeiliSearch } from 'meilisearch';
 import { Product, IProduct } from '../models/Product';
 import { SearchLog } from '../models/SearchLog';
+import { categoryFilterForSlug } from '../utils/categories';
 
 const MEILI_HOST = process.env.MEILI_HOST ?? 'http://127.0.0.1:7700';
 const MEILI_KEY = process.env.MEILI_MASTER_KEY ?? '';
@@ -95,7 +96,10 @@ export interface SearchParams {
 
 const buildMongoFilter = (params: SearchParams): Record<string, unknown> => {
   const filter: Record<string, unknown> = { active: true };
-  if (params.category) filter.category = params.category;
+  if (params.category) {
+    const categoryFilter = categoryFilterForSlug(params.category);
+    if (categoryFilter) filter.category = categoryFilter;
+  }
   if (params.minPrice || params.maxPrice) {
     filter.price = {};
     if (params.minPrice) (filter.price as Record<string, number>).$gte = params.minPrice;
@@ -123,7 +127,11 @@ export const searchProducts = async (params: SearchParams) => {
   if (client && meiliReady && q) {
     try {
       const filters: string[] = ['active = true'];
-      if (params.category) filters.push(`category = "${params.category}"`);
+      if (params.category === 'common') {
+        filters.push('(category = "men" OR category = "women")');
+      } else if (params.category) {
+        filters.push(`category = "${params.category}"`);
+      }
       if (params.minPrice) filters.push(`price >= ${params.minPrice}`);
       if (params.maxPrice) filters.push(`price <= ${params.maxPrice}`);
       if (params.minRating) filters.push(`ratings >= ${params.minRating}`);
@@ -270,7 +278,10 @@ export const autocompleteSearch = async (q: string, limit = 8) => {
 export const visualSearch = async (colors: string[], category?: string) => {
   const filter: Record<string, unknown> = { active: true };
   if (colors.length) filter.colors = { $in: colors.map((c) => new RegExp(c, 'i')) };
-  if (category) filter.category = category;
+  if (category) {
+    const categoryFilter = categoryFilterForSlug(category);
+    if (categoryFilter) filter.category = categoryFilter;
+  }
 
   const products = await Product.find(filter).limit(24);
 
