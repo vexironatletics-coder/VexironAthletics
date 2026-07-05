@@ -1,5 +1,8 @@
 export const APP_NAME = 'VexironAthletics';
 
+/** Navbar / brand mark (transparent SVG in public/) */
+export const SITE_LOGO_PATH = '/LOGO.svg';
+
 /** E.164 without + — e.g. 923001234567 for Pakistan */
 export const WHATSAPP_NUMBER =
   process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '923001234567';

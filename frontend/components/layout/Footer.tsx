@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Mail } from 'lucide-react';
 import { APP_NAME } from '@/lib/constants';
+import { SiteLogo } from '@/components/layout/SiteLogo';
 
 const footerLinks = {
   shop: [
@@ -67,8 +68,8 @@ export function Footer() {
 
           {/* Brand + socials */}
           <div>
-            <Link href="/" className="text-xl font-bold text-[var(--accent)]">
-              {APP_NAME}
+            <Link href="/" aria-label={APP_NAME} className="inline-flex">
+              <SiteLogo className="h-9 sm:h-10 max-w-[200px]" />
             </Link>
             <p className="mt-3 text-sm opacity-80 leading-relaxed">
               Premium clothing for men, women, and children. Quality fashion at affordable prices.

@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { useState, useRef, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
@@ -30,6 +29,7 @@ import type { RootState } from '@/store';
 import { useRouter } from 'next/navigation';
 import { useClerk } from '@clerk/nextjs';
 import { APP_NAME } from '@/lib/constants';
+import { SiteLogo } from '@/components/layout/SiteLogo';
 import { cn } from '@/lib/utils';
 
 const navLinks = [
@@ -122,14 +122,7 @@ export function Navbar() {
             </button>
 
             <Link href="/" aria-label={APP_NAME} className="flex shrink-0 items-center">
-              <Image
-                src="/logo.png"
-                alt={APP_NAME}
-                width={140}
-                height={40}
-                className="h-8 sm:h-9 w-auto object-contain"
-                priority
-              />
+              <SiteLogo priority />
             </Link>
 
             <nav className="hidden items-center gap-0.5 lg:flex">
