@@ -17,14 +17,37 @@ const DEFAULT_CATEGORY_IMAGES: ICategoryImage[] = [
   { slug: 'children', label: "Children's", image: '', href: '/category/children' },
 ];
 
+const toPlainCategoryImage = (cat: ICategoryImage): ICategoryImage => {
+  const raw =
+    typeof (cat as { toObject?: () => ICategoryImage }).toObject === 'function'
+      ? (cat as { toObject: () => ICategoryImage }).toObject()
+      : cat;
+  const slug = String(raw.slug ?? '').trim().toLowerCase();
+  const defaultDef = DEFAULT_CATEGORY_IMAGES.find((d) => d.slug === slug);
+  const href = raw.href?.trim();
+  return {
+    slug,
+    label: raw.label?.trim() || defaultDef?.label || slug,
+    image: raw.image?.trim() || defaultDef?.image || '',
+    imagePublicId: raw.imagePublicId,
+    href:
+      href && href.startsWith('/category/')
+        ? href
+        : defaultDef?.href || `/category/${slug}`,
+  };
+};
+
 const mergeCategoryImages = (saved: ICategoryImage[]): ICategoryImage[] => {
-  const bySlug = new Map(saved.map((c) => [c.slug, c]));
+  const plain = saved.map(toPlainCategoryImage);
+  const bySlug = new Map(plain.map((c) => [c.slug, c]));
   const defaultSlugs = new Set(DEFAULT_CATEGORY_IMAGES.map((d) => d.slug));
   const mergedDefaults = DEFAULT_CATEGORY_IMAGES.map((def) => ({
     ...def,
     ...(bySlug.get(def.slug) ?? {}),
+    href: bySlug.get(def.slug)?.href || def.href,
+    image: bySlug.get(def.slug)?.image || def.image,
   }));
-  const extras = saved.filter((c) => !defaultSlugs.has(c.slug));
+  const extras = plain.filter((c) => !defaultSlugs.has(c.slug));
   return [...mergedDefaults, ...extras];
 };
 
@@ -235,7 +258,7 @@ export const updateCategoryImages = async (req: Request, res: Response): Promise
       res.status(400).json({ message: 'categories array is required' });
       return;
     }
-    settings.categoryImages = categories;
+    settings.categoryImages = categories.map(toPlainCategoryImage);
     await settings.save();
     res.json(settings.categoryImages);
   } catch {

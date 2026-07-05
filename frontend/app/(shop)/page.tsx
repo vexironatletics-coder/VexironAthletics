@@ -21,7 +21,7 @@ import { useGetCategoryImagesQuery } from '@/store/api/settingsApi';
 import Image from 'next/image';
 
 import { categoryShirtImages, resolveImageSrc } from '@/lib/shirtImages';
-import { SHOP_CATEGORY_NAV_LINKS } from '@/lib/categories';
+import { SHOP_CATEGORY_NAV_LINKS, getCategoryLinkHref } from '@/lib/categories';
 
 const DEFAULT_CATEGORIES = SHOP_CATEGORY_NAV_LINKS.map(({ slug, href, label }) => ({
   slug,
@@ -54,12 +54,12 @@ export default function LandingPage() {
         title="Shop by Category"
         description="Explore curated styles for men, women, common unisex pieces, and children — built for performance and everyday wear."
       >
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:pr-20">
           {categories.map((cat, i) => (
             <SlideUp key={cat.slug} delay={i * 100}>
               <Link
-                href={cat.href || `/category/${cat.slug}`}
-                className="group relative block aspect-[4/5] overflow-hidden rounded-2xl shadow-lg ring-1 ring-[var(--border)] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                href={getCategoryLinkHref(cat)}
+                className="group relative z-10 block aspect-[4/5] overflow-hidden rounded-2xl shadow-lg ring-1 ring-[var(--border)] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
               >
                 <Image
                   src={cat.image}
