@@ -30,7 +30,15 @@ const categorySchema = z.object({
 });
 
 // ─── Category Image Card ────────────────────────────────────────────────────
-function CategoryImageCard({ cat, onUpdated }: { cat: CategoryImage; onUpdated: (updated: CategoryImage) => void }) {
+function CategoryImageCard({
+  cat,
+  onUpdated,
+  onImageSaved,
+}: {
+  cat: CategoryImage;
+  onUpdated: (updated: CategoryImage) => void;
+  onImageSaved: (updated: CategoryImage) => Promise<void>;
+}) {
   const [uploadCategoryImage, { isLoading: uploading }] = useUploadCategoryImageMutation();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -41,8 +49,10 @@ function CategoryImageCard({ cat, onUpdated }: { cat: CategoryImage; onUpdated: 
     fd.append('image', file);
     try {
       const result = await uploadCategoryImage(fd).unwrap();
-      onUpdated({ ...cat, image: result.url, imagePublicId: result.publicId });
-      toast.success(`${cat.label} image updated`);
+      const updated = { ...cat, image: result.url, imagePublicId: result.publicId };
+      onUpdated(updated);
+      await onImageSaved(updated);
+      toast.success(`${cat.label} image saved`);
     } catch {
       toast.error('Image upload failed');
     }
@@ -171,6 +181,16 @@ export default function AdminCategoriesPage() {
     });
   };
 
+  const handleCategoryImageSaved = async (updated: CategoryImage) => {
+    const base = localCategoryImages ?? rawCategoryImages ?? [];
+    const exists = base.some((c) => c.slug === updated.slug);
+    const next = exists
+      ? base.map((c) => (c.slug === updated.slug ? updated : c))
+      : [...base, updated];
+    await updateCategoryImages({ categories: next }).unwrap();
+    setLocalCategoryImages(null);
+  };
+
   const addShopCategory = () => {
     const slug = `category-${Date.now()}`;
     const newCat: CategoryImage = { slug, label: 'New Category', image: '', href: `/category/${slug}` };
@@ -220,7 +240,12 @@ export default function AdminCategoriesPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {categoryImages.map((cat) => (
               <div key={cat.slug} className="relative">
-                <CategoryImageCard key={cat.slug + cat.image} cat={cat} onUpdated={handleCategoryImageUpdated} />
+                <CategoryImageCard
+                  key={cat.slug + cat.image}
+                  cat={cat}
+                  onUpdated={handleCategoryImageUpdated}
+                  onImageSaved={handleCategoryImageSaved}
+                />
                 <button
                   onClick={() => removeShopCategory(cat.slug)}
                   title="Remove this category"

@@ -19,7 +19,13 @@ const DEFAULT_CATEGORY_IMAGES: ICategoryImage[] = [
 
 const mergeCategoryImages = (saved: ICategoryImage[]): ICategoryImage[] => {
   const bySlug = new Map(saved.map((c) => [c.slug, c]));
-  return DEFAULT_CATEGORY_IMAGES.map((def) => ({ ...def, ...bySlug.get(def.slug) }));
+  const defaultSlugs = new Set(DEFAULT_CATEGORY_IMAGES.map((d) => d.slug));
+  const mergedDefaults = DEFAULT_CATEGORY_IMAGES.map((def) => ({
+    ...def,
+    ...(bySlug.get(def.slug) ?? {}),
+  }));
+  const extras = saved.filter((c) => !defaultSlugs.has(c.slug));
+  return [...mergedDefaults, ...extras];
 };
 
 export const DEFAULT_PUBLIC_SETTINGS = {
@@ -244,6 +250,7 @@ export const uploadCategoryImage = async (req: Request, res: Response): Promise<
     if (!isCloudinaryConfigured()) {
       res.status(500).json({ message: 'Cloudinary env vars missing' }); return;
     }
+    cacheDelete(CATEGORY_IMAGES_CACHE_KEY);
     const result = await cloudinary.uploader.upload(
       `data:${file.mimetype};base64,${file.buffer.toString('base64')}`,
       { folder: 'ecom/categories', transformation: [{ width: 800, height: 1000, crop: 'fill', quality: 'auto' }] }

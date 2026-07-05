@@ -20,7 +20,7 @@ import { useGetProductsQuery } from '@/store/api/productApi';
 import { useGetCategoryImagesQuery } from '@/store/api/settingsApi';
 import Image from 'next/image';
 
-import { categoryShirtImages } from '@/lib/shirtImages';
+import { categoryShirtImages, resolveImageSrc } from '@/lib/shirtImages';
 import { SHOP_CATEGORY_NAV_LINKS } from '@/lib/categories';
 
 const DEFAULT_CATEGORIES = SHOP_CATEGORY_NAV_LINKS.map(({ slug, href, label }) => ({
@@ -34,7 +34,13 @@ export default function LandingPage() {
   const { data, isLoading, isError } = useGetProductsQuery({ limit: 8, sort: 'newest' });
   const { data: categoryData } = useGetCategoryImagesQuery();
   const categories = categoryData && categoryData.length > 0
-    ? categoryData.map((c) => ({ ...c, image: c.image || categoryShirtImages[c.slug as keyof typeof categoryShirtImages] || categoryShirtImages.men }))
+    ? categoryData.map((c) => ({
+        ...c,
+        image: resolveImageSrc(
+          c.image,
+          categoryShirtImages[c.slug as keyof typeof categoryShirtImages] ?? categoryShirtImages.men
+        ),
+      }))
     : DEFAULT_CATEGORIES;
 
   return (
@@ -61,6 +67,7 @@ export default function LandingPage() {
                   fill
                   className="object-cover transition duration-500 group-hover:scale-110"
                   sizes="(max-width:768px) 100vw, 33vw"
+                  unoptimized={cat.image.startsWith('http')}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[var(--hero-from)]/90 via-[var(--hero-to)]/40 to-transparent" />
                 <div className="absolute bottom-0 p-6">

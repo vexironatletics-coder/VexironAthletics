@@ -27,6 +27,7 @@ export function AuthLayout({
             className="object-cover animate-ken-burns"
             priority
             sizes="50vw"
+            unoptimized
           />
           <div className="theme-hero-bg absolute inset-0 opacity-80 mix-blend-multiply" />
           <div className="absolute inset-0 bg-gradient-to-t from-[var(--hero-from)]/90 via-transparent to-transparent" />

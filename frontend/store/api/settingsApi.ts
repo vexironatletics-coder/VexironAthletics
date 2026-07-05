@@ -80,6 +80,7 @@ export const settingsApi = createApi({
         method: 'POST',
         body: formData,
       }),
+      invalidatesTags: ['CategoryImages'],
     }),
   }),
 });
