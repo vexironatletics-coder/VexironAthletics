@@ -12,11 +12,11 @@ export function SiteLogo({ className, priority }: SiteLogoProps) {
     <img
       src={SITE_LOGO_PATH}
       alt={APP_NAME}
-      width={200}
-      height={48}
+      width={520}
+      height={120}
       decoding="async"
       fetchPriority={priority ? 'high' : undefined}
-      className={cn('h-10 sm:h-11 w-auto max-w-[min(52vw,220px)] object-contain object-left', className)}
+      className={cn('h-20 sm:h-24 w-auto max-w-[min(85vw,520px)] object-contain object-left', className)}
     />
   );
 }

@@ -45,7 +45,7 @@ export const organizationJsonLd = () => ({
   '@type': 'Organization',
   name: APP_NAME,
   url: SITE_URL,
-  logo: `${SITE_URL}/favicon.ico`,
+  logo: `${SITE_URL}/LOGO.svg`,
 });
 
 export const websiteJsonLd = () => ({

@@ -69,7 +69,7 @@ export function Footer() {
           {/* Brand + socials */}
           <div>
             <Link href="/" aria-label={APP_NAME} className="inline-flex">
-              <SiteLogo className="h-9 sm:h-10 max-w-[200px]" />
+              <SiteLogo className="h-16 sm:h-24 max-w-[min(95vw,560px)]" />
             </Link>
             <p className="mt-3 text-sm opacity-80 leading-relaxed">
               Premium clothing for men, women, and children. Quality fashion at affordable prices.

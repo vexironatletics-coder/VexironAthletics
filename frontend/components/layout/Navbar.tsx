@@ -108,7 +108,7 @@ export function Navbar() {
   return (
     <>
       <header className="site-header sticky top-0 z-50 border-b border-white/10 shadow-lg">
-        <div className="mx-auto flex h-14 sm:h-16 max-w-7xl items-center justify-between gap-2 px-3 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-20 sm:h-24 max-w-7xl items-center justify-between gap-2 px-3 sm:px-6 lg:px-8">
 
           {/* Left: hamburger + logo + nav */}
           <div className="flex items-center gap-3 sm:gap-5">
