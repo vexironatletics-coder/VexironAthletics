@@ -22,7 +22,7 @@ export function AuthLayout({
         <div className="relative hidden overflow-hidden lg:block">
           <Image
             src={authSideShirtImage}
-            alt="Shirt collection"
+            alt="T-shirts and trousers — curated fashion"
             fill
             className="object-cover animate-ken-burns"
             priority
@@ -44,9 +44,32 @@ export function AuthLayout({
           </FadeIn>
         </div>
 
-        <div className="flex flex-col justify-center px-4 py-12 sm:px-8 lg:px-12">
+        <div className="flex flex-col justify-center px-4 py-8 sm:px-8 sm:py-12 lg:px-12">
           <div className="mx-auto w-full max-w-md">
-            <SlideUp className="mb-8 lg:hidden">
+            <SlideUp className="mb-6 overflow-hidden rounded-2xl lg:hidden" delay={50}>
+              <div className="relative h-44 sm:h-52">
+                <Image
+                  src={authSideShirtImage}
+                  alt="T-shirts and trousers — curated fashion"
+                  fill
+                  className="object-cover"
+                  sizes="100vw"
+                  priority
+                  unoptimized
+                />
+                <div className="theme-hero-bg absolute inset-0 opacity-70 mix-blend-multiply" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[var(--hero-from)]/90 via-[var(--hero-from)]/20 to-transparent" />
+                <div className="absolute bottom-0 p-5 text-white">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/80">
+                    {APP_NAME}
+                  </p>
+                  <p className="mt-1 text-lg font-bold leading-snug">
+                    Curated fashion for every moment
+                  </p>
+                </div>
+              </div>
+            </SlideUp>
+            <SlideUp className="mb-6 lg:hidden">
               <Link href="/" className="text-xl font-bold tracking-tight text-[var(--accent)] transition hover:opacity-80">
                 {APP_NAME}
               </Link>

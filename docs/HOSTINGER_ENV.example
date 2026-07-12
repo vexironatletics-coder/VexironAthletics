@@ -5,8 +5,8 @@ NODE_ENV=production
 CLIENT_URL=https://vexironathletics.com
 NEXT_PUBLIC_API_URL=https://vexironathletics.com/api
 NEXT_PUBLIC_SITE_URL=https://vexironathletics.com
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_dHJ1ZS1hYXJkdmFyay0zNi5jbGVyay5hY2NvdW50cy5kZXYk
-CLERK_SECRET_KEY=sk_test_ATZmFAN3WEJQnnVr7tMaLVGlnsNJdDivCv3NmpdIuL
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_Y2xlcmsudmV4aXJvbmF0aGxldGljcy5jb20k
+CLERK_SECRET_KEY=sk_live_your_clerk_secret_key
 
 # IMPORTANT: Use the password you set in MongoDB Atlas
 MONGODB_URI=mongodb://vexironatletics_db_user:Aliraza123@ac-ozbahrw-shard-00-00.kl9cryy.mongodb.net:27017,ac-ozbahrw-shard-00-01.kl9cryy.mongodb.net:27017,ac-ozbahrw-shard-00-02.kl9cryy.mongodb.net:27017/ecom-store?ssl=true&authSource=admin&retryWrites=true&w=majority&appName=Cluster0

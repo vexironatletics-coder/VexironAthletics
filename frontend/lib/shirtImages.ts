@@ -52,4 +52,5 @@ export const heroStackShirtImages = [
   unsplash('1483985988355-763728e1f99c', 400, 520),
 ] as const;
 
-export const authSideShirtImage = unsplash('1602810318383-e386cc2a3ccf', 1200, 1600);
+/** Login / register side panel — T-shirt & trouser flatlay */
+export const authSideShirtImage = unsplash('1562157873-125cb397475e', 1200, 1600);

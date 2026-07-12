@@ -211,11 +211,11 @@ export function HeroCarousel() {
       </div>
 
       {/* Compact stack on mobile — bottom of hero */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-14 z-[5] overflow-hidden px-4 lg:hidden">
+      <div className="pointer-events-none absolute inset-x-0 bottom-14 z-[5] overflow-hidden px-4 hidden lg:hidden">
         <div className="pointer-events-auto mx-auto max-w-xs">
           <HeroProductCardStack compact />
+          </div>
         </div>
-      </div>
 
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 mx-auto flex max-w-7xl items-start justify-between px-4 pt-6 sm:px-6 lg:px-8">
         <div className="pointer-events-auto flex gap-1.5">
