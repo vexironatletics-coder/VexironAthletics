@@ -95,18 +95,16 @@ async function main() {
   let nextReady = false;
 
   // Serve built static assets directly (correct MIME types, no HTML fallback)
-  if (hasFrontendBuild) {
-    server.use(
-      '/_next/static',
-      express.static(path.join(frontendDir, '.next/static'), {
-        maxAge: '1y',
-        immutable: true,
-        setHeaders: (res) => {
-          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-        },
-      })
-    );
-  }
+  server.use(
+    '/_next/static',
+    express.static(path.join(frontendDir, '.next/static'), {
+      maxAge: '1y',
+      immutable: true,
+      setHeaders: (res) => {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      },
+    })
+  );
 
   // Public assets (favicon, etc.)
   server.use(express.static(path.join(frontendDir, 'public'), { maxAge: '1d' }));
@@ -142,28 +140,33 @@ async function main() {
     });
   }
 
-  // Load Next.js in background (can take 30–60s on shared hosting)
-  if (hasFrontendBuild) {
-    const nextApp = next({
-      dev,
-      dir: frontendDir,
-      hostname: typeof PORT === 'number' ? HOST : 'localhost',
-      port: typeof PORT === 'number' ? PORT : 3000,
-    });
-    nextApp
-      .prepare()
-      .then(() => {
-        handle = nextApp.getRequestHandler();
-        nextReady = true;
-        console.log('[Startup] Next.js ready — storefront is live');
-      })
-      .catch((err) => {
-        console.error('[Startup] Next.js prepare failed — maintenance page stays active');
-        console.error('[Startup]', err?.message || err);
-      });
-  } else {
-    console.warn('[Startup] frontend/.next not found — run "npm run build --prefix frontend" on Hostinger');
+  // Load Next.js in background — polls until build finishes if app started during build
+  const buildIdPath = path.join(frontendDir, '.next', 'BUILD_ID');
+  let attemptCount = 0;
+
+  async function loadNextApp() {
+    attemptCount++;
+    if (!fs.existsSync(buildIdPath)) {
+      console.warn(`[Startup] frontend/.next/BUILD_ID not found yet (attempt ${attemptCount}) — checking again in 5 seconds...`);
+      setTimeout(loadNextApp, 5000);
+      return;
+    }
+
+    console.log('[Startup] Verified frontend/.next/BUILD_ID exists — initializing Next.js storefront...');
+    try {
+      const nextApp = next({ dev, dir: frontendDir });
+      await nextApp.prepare();
+      handle = nextApp.getRequestHandler();
+      nextReady = true;
+      console.log('[Startup] Next.js ready — storefront is live!');
+    } catch (err) {
+      console.error('[Startup] Next.js prepare failed — maintenance page stays active');
+      console.error('[Startup]', err?.stack || err?.message || err);
+      setTimeout(loadNextApp, 10000);
+    }
   }
+
+  loadNextApp();
 
   startBackendServices()
     .then((ok) => {
