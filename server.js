@@ -1,46 +1,117 @@
 /**
  * Production entry for Hostinger / single-host deployment.
- * Serves the Next.js storefront and Express API on one port.
- * Starts listening immediately so Hostinger health checks pass,
- * then loads Next.js in the background.
+ * Comprehensive crash guards + logging at every step for debugging.
  */
 
+// ── Process-level crash guards ──────────────────────────────────────────────
+// These prevent the server from dying silently on any unhandled error.
+process.on('uncaughtException', (err, origin) => {
+  console.error('[CRASH] Uncaught Exception at:', origin);
+  console.error('[CRASH]', err?.stack || err?.message || err);
+  // Do NOT exit — Hostinger health checks need the process alive.
+  // If the HTTP server is already listening, it will keep serving.
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[CRASH] Unhandled Promise Rejection at:', promise);
+  console.error('[CRASH] Reason:', reason instanceof Error ? reason.stack : reason);
+});
+
+// ── Boot stamp ──────────────────────────────────────────────────────────────
+const bootTime = new Date().toISOString();
+console.log('');
+console.log('[Boot] ========================================================');
+console.log('[Boot]  VexironAthletics server booting at', bootTime);
+console.log('[Boot] ========================================================');
+console.log('[Boot] Node.js version:', process.version);
+console.log('[Boot] Platform:', process.platform, process.arch);
+
+// ── NODE_ENV ────────────────────────────────────────────────────────────────
 if (!process.env.NODE_ENV) {
   process.env.NODE_ENV = 'production';
+  console.log('[Boot] NODE_ENV not set — defaulting to production');
 }
+console.log('[Boot] NODE_ENV:', process.env.NODE_ENV);
 
+// ── Core requires ────────────────────────────────────────────────────────────
+console.log('[Boot] Loading core modules...');
 const path = require('path');
-const fs = require('fs');
+const fs   = require('fs');
 const http = require('http');
 const express = require('express');
-const next = require('next');
+console.log('[Boot] Core modules loaded');
 
+// ── dotenv ──────────────────────────────────────────────────────────────────
 try {
-  require(path.join(__dirname, 'backend', 'node_modules', 'dotenv')).config();
-  require(path.join(__dirname, 'backend', 'node_modules', 'dotenv')).config({
-    path: path.join(__dirname, 'backend', '.env'),
-  });
+  const dotenvBin = path.join(__dirname, 'backend', 'node_modules', 'dotenv');
+  const dotenv = require(dotenvBin);
+  dotenv.config();
+  dotenv.config({ path: path.join(__dirname, 'backend', '.env') });
+  console.log('[Boot] dotenv loaded from backend/node_modules');
 } catch {
-  // Hostinger injects env vars via hPanel — dotenv is optional
+  console.log('[Boot] dotenv not found — relying on Hostinger hPanel env vars (normal in production)');
 }
 
-const PORT = process.env.PORT ? (isNaN(Number(process.env.PORT)) ? process.env.PORT : Number(process.env.PORT)) : 3000;
-const dev = process.env.NODE_ENV !== 'production';
-const frontendDir = path.join(__dirname, 'frontend');
-const nextBuildDir = path.join(frontendDir, '.next');
-const hasFrontendBuild = fs.existsSync(nextBuildDir);
+// ── Environment dump ─────────────────────────────────────────────────────────
+console.log('[Boot] Environment variables:');
+console.log('[Boot]   PORT             :', process.env.PORT || '(not set)');
+console.log('[Boot]   NODE_ENV         :', process.env.NODE_ENV);
+console.log('[Boot]   CLIENT_URL       :', process.env.CLIENT_URL || '(not set)');
+console.log('[Boot]   MONGODB_URI set  :', Boolean(process.env.MONGODB_URI?.trim()));
+console.log('[Boot]   JWT_SECRET set   :', Boolean(process.env.JWT_SECRET?.trim()));
+console.log('[Boot]   CLOUDINARY set   :', Boolean(process.env.CLOUDINARY_CLOUD_NAME?.trim()));
 
-let createApp;
-let startBackendServices;
-let initSocketServer;
+// ── PORT resolution ──────────────────────────────────────────────────────────
+// Hostinger sets PORT as a number (e.g. "3000") OR a UNIX socket path.
+const rawPort = process.env.PORT;
+const PORT = rawPort
+  ? (isNaN(Number(rawPort)) ? rawPort : Number(rawPort))
+  : 3000;
+console.log('[Boot] Resolved PORT:', PORT, '| typeof:', typeof PORT);
+
+// ── Directory checks ──────────────────────────────────────────────────────────
+const frontendDir  = path.join(__dirname, 'frontend');
+const nextBuildDir = path.join(frontendDir, '.next');
+const buildIdPath  = path.join(nextBuildDir, 'BUILD_ID');
+const hostEntryPath = path.join(__dirname, 'backend', 'dist', 'hostEntry.js');
+
+console.log('[Boot] Directory checks:');
+console.log('[Boot]   __dirname          :', __dirname);
+console.log('[Boot]   cwd()             :', process.cwd());
+console.log('[Boot]   frontendDir       :', frontendDir);
+console.log('[Boot]   .next exists      :', fs.existsSync(nextBuildDir));
+console.log('[Boot]   BUILD_ID exists   :', fs.existsSync(buildIdPath));
+console.log('[Boot]   hostEntry.js exists:', fs.existsSync(hostEntryPath));
+
+if (fs.existsSync(buildIdPath)) {
+  try {
+    const buildId = fs.readFileSync(buildIdPath, 'utf8').trim();
+    console.log('[Boot]   BUILD_ID value    :', buildId);
+  } catch (e) {
+    console.log('[Boot]   BUILD_ID read err :', e.message);
+  }
+}
+
+// ── Load backend bundle ──────────────────────────────────────────────────────
+console.log('[Boot] Loading backend/dist/hostEntry...');
+let createApp, startBackendServices, initSocketServer;
 try {
   ({ createApp, startBackendServices, initSocketServer } = require('./backend/dist/hostEntry'));
+  console.log('[Boot] ✓ backend/dist/hostEntry loaded');
 } catch (err) {
-  console.error('[Startup] FATAL: backend/dist/hostEntry.js missing or failed to load');
-  console.error('[Startup]', err?.message || err);
+  console.error('[Boot] FATAL: backend/dist/hostEntry.js failed to load');
+  console.error('[Boot]', err?.stack || err?.message || err);
   process.exit(1);
 }
 
+// ── Next.js require (lazy — only called inside loadNextApp) ──────────────────
+// We deliberately do NOT require('next') at the top level here.
+// This avoids crashes if the module has issues, and lets us control when it loads.
+
+const dev = process.env.NODE_ENV !== 'production';
+console.log('[Boot] dev mode:', dev);
+
+// ── Maintenance page (served while Next.js prepares) ────────────────────────
 const MAINTENANCE_HTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -65,7 +136,7 @@ const MAINTENANCE_HTML = `<!DOCTYPE html>
 <body>
   <div>
     <h1>VEXIRON ATHLETICS</h1>
-    <p>We're deploying an update and will be back in just a few minutes. Thank you for your patience.</p>
+    <p>We're deploying an update and will be back shortly. Thank you for your patience.</p>
     <div class="dots">
       <span class="dot"></span>
       <span class="dot"></span>
@@ -75,28 +146,46 @@ const MAINTENANCE_HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
+// ── main() ────────────────────────────────────────────────────────────────────
 async function main() {
-  console.log('[Startup] NODE_ENV:', process.env.NODE_ENV);
-  console.log('[Startup] MONGODB_URI configured:', Boolean(process.env.MONGODB_URI?.trim()));
-  console.log('[Startup] CLIENT_URL:', process.env.CLIENT_URL || '(unset)');
-  console.log('[Startup] Frontend build present:', hasFrontendBuild);
-  console.log('[Startup] Working directory:', process.cwd());
+  console.log('[Main] Entering main()...');
 
-  const apiApp = createApp({ catchAll: false });
+  // ── Create Express API app ──────────────────────────────────────────────────
+  console.log('[Main] Calling createApp()...');
+  let apiApp;
+  try {
+    apiApp = createApp({ catchAll: false });
+    console.log('[Main] ✓ createApp() succeeded');
+  } catch (err) {
+    console.error('[Main] FATAL: createApp() threw:', err?.stack || err?.message || err);
+    process.exit(1);
+  }
+
+  // ── HTTP server setup ────────────────────────────────────────────────────────
   const server = express();
   const httpServer = http.createServer(server);
+  console.log('[Main] HTTP server instance created');
 
-  // Real-time live chat (Socket.IO on same port as storefront + API)
-  initSocketServer(httpServer);
+  // ── Socket.IO ────────────────────────────────────────────────────────────────
+  console.log('[Main] Initializing Socket.IO...');
+  try {
+    initSocketServer(httpServer);
+    console.log('[Main] ✓ Socket.IO initialized');
+  } catch (err) {
+    // Non-fatal: chat feature won't work but storefront is unaffected
+    console.error('[Main] Socket.IO init failed (chat disabled, app continues):', err?.message || err);
+  }
 
-  // Next.js handler — set after prepare() completes
-  let handle = null;
+  // ── Next.js state ────────────────────────────────────────────────────────────
+  let handle    = null;
   let nextReady = false;
 
-  // Serve built static assets directly (correct MIME types, no HTML fallback)
+  // ── Middleware: static Next.js assets ─────────────────────────────────────
+  const nextStaticDir = path.join(frontendDir, '.next/static');
+  console.log('[Main] Mounting /_next/static from:', nextStaticDir);
   server.use(
     '/_next/static',
-    express.static(path.join(frontendDir, '.next/static'), {
+    express.static(nextStaticDir, {
       maxAge: '1y',
       immutable: true,
       setHeaders: (res) => {
@@ -105,73 +194,121 @@ async function main() {
     })
   );
 
-  // Public assets (favicon, etc.)
-  server.use(express.static(path.join(frontendDir, 'public'), { maxAge: '1d' }));
+  // ── Middleware: public assets ─────────────────────────────────────────────
+  const publicDir = path.join(frontendDir, 'public');
+  console.log('[Main] Mounting /public from:', publicDir);
+  server.use(express.static(publicDir, { maxAge: '1d' }));
 
+  // ── Middleware: API routes from Express backend ────────────────────────────
   server.use(apiApp);
 
+  // ── Catch-all: route to Next.js or maintenance page ───────────────────────
   server.all('{*path}', (req, res) => {
-    if (req.path.startsWith('/api')) {
-      return res.status(404).json({ message: 'Route not found' });
+    const { method, path: reqPath } = req;
+
+    // Log every non-asset request for debugging
+    if (!reqPath.startsWith('/_next') && !reqPath.startsWith('/api/health')) {
+      console.log(`[Request] ${method} ${reqPath} | nextReady=${nextReady}`);
     }
-    // Never return HTML for Next.js asset paths — causes MIME type errors
-    if (req.path.startsWith('/_next')) {
-      if (!nextReady || !handle) return res.status(503).end();
+
+    // /api routes not matched above → 404 JSON (no HTML fallback)
+    if (reqPath.startsWith('/api')) {
+      return res.status(404).json({ message: 'API route not found', path: reqPath });
+    }
+
+    // /_next/* asset requests — only Next.js can serve these
+    if (reqPath.startsWith('/_next')) {
+      if (!nextReady || !handle) {
+        console.warn(`[Request] /_next asset requested but Next.js not ready — 503: ${reqPath}`);
+        return res.status(503).end();
+      }
       return handle(req, res);
     }
+
+    // All other requests — serve storefront or maintenance page
     if (!nextReady || !handle) {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       return res.status(200).send(MAINTENANCE_HTML);
     }
+
     return handle(req, res);
   });
 
-  // Listen FIRST — Hostinger health checks time out if we wait for next.prepare()
-  httpServer.listen(PORT, () => {
-    console.log(`[Startup] VexironAthletics listening on port ${PORT}`);
-    console.log(`[Startup] API health: http://localhost:${PORT}/api/health`);
-    console.log(`[Startup] Socket.IO: ws://localhost:${PORT}/socket.io`);
+  // ── Start listening ───────────────────────────────────────────────────────
+  console.log('[Main] Binding HTTP server to PORT:', PORT);
+  await new Promise((resolve, reject) => {
+    httpServer.once('error', (err) => {
+      console.error('[Main] httpServer.listen error:', err.code, err.message);
+      reject(err);
+    });
+    httpServer.listen(PORT, () => {
+      const addr = httpServer.address();
+      console.log('[Main] ✓ Server listening');
+      console.log('[Main]   address():', JSON.stringify(addr));
+      console.log('[Main]   PORT env :', process.env.PORT);
+      console.log('[Main]   Resolved :', PORT, typeof PORT);
+      console.log('[Main]   API health: http://localhost:' + (typeof addr === 'object' ? addr?.port : addr) + '/api/health');
+      resolve(undefined);
+    });
   });
 
-  // Load Next.js in background — polls until build finishes if app started during build
-  const buildIdPath = path.join(frontendDir, '.next', 'BUILD_ID');
-  let attemptCount = 0;
+  // ── Load Next.js in background (polls for BUILD_ID) ───────────────────────
+  let nextAttempt = 0;
 
   async function loadNextApp() {
-    attemptCount++;
+    nextAttempt++;
+    console.log(`[Next.js] Load attempt ${nextAttempt} — checking BUILD_ID at:`, buildIdPath);
+
     if (!fs.existsSync(buildIdPath)) {
-      console.warn(`[Startup] frontend/.next/BUILD_ID not found yet (attempt ${attemptCount}) — checking again in 5 seconds...`);
+      console.warn(`[Next.js] BUILD_ID not found yet (attempt ${nextAttempt}) — retrying in 5s`);
       setTimeout(loadNextApp, 5000);
       return;
     }
 
-    console.log('[Startup] Verified frontend/.next/BUILD_ID exists — initializing Next.js storefront...');
+    let buildId = '(unreadable)';
+    try { buildId = fs.readFileSync(buildIdPath, 'utf8').trim(); } catch {}
+    console.log(`[Next.js] BUILD_ID found: ${buildId} — calling require('next')...`);
+
     try {
-      const nextApp = next({ dev, dir: frontendDir });
+      // Lazy require to isolate any module-load errors
+      const nextModule = require('next');
+      // Handle both CJS default export and ESM interop
+      const nextFn = typeof nextModule === 'function' ? nextModule : nextModule.default;
+      if (typeof nextFn !== 'function') {
+        throw new Error(`require('next') did not return a function — got: ${typeof nextModule}`);
+      }
+      console.log('[Next.js] next() function resolved — calling prepare()...');
+      const nextApp = nextFn({ dev, dir: frontendDir });
       await nextApp.prepare();
-      handle = nextApp.getRequestHandler();
+      handle    = nextApp.getRequestHandler();
       nextReady = true;
-      console.log('[Startup] Next.js ready — storefront is live!');
+      console.log('[Next.js] ✓ Next.js ready — storefront is live!');
     } catch (err) {
-      console.error('[Startup] Next.js prepare failed — maintenance page stays active');
-      console.error('[Startup]', err?.stack || err?.message || err);
+      console.error('[Next.js] prepare() failed on attempt', nextAttempt);
+      console.error('[Next.js]', err?.stack || err?.message || err);
+      console.log('[Next.js] Retrying in 10s...');
       setTimeout(loadNextApp, 10000);
     }
   }
 
   loadNextApp();
 
+  // ── Backend services (MongoDB, seed, search) ──────────────────────────────
+  console.log('[Main] Starting backend services (MongoDB connection)...');
   startBackendServices()
     .then((ok) => {
-      if (ok) console.log('[Startup] MongoDB connected — products and orders ready');
-      else console.warn('[Startup] MongoDB not connected — DB routes return 503 until connected');
+      if (ok) console.log('[Main] ✓ MongoDB connected — DB routes are active');
+      else console.warn('[Main] MongoDB NOT connected — check MONGODB_URI and Atlas IP whitelist');
     })
     .catch((err) => {
-      console.error('[Startup] Backend services error:', err?.message || err);
+      console.error('[Main] Backend services error:', err?.message || err);
     });
+
+  console.log('[Main] Setup complete — server is running');
 }
 
+// ── Start ──────────────────────────────────────────────────────────────────
 main().catch((err) => {
-  console.error('[Startup] FATAL startup error:', err?.message || err);
+  console.error('[Boot] FATAL main() error:', err?.stack || err?.message || err);
   process.exit(1);
 });

@@ -58,34 +58,38 @@ const getPublicIpHint = async (): Promise<string | null> => {
   }
 };
 
-export const connectDBWithRetry = async (): Promise<boolean> => {
+export const connectDBWithRetry = async (maxAttempts = 5): Promise<boolean> => {
   let attempt = 0;
   let publicIpHint: string | null = null;
 
   const tryConnect = async (): Promise<boolean> => {
     attempt += 1;
+    console.log(`[DB] MongoDB connection attempt ${attempt}/${maxAttempts}...`);
     try {
       await connectDB();
+      console.log(`[DB] ✓ MongoDB connected on attempt ${attempt}`);
       return true;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`MongoDB attempt ${attempt} failed: ${message}`);
+      console.error(`[DB] MongoDB attempt ${attempt} failed: ${message}`);
 
       if (attempt === 1) {
         publicIpHint = await getPublicIpHint();
+        if (publicIpHint) {
+          console.error(`[DB] Fix: MongoDB Atlas → Network Access → Add IP → ${publicIpHint} (or 0.0.0.0/0)`);
+        } else {
+          console.error('[DB] Fix: MongoDB Atlas → Network Access → Add IP Address (or 0.0.0.0/0 for dev)');
+        }
       }
 
-      if (publicIpHint) {
-        console.error(
-          `Fix: MongoDB Atlas → Network Access → Add IP Address → ${publicIpHint} (or 0.0.0.0/0 for dev only)`
-        );
-      } else {
-        console.error(
-          'Fix: MongoDB Atlas → Network Access → Add IP Address (use 0.0.0.0/0 for dev or your current public IP)'
-        );
+      if (attempt >= maxAttempts) {
+        console.error(`[DB] Giving up after ${maxAttempts} attempts — app continues without DB`);
+        return false;
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      const delay = Math.min(5000 * attempt, 30000);
+      console.log(`[DB] Retrying in ${delay / 1000}s...`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
       return tryConnect();
     }
   };
