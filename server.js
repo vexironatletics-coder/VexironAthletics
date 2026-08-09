@@ -24,7 +24,6 @@ try {
   // Hostinger injects env vars via hPanel — dotenv is optional
 }
 
-const HOST = process.env.HOST || '0.0.0.0';
 const PORT = process.env.PORT ? (isNaN(Number(process.env.PORT)) ? process.env.PORT : Number(process.env.PORT)) : 3000;
 const dev = process.env.NODE_ENV !== 'production';
 const frontendDir = path.join(__dirname, 'frontend');
@@ -128,17 +127,11 @@ async function main() {
   });
 
   // Listen FIRST — Hostinger health checks time out if we wait for next.prepare()
-  if (typeof PORT === 'number') {
-    httpServer.listen(PORT, HOST, () => {
-      console.log(`[Startup] VexironAthletics listening on http://${HOST}:${PORT}`);
-      console.log(`[Startup] API health: http://${HOST}:${PORT}/api/health`);
-      console.log(`[Startup] Socket.IO: ws://${HOST}:${PORT}/socket.io`);
-    });
-  } else {
-    httpServer.listen(PORT, () => {
-      console.log(`[Startup] VexironAthletics listening on socket ${PORT}`);
-    });
-  }
+  httpServer.listen(PORT, () => {
+    console.log(`[Startup] VexironAthletics listening on port ${PORT}`);
+    console.log(`[Startup] API health: http://localhost:${PORT}/api/health`);
+    console.log(`[Startup] Socket.IO: ws://localhost:${PORT}/socket.io`);
+  });
 
   // Load Next.js in background — polls until build finishes if app started during build
   const buildIdPath = path.join(frontendDir, '.next', 'BUILD_ID');
