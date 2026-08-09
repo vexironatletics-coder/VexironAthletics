@@ -199,6 +199,23 @@ async function main() {
   console.log('[Main] Mounting /public from:', publicDir);
   server.use(express.static(publicDir, { maxAge: '1d' }));
 
+  // ── Status endpoint: shows Next.js readiness (useful for Hostinger debugging) ──
+  server.get('/api/status', (req, res) => {
+    const buildIdExists = fs.existsSync(buildIdPath);
+    res.json({
+      timestamp: new Date().toISOString(),
+      nextReady,
+      nextAttempt: 'see logs',
+      buildIdExists,
+      buildIdPath,
+      frontendDir,
+      nodeVersion: process.version,
+      uptime: Math.floor(process.uptime()) + 's',
+      memoryMB: Math.round(process.memoryUsage().rss / 1024 / 1024),
+      port: PORT,
+    });
+  });
+
   // ── Middleware: API routes from Express backend ────────────────────────────
   server.use(apiApp);
 
@@ -279,15 +296,25 @@ async function main() {
       }
       console.log('[Next.js] next() function resolved — calling prepare()...');
       const nextApp = nextFn({ dev, dir: frontendDir });
-      await nextApp.prepare();
+
+      // Wrap prepare() with a 90-second timeout so it never hangs forever
+      const prepareWithTimeout = Promise.race([
+        nextApp.prepare(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('next.prepare() timed out after 90s')), 90000)
+        ),
+      ]);
+
+      await prepareWithTimeout;
       handle    = nextApp.getRequestHandler();
       nextReady = true;
       console.log('[Next.js] ✓ Next.js ready — storefront is live!');
     } catch (err) {
       console.error('[Next.js] prepare() failed on attempt', nextAttempt);
       console.error('[Next.js]', err?.stack || err?.message || err);
-      console.log('[Next.js] Retrying in 10s...');
-      setTimeout(loadNextApp, 10000);
+      const retryDelay = nextAttempt < 3 ? 10000 : 30000;
+      console.log(`[Next.js] Retrying in ${retryDelay / 1000}s...`);
+      setTimeout(loadNextApp, retryDelay);
     }
   }
 
