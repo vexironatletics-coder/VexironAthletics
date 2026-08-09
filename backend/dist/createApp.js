@@ -1,5 +1,381 @@
 /* VexironAthletics Backend – built with esbuild */
-"use strict";var Rn=Object.create;var Ye=Object.defineProperty;var Cn=Object.getOwnPropertyDescriptor;var An=Object.getOwnPropertyNames;var En=Object.getPrototypeOf,kn=Object.prototype.hasOwnProperty;var On=(e,t)=>{for(var r in t)Ye(e,r,{get:t[r],enumerable:!0})},rr=(e,t,r,o)=>{if(t&&typeof t=="object"||typeof t=="function")for(let s of An(t))!kn.call(e,s)&&s!==r&&Ye(e,s,{get:()=>t[s],enumerable:!(o=Cn(t,s))||o.enumerable});return e};var p=(e,t,r)=>(r=e!=null?Rn(En(e)):{},rr(t||!e||!e.__esModule?Ye(r,"default",{value:e,enumerable:!0}):r,e)),Tn=e=>rr(Ye({},"__esModule",{value:!0}),e);var Ri={};On(Ri,{createApp:()=>Pi});module.exports=Tn(Ri);var We=p(require("express")),Sn=p(require("cors")),vn=p(require("helmet")),In=p(require("pino-http"));var gt=p(require("pino")),or=process.env.NODE_ENV==="production",$n=!or&&process.stdout.isTTY,sr;if($n)try{require.resolve("pino-pretty"),sr={transport:{target:"pino-pretty",options:{colorize:!0,translateTime:"SYS:HH:MM:ss",ignore:"pid,hostname"}}}}catch{}var Dn=(0,gt.default)({level:or?"info":"debug",timestamp:gt.default.stdTimeFunctions.isoTime,...sr}),nr=Dn;var Pn=p(require("compression")),Xt=p(require("dotenv")),Zt=p(require("path"));var ir=p(require("mongoose")),D=()=>ir.default.connection.readyState===1,ar=()=>!!(process.env.MONGODB_URI?.trim()||process.env.MONGODB_URI_SRV?.trim());var cr=p(require("mongoose")),Mn=e=>{if(!e||typeof e!="object")return!1;let t="name"in e?String(e.name):"",r="message"in e?String(e.message):"";return t==="MongoNotConnectedError"||t==="MongoServerSelectionError"||t==="MongooseError"||r.includes("buffering timed out")||r.includes("before initial connection is complete")},_n=process.env.NODE_ENV==="production",dr=(e,t,r,o)=>{if(Mn(e)){console.error("[API] Database unavailable:",e instanceof Error?e.message:e),r.status(503).json({message:"Database is temporarily unavailable. Please try again in a moment."});return}let s=e.statusCode??500;s>=500?(console.error("[API Error]",e),r.status(s).json({message:_n?"An unexpected error occurred. Please try again.":e.message||"Internal Server Error"})):r.status(s).json({message:e.message||"Request error"})},ur=(e,t)=>{t.status(404).json({message:"Route not found"})};cr.default.connection.on("error",e=>{console.error("[MongoDB] Connection error:",e.message)});function ft(e,t=0){if(!(t>10))for(let r of Object.keys(e)){if(r.startsWith("$")||r.includes(".")){delete e[r];continue}let o=e[r];if(o!==null&&typeof o=="object"&&!Array.isArray(o)&&ft(o,t+1),Array.isArray(o))for(let s of o)s!==null&&typeof s=="object"&&!Array.isArray(s)&&ft(s,t+1)}}var lr=(e,t,r)=>{e.body&&typeof e.body=="object"&&!Array.isArray(e.body)&&ft(e.body),r()};var ke=new Map,jn=e=>{if(!(ke.size<5e3))for(let[t,r]of ke)r.resetAt<=e&&ke.delete(t)},Nn=e=>{let t=e.headers["x-forwarded-for"];return typeof t=="string"&&t.length>0?t.split(",")[0]?.trim()??e.ip??"unknown":e.ip??"unknown"},Ke=e=>{let{windowMs:t,max:r,keyPrefix:o="global",message:s="Too many requests, please try again later"}=e;return(n,i,a)=>{let c=Date.now();jn(c);let u=`${o}:${Nn(n)}`,y=ke.get(u);if(!y||y.resetAt<=c){ke.set(u,{count:1,resetAt:c+t}),a();return}if(y.count>=r){let l=Math.ceil((y.resetAt-c)/1e3);i.setHeader("Retry-After",String(l)),i.status(429).json({message:s});return}y.count+=1,a()}},ee=Ke({windowMs:900*1e3,max:20,keyPrefix:"auth",message:"Too many authentication attempts. Please wait and try again."}),mr=Ke({windowMs:60*1e3,max:10,keyPrefix:"orders",message:"Too many order requests. Please wait a moment."}),pr=Ke({windowMs:60*1e3,max:120,keyPrefix:"analytics"}),gr=Ke({windowMs:60*1e3,max:200,keyPrefix:"api",message:"Too many requests from this IP. Please slow down."});var ae=(e,t,r)=>{if(!D()){t.status(503).json({message:"Database is not connected. Add your IP to MongoDB Atlas Network Access, then wait a few seconds and try again."});return}r()};var Nr=require("express"),G=require("express-validator");var Ze=p(require("bcryptjs")),St=p(require("crypto")),kr=p(require("jsonwebtoken")),$e=require("express-validator");var ce=p(require("mongoose")),Bn=new ce.Schema({label:{type:String,required:!0},street:{type:String,required:!0},city:{type:String,required:!0},state:{type:String,required:!0},postal:{type:String,required:!0},country:{type:String,required:!0},isDefault:{type:Boolean,default:!1}},{_id:!1}),zn=new ce.Schema({name:{type:String,required:!0,trim:!0},email:{type:String,required:!0,unique:!0,lowercase:!0},password:{type:String,select:!1},avatar:{type:String},banner:{type:String},provider:{type:String,enum:["local","google","facebook"],default:"local"},clerkId:{type:String},phone:{type:String},role:{type:String,enum:["user","editor","manager","admin","superadmin"],default:"user"},addresses:[Bn],isActive:{type:Boolean,default:!0},loyaltyPoints:{type:Number,default:0},lifetimePointsEarned:{type:Number,default:0},tier:{type:String,enum:["bronze","silver","gold"],default:"bronze"},referralCode:{type:String,unique:!0,sparse:!0},referredBy:{type:ce.Schema.Types.ObjectId,ref:"User"},resetPasswordToken:{type:String,select:!1},resetPasswordExpire:{type:Date,select:!1}},{timestamps:!0}),h=ce.default.model("User",zn);var fr=p(require("jsonwebtoken")),Oe=e=>{let t=process.env.JWT_SECRET;if(!t)throw new Error("JWT_SECRET is not defined");let r={id:e._id.toString(),email:e.email,role:e.role};return fr.default.sign(r,t,{expiresIn:process.env.JWT_EXPIRES_IN??"7d"})},j=e=>({id:e._id.toString(),name:e.name,email:e.email,avatar:e.avatar,banner:e.banner,role:e.role,provider:e.provider,addresses:e.addresses,isActive:e.isActive,loyaltyPoints:e.loyaltyPoints??0,tier:e.tier??"bronze",referralCode:e.referralCode}),yt=e=>e.toLowerCase().trim().replace(/[^\w\s-]/g,"").replace(/[\s_-]+/g,"-").replace(/^-+|-+$/g,""),Un=5e3,Ln=250,yr=e=>e>=Un?0:Ln;var hr=require("@clerk/backend"),br=(0,hr.createClerkClient)({secretKey:process.env.CLERK_SECRET_KEY});var wr=async e=>{let t=await br.users.getUser(e),r=t.externalAccounts[0]?.provider??"local",o="local";r.includes("google")?o="google":r.includes("facebook")&&(o="facebook");let s=t.emailAddresses.find(n=>n.id===t.primaryEmailAddressId);return{name:`${t.firstName??""} ${t.lastName??""}`.trim()||"User",email:s?.emailAddress??t.emailAddresses[0]?.emailAddress??"",avatar:t.imageUrl,clerkId:e,provider:o}};var Ir=p(require("nodemailer"));var xr=e=>e.replace(/\s+/g," ").trim(),Sr=e=>{let t=(e.phones??[]).map(xr).filter(Boolean),r=t.length>0?t:e.phone?[xr(e.phone)]:[];if(r.length===0)throw new Error("At least one mobile number is required");return{name:e.name?.trim()??"",phones:r,phone:r[0],landmark:e.landmark?.trim()??"",street:e.street?.trim()??"",city:e.city?.trim()??"",state:e.state?.trim()??"",postal:e.postal?.trim()??"",country:e.country?.trim()??""}},Je=e=>(e.phones&&e.phones.length>0?e.phones:e.phone?[e.phone]:[]).join(", ");var vr=()=>({accountName:process.env.BANK_ACCOUNT_NAME??"Vexiron Athletics",bankName:process.env.BANK_NAME??"HBL - Habib Bank Limited",accountNumber:process.env.BANK_ACCOUNT_NUMBER??"12345678901234"}),Xe=e=>e==="cod"?"Cash on Delivery":e==="bank"?"Bank Transfer":e.replace(/_/g," ").replace(/\b\w/g,t=>t.toUpperCase());var ht=()=>{let e=process.env.SMTP_USER,t=process.env.SMTP_PASS;return!e||!t?null:Ir.default.createTransport({host:process.env.SMTP_HOST??"smtp.gmail.com",port:Number(process.env.SMTP_PORT??587),secure:process.env.SMTP_SECURE==="true",auth:{user:e,pass:t}})},bt=process.env.SMTP_FROM??"VexironAthletics <contact@vexironathletics.com>";function wt(e){return`<!DOCTYPE html>
+"use strict";
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/createApp.ts
+var createApp_exports = {};
+__export(createApp_exports, {
+  createApp: () => createApp
+});
+module.exports = __toCommonJS(createApp_exports);
+var import_express15 = __toESM(require("express"));
+var import_cors = __toESM(require("cors"));
+var import_helmet = __toESM(require("helmet"));
+var import_pino_http = __toESM(require("pino-http"));
+
+// src/config/logger.ts
+var import_pino = __toESM(require("pino"));
+var isProd = process.env.NODE_ENV === "production";
+var usePretty = !isProd && process.stdout.isTTY;
+var prettyTransport;
+if (usePretty) {
+  try {
+    require.resolve("pino-pretty");
+    prettyTransport = {
+      transport: {
+        target: "pino-pretty",
+        options: { colorize: true, translateTime: "SYS:HH:MM:ss", ignore: "pid,hostname" }
+      }
+    };
+  } catch {
+  }
+}
+var logger = (0, import_pino.default)({
+  level: isProd ? "info" : "debug",
+  timestamp: import_pino.default.stdTimeFunctions.isoTime,
+  ...prettyTransport
+});
+var logger_default = logger;
+
+// src/createApp.ts
+var import_compression = __toESM(require("compression"));
+var import_dotenv = __toESM(require("dotenv"));
+var import_path2 = __toESM(require("path"));
+
+// src/config/db.ts
+var import_mongoose = __toESM(require("mongoose"));
+var isDbConnected = () => import_mongoose.default.connection.readyState === 1;
+var isMongoConfigured = () => Boolean(process.env.MONGODB_URI?.trim() || process.env.MONGODB_URI_SRV?.trim());
+
+// src/middleware/errorHandler.ts
+var import_mongoose2 = __toESM(require("mongoose"));
+var isDbUnavailableError = (err) => {
+  if (!err || typeof err !== "object") return false;
+  const name = "name" in err ? String(err.name) : "";
+  const message = "message" in err ? String(err.message) : "";
+  return name === "MongoNotConnectedError" || name === "MongoServerSelectionError" || name === "MongooseError" || message.includes("buffering timed out") || message.includes("before initial connection is complete");
+};
+var isProd2 = process.env.NODE_ENV === "production";
+var errorHandler = (err, _req, res, _next) => {
+  if (isDbUnavailableError(err)) {
+    console.error("[API] Database unavailable:", err instanceof Error ? err.message : err);
+    res.status(503).json({ message: "Database is temporarily unavailable. Please try again in a moment." });
+    return;
+  }
+  const statusCode = err.statusCode ?? 500;
+  if (statusCode >= 500) {
+    console.error("[API Error]", err);
+    res.status(statusCode).json({
+      message: isProd2 ? "An unexpected error occurred. Please try again." : err.message || "Internal Server Error"
+    });
+  } else {
+    res.status(statusCode).json({ message: err.message || "Request error" });
+  }
+};
+var notFound = (_req, res) => {
+  res.status(404).json({ message: "Route not found" });
+};
+import_mongoose2.default.connection.on("error", (err) => {
+  console.error("[MongoDB] Connection error:", err.message);
+});
+
+// src/middleware/sanitize.ts
+function stripOperators(obj, depth = 0) {
+  if (depth > 10) return;
+  for (const key of Object.keys(obj)) {
+    if (key.startsWith("$") || key.includes(".")) {
+      delete obj[key];
+      continue;
+    }
+    const val = obj[key];
+    if (val !== null && typeof val === "object" && !Array.isArray(val)) {
+      stripOperators(val, depth + 1);
+    }
+    if (Array.isArray(val)) {
+      for (const item of val) {
+        if (item !== null && typeof item === "object" && !Array.isArray(item)) {
+          stripOperators(item, depth + 1);
+        }
+      }
+    }
+  }
+}
+var sanitizeInputs = (req, _res, next) => {
+  if (req.body && typeof req.body === "object" && !Array.isArray(req.body)) {
+    stripOperators(req.body);
+  }
+  next();
+};
+
+// src/middleware/rateLimit.ts
+var store = /* @__PURE__ */ new Map();
+var pruneExpired = (now) => {
+  if (store.size < 5e3) return;
+  for (const [key, bucket] of store) {
+    if (bucket.resetAt <= now) store.delete(key);
+  }
+};
+var clientKey = (req) => {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (typeof forwarded === "string" && forwarded.length > 0) {
+    return forwarded.split(",")[0]?.trim() ?? req.ip ?? "unknown";
+  }
+  return req.ip ?? "unknown";
+};
+var rateLimit = (options) => {
+  const { windowMs, max, keyPrefix = "global", message = "Too many requests, please try again later" } = options;
+  return (req, res, next) => {
+    const now = Date.now();
+    pruneExpired(now);
+    const key = `${keyPrefix}:${clientKey(req)}`;
+    const existing = store.get(key);
+    if (!existing || existing.resetAt <= now) {
+      store.set(key, { count: 1, resetAt: now + windowMs });
+      next();
+      return;
+    }
+    if (existing.count >= max) {
+      const retryAfterSec = Math.ceil((existing.resetAt - now) / 1e3);
+      res.setHeader("Retry-After", String(retryAfterSec));
+      res.status(429).json({ message });
+      return;
+    }
+    existing.count += 1;
+    next();
+  };
+};
+var authRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1e3,
+  max: 20,
+  keyPrefix: "auth",
+  message: "Too many authentication attempts. Please wait and try again."
+});
+var orderRateLimit = rateLimit({
+  windowMs: 60 * 1e3,
+  max: 10,
+  keyPrefix: "orders",
+  message: "Too many order requests. Please wait a moment."
+});
+var analyticsRateLimit = rateLimit({
+  windowMs: 60 * 1e3,
+  max: 120,
+  keyPrefix: "analytics"
+});
+var globalApiRateLimit = rateLimit({
+  windowMs: 60 * 1e3,
+  max: 200,
+  keyPrefix: "api",
+  message: "Too many requests from this IP. Please slow down."
+});
+
+// src/middleware/requireDb.ts
+var requireDb = (_req, res, next) => {
+  if (!isDbConnected()) {
+    res.status(503).json({
+      message: "Database is not connected. Add your IP to MongoDB Atlas Network Access, then wait a few seconds and try again."
+    });
+    return;
+  }
+  next();
+};
+
+// src/routes/auth.ts
+var import_express = require("express");
+var import_express_validator2 = require("express-validator");
+
+// src/controllers/authController.ts
+var import_bcryptjs = __toESM(require("bcryptjs"));
+var import_crypto = __toESM(require("crypto"));
+var import_jsonwebtoken2 = __toESM(require("jsonwebtoken"));
+var import_express_validator = require("express-validator");
+
+// src/models/User.ts
+var import_mongoose3 = __toESM(require("mongoose"));
+var addressSchema = new import_mongoose3.Schema(
+  {
+    label: { type: String, required: true },
+    street: { type: String, required: true },
+    city: { type: String, required: true },
+    state: { type: String, required: true },
+    postal: { type: String, required: true },
+    country: { type: String, required: true },
+    isDefault: { type: Boolean, default: false }
+  },
+  { _id: false }
+);
+var userSchema = new import_mongoose3.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    email: { type: String, required: true, unique: true, lowercase: true },
+    password: { type: String, select: false },
+    avatar: { type: String },
+    banner: { type: String },
+    provider: {
+      type: String,
+      enum: ["local", "google", "facebook"],
+      default: "local"
+    },
+    clerkId: { type: String },
+    phone: { type: String },
+    role: { type: String, enum: ["user", "editor", "manager", "admin", "superadmin"], default: "user" },
+    addresses: [addressSchema],
+    isActive: { type: Boolean, default: true },
+    loyaltyPoints: { type: Number, default: 0 },
+    lifetimePointsEarned: { type: Number, default: 0 },
+    tier: { type: String, enum: ["bronze", "silver", "gold"], default: "bronze" },
+    referralCode: { type: String, unique: true, sparse: true },
+    referredBy: { type: import_mongoose3.Schema.Types.ObjectId, ref: "User" },
+    resetPasswordToken: { type: String, select: false },
+    resetPasswordExpire: { type: Date, select: false }
+  },
+  { timestamps: true }
+);
+var User = import_mongoose3.default.model("User", userSchema);
+
+// src/utils/helpers.ts
+var import_jsonwebtoken = __toESM(require("jsonwebtoken"));
+var signJWT = (user) => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error("JWT_SECRET is not defined");
+  }
+  const payload = {
+    id: user._id.toString(),
+    email: user.email,
+    role: user.role
+  };
+  return import_jsonwebtoken.default.sign(payload, secret, {
+    expiresIn: process.env.JWT_EXPIRES_IN ?? "7d"
+  });
+};
+var sanitizeUser = (user) => ({
+  id: user._id.toString(),
+  name: user.name,
+  email: user.email,
+  avatar: user.avatar,
+  banner: user.banner,
+  role: user.role,
+  provider: user.provider,
+  addresses: user.addresses,
+  isActive: user.isActive,
+  loyaltyPoints: user.loyaltyPoints ?? 0,
+  tier: user.tier ?? "bronze",
+  referralCode: user.referralCode
+});
+var slugify = (name) => name.toLowerCase().trim().replace(/[^\w\s-]/g, "").replace(/[\s_-]+/g, "-").replace(/^-+|-+$/g, "");
+var FREE_SHIPPING_THRESHOLD = 5e3;
+var SHIPPING_FEE = 250;
+var calculateShippingFee = (subtotal) => subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+
+// src/config/clerk.ts
+var import_backend = require("@clerk/backend");
+var clerkClient = (0, import_backend.createClerkClient)({
+  secretKey: process.env.CLERK_SECRET_KEY
+});
+
+// src/services/clerkSync.ts
+var syncClerkUser = async (clerkUserId) => {
+  const clerkUser = await clerkClient.users.getUser(clerkUserId);
+  const externalProvider = clerkUser.externalAccounts[0]?.provider ?? "local";
+  let provider = "local";
+  if (externalProvider.includes("google")) {
+    provider = "google";
+  } else if (externalProvider.includes("facebook")) {
+    provider = "facebook";
+  }
+  const primaryEmail = clerkUser.emailAddresses.find(
+    (entry) => entry.id === clerkUser.primaryEmailAddressId
+  );
+  return {
+    name: `${clerkUser.firstName ?? ""} ${clerkUser.lastName ?? ""}`.trim() || "User",
+    email: primaryEmail?.emailAddress ?? clerkUser.emailAddresses[0]?.emailAddress ?? "",
+    avatar: clerkUser.imageUrl,
+    clerkId: clerkUserId,
+    provider
+  };
+};
+
+// src/services/emailService.ts
+var import_nodemailer = __toESM(require("nodemailer"));
+
+// src/utils/shippingAddress.ts
+var cleanPhone = (phone) => phone.replace(/\s+/g, " ").trim();
+var normalizeShippingAddress = (input) => {
+  const fromArray = (input.phones ?? []).map(cleanPhone).filter(Boolean);
+  const phones = fromArray.length > 0 ? fromArray : input.phone ? [cleanPhone(input.phone)] : [];
+  if (phones.length === 0) {
+    throw new Error("At least one mobile number is required");
+  }
+  return {
+    name: input.name?.trim() ?? "",
+    phones,
+    phone: phones[0],
+    landmark: input.landmark?.trim() ?? "",
+    street: input.street?.trim() ?? "",
+    city: input.city?.trim() ?? "",
+    state: input.state?.trim() ?? "",
+    postal: input.postal?.trim() ?? "",
+    country: input.country?.trim() ?? ""
+  };
+};
+var formatShippingPhones = (address) => {
+  const phones = address.phones && address.phones.length > 0 ? address.phones : address.phone ? [address.phone] : [];
+  return phones.join(", ");
+};
+
+// src/config/bankTransfer.ts
+var getBankTransferDetails = () => ({
+  accountName: process.env.BANK_ACCOUNT_NAME ?? "Vexiron Athletics",
+  bankName: process.env.BANK_NAME ?? "HBL - Habib Bank Limited",
+  accountNumber: process.env.BANK_ACCOUNT_NUMBER ?? "12345678901234"
+});
+var formatPaymentMethodLabel = (method) => {
+  if (method === "cod") return "Cash on Delivery";
+  if (method === "bank") return "Bank Transfer";
+  return method.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+};
+
+// src/services/emailService.ts
+var getTransporter = () => {
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  if (!user || !pass) return null;
+  return import_nodemailer.default.createTransport({
+    host: process.env.SMTP_HOST ?? "smtp.gmail.com",
+    port: Number(process.env.SMTP_PORT ?? 587),
+    secure: process.env.SMTP_SECURE === "true",
+    auth: { user, pass }
+  });
+};
+var FROM = process.env.SMTP_FROM ?? `VexironAthletics <contact@vexironathletics.com>`;
+function brandEmail(body10) {
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -27,7 +403,7 @@
           <!-- Body -->
           <tr>
             <td style="background:#ffffff;padding:40px 40px 32px;border-left:1px solid #e8ecf0;border-right:1px solid #e8ecf0;">
-              ${e}
+              ${body10}
             </td>
           </tr>
 
@@ -56,7 +432,15 @@
     </tr>
   </table>
 </body>
-</html>`}var Pr=async(e,t)=>{let r=ht();if(!r)return console.info(`[Password Reset] No SMTP configured \u2014 reset link for ${e}: ${t}`),{sent:!1,resetUrl:t};let o=`
+</html>`;
+}
+var sendPasswordResetEmail = async (email, resetUrl) => {
+  const transporter = getTransporter();
+  if (!transporter) {
+    console.info(`[Password Reset] No SMTP configured \u2014 reset link for ${email}: ${resetUrl}`);
+    return { sent: false, resetUrl };
+  }
+  const body10 = `
     <!-- Icon -->
     <div style="text-align:center;margin-bottom:28px;">
       <div style="display:inline-block;background:#EFF6FF;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:28px;">\u{1F510}</div>
@@ -72,7 +456,7 @@
 
     <!-- CTA Button -->
     <div style="text-align:center;margin-bottom:32px;">
-      <a href="${t}"
+      <a href="${resetUrl}"
          style="display:inline-block;background:#0A2947;color:#F3E4C9;text-decoration:none;
                 padding:15px 40px;border-radius:10px;font-size:15px;font-weight:700;
                 letter-spacing:0.3px;box-shadow:0 4px 12px rgba(10,41,71,0.3);">
@@ -99,23 +483,38 @@
     <!-- Fallback link -->
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
       Button not working?<br/>
-      <a href="${t}" style="color:#0A2947;word-break:break-all;">${t}</a>
+      <a href="${resetUrl}" style="color:#0A2947;word-break:break-all;">${resetUrl}</a>
     </p>
-  `;return await r.sendMail({from:bt,to:e,subject:"\u{1F510} Reset your VexironAthletics password",html:wt(o)}),{sent:!0}},Rr=async(e,t,r,o,s,n,i)=>{let a=ht(),c=r.slice(-8).toUpperCase(),u=o.map(l=>`
+  `;
+  await transporter.sendMail({
+    from: FROM,
+    to: email,
+    subject: "\u{1F510} Reset your VexironAthletics password",
+    html: brandEmail(body10)
+  });
+  return { sent: true };
+};
+var sendOrderConfirmationEmail = async (email, customerName, orderId, items, total, shippingAddress, paymentMethod) => {
+  const transporter = getTransporter();
+  const shortId = orderId.slice(-8).toUpperCase();
+  const itemRows = items.map(
+    (item) => `
         <tr>
           <td style="padding:12px 8px;border-bottom:1px solid #f3f4f6;font-size:14px;color:#111827;">
-            ${l.name}
+            ${item.name}
           </td>
           <td style="padding:12px 8px;border-bottom:1px solid #f3f4f6;font-size:13px;color:#6b7280;white-space:nowrap;">
-            ${l.size} \xB7 ${l.color}
+            ${item.size} \xB7 ${item.color}
           </td>
           <td style="padding:12px 8px;border-bottom:1px solid #f3f4f6;font-size:14px;text-align:center;color:#111827;">
-            ${l.qty}
+            ${item.qty}
           </td>
           <td style="padding:12px 8px;border-bottom:1px solid #f3f4f6;font-size:14px;text-align:right;color:#111827;font-weight:600;">
-            \u20A8${(l.price*l.qty).toLocaleString()}
+            \u20A8${(item.price * item.qty).toLocaleString()}
           </td>
-        </tr>`).join(""),y=`
+        </tr>`
+  ).join("");
+  const body10 = `
     <!-- Greeting -->
     <div style="text-align:center;margin-bottom:28px;">
       <div style="display:inline-block;background:#F0FDF4;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:28px;">\u2705</div>
@@ -125,13 +524,13 @@
       Order Confirmed!
     </h2>
     <p style="margin:0 0 28px;color:#6b7280;font-size:15px;text-align:center;">
-      Hi <strong>${t}</strong>, thank you for shopping with VexironAthletics! \u{1F389}
+      Hi <strong>${customerName}</strong>, thank you for shopping with VexironAthletics! \u{1F389}
     </p>
 
     <!-- Order ID badge -->
     <div style="background:#0A2947;border-radius:10px;padding:14px 20px;text-align:center;margin-bottom:28px;">
       <p style="margin:0;color:rgba(255,255,255,0.6);font-size:12px;text-transform:uppercase;letter-spacing:1px;">Order Number</p>
-      <p style="margin:4px 0 0;color:#F3E4C9;font-size:22px;font-weight:800;letter-spacing:2px;">#${c}</p>
+      <p style="margin:4px 0 0;color:#F3E4C9;font-size:22px;font-weight:800;letter-spacing:2px;">#${shortId}</p>
     </div>
 
     <!-- Items table -->
@@ -144,11 +543,11 @@
           <th style="padding:10px 8px;text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;font-weight:600;">Price</th>
         </tr>
       </thead>
-      <tbody>${u}</tbody>
+      <tbody>${itemRows}</tbody>
       <tfoot>
         <tr style="background:#f9fafb;">
           <td colspan="3" style="padding:14px 8px;font-size:15px;font-weight:700;color:#0A2947;">Total</td>
-          <td style="padding:14px 8px;font-size:16px;font-weight:800;color:#0A2947;text-align:right;">\u20A8${s.toLocaleString()}</td>
+          <td style="padding:14px 8px;font-size:16px;font-weight:800;color:#0A2947;text-align:right;">\u20A8${total.toLocaleString()}</td>
         </tr>
       </tfoot>
     </table>
@@ -157,15 +556,15 @@
     <div style="background:#f9fafb;border-radius:10px;padding:20px;margin-bottom:24px;">
       <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#0A2947;text-transform:uppercase;letter-spacing:0.5px;">\u{1F4E6} Shipping To</p>
       <p style="margin:0;color:#374151;font-size:14px;line-height:1.8;">
-        <strong>${n.name}</strong><br/>
-        ${n.landmark?`Near: ${n.landmark}<br/>`:""}
-        ${n.street}<br/>
-        ${n.city}, ${n.state} ${n.postal}<br/>
-        ${n.country}<br/>
-        \u{1F4DE} ${Je(n)}
+        <strong>${shippingAddress.name}</strong><br/>
+        ${shippingAddress.landmark ? `Near: ${shippingAddress.landmark}<br/>` : ""}
+        ${shippingAddress.street}<br/>
+        ${shippingAddress.city}, ${shippingAddress.state} ${shippingAddress.postal}<br/>
+        ${shippingAddress.country}<br/>
+        \u{1F4DE} ${formatShippingPhones(shippingAddress)}
       </p>
       <p style="margin:12px 0 0;color:#374151;font-size:14px;">
-        \u{1F4B3} <strong>Payment:</strong> ${Xe(i)}
+        \u{1F4B3} <strong>Payment:</strong> ${formatPaymentMethodLabel(paymentMethod)}
       </p>
     </div>
 
@@ -173,16 +572,69 @@
       We'll send you another email when your order ships.<br/>
       Questions? Just reply to this email \u2014 we're happy to help!
     </p>
-  `;return a?(await a.sendMail({from:bt,to:e,subject:`\u2705 Order confirmed \u2014 #${c} | VexironAthletics`,html:wt(y)}),{sent:!0}):(console.info(`[Order Confirmation] Order #${c} for ${e} \u2014 \u20A8${s}`),{sent:!1})},qn={processing:{emoji:"\u2699\uFE0F",label:"Processing",color:"#92400E",bg:"#FFF8F0",message:"Great news! We've received your order and are preparing it for shipment. Hang tight!"},shipped:{emoji:"\u{1F69A}",label:"Shipped",color:"#1D4ED8",bg:"#EFF6FF",message:"Your order is on its way! Expect delivery within the next few days."},delivered:{emoji:"\u{1F389}",label:"Delivered",color:"#065F46",bg:"#F0FDF4",message:"Your order has arrived! We hope you love your new VexironAthletics purchase."},cancelled:{emoji:"\u274C",label:"Cancelled",color:"#991B1B",bg:"#FFF1F2",message:"Your order has been cancelled. If you didn't request this, please contact us immediately."}},Cr=async(e,t,r,o)=>{let s=ht(),n=r.slice(-8).toUpperCase(),i=qn[o]??{emoji:"\u{1F4CB}",label:o.charAt(0).toUpperCase()+o.slice(1),color:"#374151",bg:"#f9fafb",message:`Your order status has been updated to: ${o}.`},a=`
+  `;
+  if (!transporter) {
+    console.info(`[Order Confirmation] Order #${shortId} for ${email} \u2014 \u20A8${total}`);
+    return { sent: false };
+  }
+  await transporter.sendMail({
+    from: FROM,
+    to: email,
+    subject: `\u2705 Order confirmed \u2014 #${shortId} | VexironAthletics`,
+    html: brandEmail(body10)
+  });
+  return { sent: true };
+};
+var statusConfig = {
+  processing: {
+    emoji: "\u2699\uFE0F",
+    label: "Processing",
+    color: "#92400E",
+    bg: "#FFF8F0",
+    message: "Great news! We've received your order and are preparing it for shipment. Hang tight!"
+  },
+  shipped: {
+    emoji: "\u{1F69A}",
+    label: "Shipped",
+    color: "#1D4ED8",
+    bg: "#EFF6FF",
+    message: "Your order is on its way! Expect delivery within the next few days."
+  },
+  delivered: {
+    emoji: "\u{1F389}",
+    label: "Delivered",
+    color: "#065F46",
+    bg: "#F0FDF4",
+    message: "Your order has arrived! We hope you love your new VexironAthletics purchase."
+  },
+  cancelled: {
+    emoji: "\u274C",
+    label: "Cancelled",
+    color: "#991B1B",
+    bg: "#FFF1F2",
+    message: "Your order has been cancelled. If you didn't request this, please contact us immediately."
+  }
+};
+var sendOrderStatusUpdateEmail = async (email, customerName, orderId, status) => {
+  const transporter = getTransporter();
+  const shortId = orderId.slice(-8).toUpperCase();
+  const cfg = statusConfig[status] ?? {
+    emoji: "\u{1F4CB}",
+    label: status.charAt(0).toUpperCase() + status.slice(1),
+    color: "#374151",
+    bg: "#f9fafb",
+    message: `Your order status has been updated to: ${status}.`
+  };
+  const body10 = `
     <div style="text-align:center;margin-bottom:28px;">
-      <div style="display:inline-block;background:${i.bg};border-radius:50%;width:64px;height:64px;line-height:64px;font-size:28px;">${i.emoji}</div>
+      <div style="display:inline-block;background:${cfg.bg};border-radius:50%;width:64px;height:64px;line-height:64px;font-size:28px;">${cfg.emoji}</div>
     </div>
 
     <h2 style="margin:0 0 6px;color:#0A2947;font-size:24px;font-weight:700;text-align:center;">
       Order Update
     </h2>
     <p style="margin:0 0 28px;color:#6b7280;font-size:15px;text-align:center;">
-      Hi <strong>${t}</strong>, here's the latest on your order.
+      Hi <strong>${customerName}</strong>, here's the latest on your order.
     </p>
 
     <!-- Order ID + Status badge -->
@@ -190,24 +642,3714 @@
       <tr>
         <td style="background:#0A2947;border-radius:10px 0 0 10px;padding:16px 20px;text-align:center;">
           <p style="margin:0;color:rgba(255,255,255,0.6);font-size:11px;text-transform:uppercase;letter-spacing:1px;">Order</p>
-          <p style="margin:4px 0 0;color:#F3E4C9;font-size:18px;font-weight:800;letter-spacing:1px;">#${n}</p>
+          <p style="margin:4px 0 0;color:#F3E4C9;font-size:18px;font-weight:800;letter-spacing:1px;">#${shortId}</p>
         </td>
-        <td style="background:${i.bg};border-radius:0 10px 10px 0;padding:16px 20px;text-align:center;border:1px solid ${i.color}20;">
+        <td style="background:${cfg.bg};border-radius:0 10px 10px 0;padding:16px 20px;text-align:center;border:1px solid ${cfg.color}20;">
           <p style="margin:0;color:#6b7280;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Status</p>
-          <p style="margin:4px 0 0;color:${i.color};font-size:18px;font-weight:800;">${i.emoji} ${i.label}</p>
+          <p style="margin:4px 0 0;color:${cfg.color};font-size:18px;font-weight:800;">${cfg.emoji} ${cfg.label}</p>
         </td>
       </tr>
     </table>
 
     <!-- Message -->
-    <div style="background:${i.bg};border-left:4px solid ${i.color};border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:28px;">
-      <p style="margin:0;color:#374151;font-size:15px;line-height:1.7;">${i.message}</p>
+    <div style="background:${cfg.bg};border-left:4px solid ${cfg.color};border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:28px;">
+      <p style="margin:0;color:#374151;font-size:15px;line-height:1.7;">${cfg.message}</p>
     </div>
 
     <p style="margin:0;color:#9ca3af;font-size:13px;text-align:center;line-height:1.6;">
       Questions about your order? Just reply to this email.<br/>
       We're available Mon\u2013Sat, 9 AM \u2013 6 PM PKT.
     </p>
-  `;return s?(await s.sendMail({from:bt,to:e,subject:`${i.emoji} Order #${n} \u2014 ${i.label} | VexironAthletics`,html:wt(a)}),{sent:!0}):(console.info(`[Order Status] #${n} \u2192 ${o} for ${e}`),{sent:!1})};var Te=e=>e>=2e3?"gold":e>=500?"silver":"bronze",xt=e=>Math.floor(e/100)*1,Ar=(e,t,r)=>{let s=Math.min(e,t)*1;return Math.min(s,r)},Er=e=>{let t=e.replace(/[^a-zA-Z0-9]/g,"").slice(0,4).toUpperCase()||"VX",r=Math.random().toString(36).slice(2,6).toUpperCase();return`${t}${r}`};var Or=e=>St.default.createHash("sha256").update(e).digest("hex"),Tr=async(e,t)=>{let r=(0,$e.validationResult)(e);if(!r.isEmpty()){t.status(400).json({message:r.array()[0].msg,errors:r.array()});return}let{name:o,email:s,password:n,referralCode:i}=e.body;if(await h.findOne({email:s})){t.status(400).json({message:"Email already registered"});return}let c;if(i){let b=await h.findOne({referralCode:i.toUpperCase()});b&&(c=b._id)}let u=await Ze.default.hash(n,10),y=await h.create({name:o,email:s,password:u,provider:"local",referralCode:Er(o),referredBy:c}),l=Oe(y);t.status(201).json({token:l,user:j(y)})},$r=async(e,t)=>{let r=(0,$e.validationResult)(e);if(!r.isEmpty()){t.status(400).json({message:r.array()[0].msg});return}let{email:o,password:s}=e.body,n=o.toLowerCase().trim(),i=await h.findOne({email:n}).select("+password");if(!i){t.status(401).json({message:"Invalid credentials"});return}if(!i.password){t.status(401).json({message:"This email uses social login. Sign in with Google or Facebook instead."});return}if(!await Ze.default.compare(s,i.password)){t.status(401).json({message:"Invalid credentials"});return}if(!i.isActive){t.status(403).json({message:"Account suspended"});return}let c=Oe(i);t.json({token:c,user:j(i)})},Dr=async(e,t)=>{let{clerkUserId:r}=e.body;if(!r){t.status(400).json({message:"clerkUserId is required"});return}let o=await wr(r),s=await h.findOneAndUpdate({email:o.email},{...o,password:null},{upsert:!0,new:!0,setDefaultsOnInsert:!0}),n=Oe(s);t.json({token:n,user:j(s)})},Mr=async(e,t)=>{let r=(0,$e.validationResult)(e);if(!r.isEmpty()){t.status(400).json({message:r.array()[0].msg});return}let{email:o}=e.body,s=await h.findOne({email:o,provider:"local"}).select("+resetPasswordToken +resetPasswordExpire");if(s&&s.password){let n=St.default.randomBytes(32).toString("hex");s.resetPasswordToken=Or(n),s.resetPasswordExpire=new Date(Date.now()+3600*1e3),await s.save({validateBeforeSave:!1});let a=`${process.env.CLIENT_URL??"http://localhost:3000"}/reset-password?token=${n}`,c=await Pr(o,a),u={message:"If an account exists with that email, a reset link has been sent."};c.resetUrl&&process.env.NODE_ENV!=="production"&&(u.resetUrl=c.resetUrl),t.json(u);return}t.json({message:"If an account exists with that email, a reset link has been sent."})},_r=async(e,t)=>{let r=(0,$e.validationResult)(e);if(!r.isEmpty()){t.status(400).json({message:r.array()[0].msg});return}let{token:o,password:s}=e.body,n=Or(o),i=await h.findOne({resetPasswordToken:n,resetPasswordExpire:{$gt:new Date},provider:"local"}).select("+resetPasswordToken +resetPasswordExpire +password");if(!i){t.status(400).json({message:"Invalid or expired reset token"});return}i.password=await Ze.default.hash(s,10),i.resetPasswordToken=null,i.resetPasswordExpire=null,await i.save(),t.json({message:"Password reset successful. You can now sign in."})},jr=async(e,t)=>{let{refreshToken:r}=e.body;if(!r){t.status(400).json({message:"Refresh token required"});return}let o=process.env.JWT_SECRET;if(!o){t.status(500).json({message:"JWT secret not configured"});return}try{let s=kr.default.verify(r,o),n=await h.findById(s.id);if(!n||!n.isActive){t.status(401).json({message:"Invalid refresh token"});return}let i=Oe(n);t.json({token:i,user:j(n)})}catch{t.status(401).json({message:"Invalid refresh token"})}};var te="VexironAthletics";var de=`Password must be at least ${8} characters and include at least one letter and one number`;var Br=(0,G.body)("password").isLength({min:8}).withMessage(de).matches(/^(?=.*[A-Za-z])(?=.*\d).+$/).withMessage(de),re=(0,Nr.Router)();re.post("/register",ee,ae,[(0,G.body)("name").trim().notEmpty().withMessage("Name is required"),(0,G.body)("email").isEmail().withMessage("Valid email is required"),Br],Tr);re.post("/login",ee,ae,[(0,G.body)("email").isEmail().withMessage("Valid email is required"),(0,G.body)("password").notEmpty().withMessage("Password is required")],$r);re.post("/clerk-sync",ee,ae,Dr);re.post("/refresh",ee,jr);re.post("/forgot-password",ee,[(0,G.body)("email").isEmail().withMessage("Valid email is required")],Mr);re.post("/reset-password",ee,[(0,G.body)("token").notEmpty().withMessage("Reset token is required"),Br],_r);var zr=re;var to=require("express"),H=require("express-validator");var Et=require("express-validator"),ze=p(require("mongoose"));var Me=p(require("mongoose")),Fn=new Me.Schema({url:{type:String,required:!0},public_id:{type:String,required:!0}},{_id:!1}),vt=new Me.Schema({name:{type:String,required:!0,trim:!0},description:{type:String,required:!0},price:{type:Number,required:!0,min:0},discountPrice:{type:Number,min:0},mediumPrice:{type:Number,min:0},premiumPrice:{type:Number,min:0},category:{type:String,enum:["men","women","children"],required:!0},images:[Fn],sizes:[{type:String}],colors:[{type:String}],stock:{type:Number,required:!0,min:0,default:0},sold:{type:Number,default:0,min:0},ratings:{type:Number,default:0,min:0,max:5},numReviews:{type:Number,default:0,min:0},active:{type:Boolean,default:!0}},{timestamps:!0});vt.index({name:"text",description:"text"});vt.index({category:1,active:1});var w=Me.default.model("Product",vt);var ue=p(require("mongoose")),Ur=new ue.Schema({user:{type:ue.Schema.Types.ObjectId,ref:"User",required:!0},product:{type:ue.Schema.Types.ObjectId,ref:"Product",required:!0},rating:{type:Number,required:!0,min:1,max:5},title:{type:String,required:!0,trim:!0},comment:{type:String,required:!0,trim:!0}},{timestamps:!0});Ur.index({product:1,createdAt:-1});var et=ue.default.model("Review",Ur);var R=require("cloudinary"),It=process.env.CLOUDINARY_CLOUD_NAME,Pt=process.env.CLOUDINARY_API_KEY,Rt=process.env.CLOUDINARY_API_SECRET;It&&Pt&&Rt&&R.v2.config({cloud_name:It,api_key:Pt,api_secret:Rt});var M=()=>!!(It&&Pt&&Rt);var Lr=require("meilisearch");var le=p(require("mongoose")),Ct=new le.Schema({query:{type:String,required:!0,trim:!0},resultsCount:{type:Number,default:0},source:{type:String,enum:["text","visual","autocomplete"],default:"text"},user:{type:le.Schema.Types.ObjectId,ref:"User"},filters:{type:le.Schema.Types.Mixed}},{timestamps:{createdAt:!0,updatedAt:!1}});Ct.index({createdAt:-1});Ct.index({query:1});var oe=le.default.model("SearchLog",Ct);var Hn=["men","women"];var _e=e=>{if(e==="common")return{$in:Hn};if(e==="men"||e==="women"||e==="children")return e};var Vn=process.env.MEILI_HOST??"http://127.0.0.1:7700",Gn=process.env.MEILI_MASTER_KEY??"",me="products",tt=null,je=!1,Ne=()=>{if(tt)return tt;try{return tt=new Lr.MeiliSearch({host:Vn,apiKey:Gn||void 0}),tt}catch{return null}},Qn=async()=>{let e=Ne();if(!e)return;try{await e.createIndex(me,{primaryKey:"id"})}catch{}await e.index(me).updateSettings({searchableAttributes:["name","description","category","colors","sizes"],filterableAttributes:["category","sizes","colors","price","ratings","active"],sortableAttributes:["price","ratings","createdAt"],typoTolerance:{enabled:!0}}),je=!0},qr=e=>({id:e._id.toString(),name:e.name,description:e.description,category:e.category,price:e.price,discountPrice:e.discountPrice,sizes:e.sizes,colors:e.colors,ratings:e.ratings,image:e.images[0]?.url??"",active:e.active,createdAt:e.createdAt?.getTime?.()??Date.now()}),rt=async e=>{let t=Ne();if(!(!t||!je))try{let r=t.index(me);e.active?await r.addDocuments([qr(e)]):await r.deleteDocument(e._id.toString())}catch{}},Fr=async()=>{await Qn();let e=await w.find({active:!0}),t=Ne();if(!t||!je)return;await t.index(me).addDocuments(e.map(qr))},Wn=e=>{let t={active:!0};if(e.category){let r=_e(e.category);r&&(t.category=r)}return(e.minPrice||e.maxPrice)&&(t.price={},e.minPrice&&(t.price.$gte=e.minPrice),e.maxPrice&&(t.price.$lte=e.maxPrice)),e.size&&(t.sizes={$in:e.size.split(",")}),e.color&&(t.colors={$in:e.color.split(",")}),e.minRating&&(t.ratings={$gte:e.minRating}),t},At=e=>{let r=e.replace(/[.*+?^${}()|[\]\\]/g,"\\$&").split("").join(".*");return new RegExp(r,"i")},Hr=async e=>{let t=Math.max(1,e.page??1),r=Math.min(50,e.limit??12),o=(t-1)*r,s=e.q.trim(),n=Ne();if(n&&je&&s)try{let g=["active = true"];e.category==="common"?g.push('(category = "men" OR category = "women")'):e.category&&g.push(`category = "${e.category}"`),e.minPrice&&g.push(`price >= ${e.minPrice}`),e.maxPrice&&g.push(`price <= ${e.maxPrice}`),e.minRating&&g.push(`ratings >= ${e.minRating}`),e.size&&e.size.split(",").forEach(v=>g.push(`sizes = "${v.trim()}"`)),e.color&&e.color.split(",").forEach(v=>g.push(`colors = "${v.trim()}"`));let A={"price-asc":["price:asc"],"price-desc":["price:desc"],rating:["ratings:desc"],newest:["createdAt:desc"]},O=await n.index(me).search(s,{filter:g.length?g.join(" AND "):void 0,sort:A[e.sort??""]??["createdAt:desc"],limit:r,offset:o,facets:["category","sizes","colors"]}),T=O.hits.map(v=>v.id),$=T.length?await w.find({_id:{$in:T},active:!0}):[],x=T.map(v=>$.find(Z=>Z._id.toString()===v)).filter(Boolean);return await oe.create({query:s,resultsCount:O.estimatedTotalHits??x.length,source:e.source??"text",user:e.userId,filters:{category:e.category,minPrice:e.minPrice,maxPrice:e.maxPrice}}),{products:x,pagination:{page:t,limit:r,total:O.estimatedTotalHits??x.length,pages:Math.ceil((O.estimatedTotalHits??x.length)/r)},facets:O.facetDistribution??{},engine:"meilisearch"}}catch{}let i=Wn(e);s&&(i.$or=[{$text:{$search:s}},{name:At(s)},{description:At(s)}]);let a={"price-asc":{price:1},"price-desc":{price:-1},newest:{createdAt:-1},rating:{ratings:-1}},c=a[e.sort??""]??a.newest,[u,y,l,b]=await Promise.all([w.find(i).sort(c).skip(o).limit(r),w.countDocuments(i),w.aggregate([{$match:{active:!0}},{$group:{_id:"$category",count:{$sum:1}}}]),w.aggregate([{$match:{active:!0}},{$unwind:"$colors"},{$group:{_id:"$colors",count:{$sum:1}}}])]);return s&&await oe.create({query:s,resultsCount:y,source:e.source??"text",user:e.userId}),{products:u,pagination:{page:t,limit:r,total:y,pages:Math.ceil(y/r)},facets:{category:Object.fromEntries(l.map(g=>[g._id,g.count])),colors:Object.fromEntries(b.map(g=>[g._id,g.count]))},engine:"mongodb"}},Vr=async(e,t=8)=>{let r=e.trim();if(!r)return[];let o=Ne();if(o&&je)try{return(await o.index(me).search(r,{filter:"active = true",limit:t,attributesToRetrieve:["id","name","category","price","discountPrice","image"]})).hits}catch{}return(await w.find({active:!0,$or:[{name:At(r)},{$text:{$search:r}}]}).select("name category price discountPrice images").limit(t)).map(n=>({id:n._id.toString(),name:n.name,category:n.category,price:n.price,discountPrice:n.discountPrice,image:n.images[0]?.url??""}))},Gr=async(e,t)=>{let r={active:!0};if(e.length&&(r.colors={$in:e.map(s=>new RegExp(s,"i"))}),t){let s=_e(t);s&&(r.category=s)}let o=await w.find(r).limit(24);return await oe.create({query:`visual:${e.join(",")}`,resultsCount:o.length,source:"visual",filters:{colors:e,category:t}}),o},Qr=async(e=30)=>{let t=new Date;t.setDate(t.getDate()-e);let[r,o,s]=await Promise.all([oe.aggregate([{$match:{createdAt:{$gte:t}}},{$group:{_id:"$query",count:{$sum:1},avgResults:{$avg:"$resultsCount"}}},{$sort:{count:-1}},{$limit:20}]),oe.countDocuments({createdAt:{$gte:t}}),oe.aggregate([{$match:{createdAt:{$gte:t}}},{$group:{_id:"$source",count:{$sum:1}}}])]);return{topQueries:r,totalSearches:o,bySource:s,days:e}};var pe=new Map;function Yn(e){let t=pe.get(e);if(t){if(Date.now()>t.expiresAt){pe.delete(e);return}return t.value}}function Kn(e,t,r){pe.set(e,{value:t,expiresAt:Date.now()+r*1e3})}function Be(e){pe.delete(e)}function ot(e){for(let t of pe.keys())t.startsWith(e)&&pe.delete(t)}async function ge(e,t,r){let o=Yn(e);if(o!==void 0)return o;let s=await r();return Kn(e,s,t),s}var Jn=60,Wr={"price-asc":{price:1},"price-desc":{price:-1},"name-asc":{name:1},"name-desc":{name:-1},"category-asc":{category:1},"category-desc":{category:-1},"stock-asc":{stock:1},"stock-desc":{stock:-1},newest:{createdAt:-1},rating:{ratings:-1}},Yr=async(e,t)=>{let{category:r,minPrice:o,maxPrice:s,size:n,color:i,search:a,sort:c="newest",page:u="1",limit:y="12",minRating:l,maxStock:b}=e.query,g={active:!0};if(r&&typeof r=="string"){let q=_e(r);q&&(g.category=q)}(o||s)&&(g.price={},o&&(g.price.$gte=Number(o)),s&&(g.price.$lte=Number(s))),n&&typeof n=="string"&&(g.sizes={$in:n.split(",")}),i&&typeof i=="string"&&(g.colors={$in:i.split(",")}),l&&(g.ratings={$gte:Number(l)}),b&&(g.stock={$lte:Number(b)}),a&&typeof a=="string"&&a.trim()&&(g.$text={$search:a.trim()});let{ids:A}=e.query;if(A&&typeof A=="string"&&A.trim()){let q=A.split(",").map(F=>F.trim()).filter(F=>ze.default.Types.ObjectId.isValid(F));q.length>0&&(g._id={$in:q})}let O=Math.max(1,parseInt(u,10)||1),T=Math.min(50,Math.max(1,parseInt(y,10)||12)),$=(O-1)*T,x=Wr[c]??Wr.newest,v=!b&&!a,Z=v?`products:${r??"all"}:${c}:${u}:${y}:${o??""}:${s??""}:${l??""}`:null,Ae=await ge(Z??`products:nocache:${Date.now()}`,Z?Jn:0,async()=>{let[q,F]=await Promise.all([w.find(g).sort(x).skip($).limit(T).lean(),w.countDocuments(g)]);return{products:q,pagination:{page:O,limit:T,total:F,pages:Math.ceil(F/T)}}});v&&t.setHeader("Cache-Control","public, max-age=30"),t.json(Ae)},Kr=async(e,t)=>{let r=String(e.params.id);if(!ze.default.Types.ObjectId.isValid(r)){t.status(400).json({message:"Invalid product ID"});return}let o=await w.findOne({_id:r,active:!0});if(!o){t.status(404).json({message:"Product not found"});return}let s=await et.find({product:r}).populate("user","name avatar").sort({createdAt:-1}).limit(50);t.json({product:o,reviews:s})},Jr=async(e,t)=>{let r=(0,Et.validationResult)(e);if(!r.isEmpty()){t.status(400).json({message:r.array()[0].msg});return}let o=e.files,s=[];if(o&&o.length>0&&M())for(let i of o){let a=await R.v2.uploader.upload(`data:${i.mimetype};base64,${i.buffer.toString("base64")}`,{folder:"ecom/products"});s.push({url:a.secure_url,public_id:a.public_id})}else if(e.body.images){let i=JSON.parse(e.body.images);s.push(...i)}let n=await w.create({...e.body,price:Number(e.body.price),discountPrice:e.body.discountPrice?Number(e.body.discountPrice):void 0,mediumPrice:e.body.mediumPrice?Number(e.body.mediumPrice):void 0,premiumPrice:e.body.premiumPrice?Number(e.body.premiumPrice):void 0,stock:Number(e.body.stock),sizes:typeof e.body.sizes=="string"?JSON.parse(e.body.sizes):e.body.sizes,colors:typeof e.body.colors=="string"?JSON.parse(e.body.colors):e.body.colors,active:e.body.active!=="false"&&e.body.active!==!1,images:s});await rt(n),ot("products:"),t.status(201).json(n)},Xr=async(e,t)=>{let r=String(e.params.id);if(!ze.default.Types.ObjectId.isValid(r)){t.status(400).json({message:"Invalid product ID"});return}let o=await w.findById(r);if(!o){t.status(404).json({message:"Product not found"});return}let s={...e.body};s.price!==void 0&&s.price!==""&&(s.price=Number(s.price)),s.discountPrice!==void 0&&s.discountPrice!==""?s.discountPrice=Number(s.discountPrice):"discountPrice"in e.body&&e.body.discountPrice===""&&(s.discountPrice=void 0),s.mediumPrice!==void 0&&s.mediumPrice!==""?s.mediumPrice=Number(s.mediumPrice):"mediumPrice"in e.body&&e.body.mediumPrice===""&&(s.mediumPrice=void 0),s.premiumPrice!==void 0&&s.premiumPrice!==""?s.premiumPrice=Number(s.premiumPrice):"premiumPrice"in e.body&&e.body.premiumPrice===""&&(s.premiumPrice=void 0),s.stock!==void 0&&s.stock!==""&&(s.stock=Number(s.stock)),typeof s.sizes=="string"&&(s.sizes=JSON.parse(s.sizes)),typeof s.colors=="string"&&(s.colors=JSON.parse(s.colors)),s.active!==void 0&&(s.active=s.active!=="false"&&s.active!==!1);let n=e.files,i=o.images;if(typeof e.body.existingImages=="string"&&e.body.existingImages.trim())try{i=JSON.parse(e.body.existingImages)}catch{t.status(400).json({message:"Invalid existing images payload"});return}if(n&&n.length>0&&M())for(let c of n){let u=await R.v2.uploader.upload(`data:${c.mimetype};base64,${c.buffer.toString("base64")}`,{folder:"ecom/products"});i.push({url:u.secure_url,public_id:u.public_id})}s.images=i;let a=await w.findByIdAndUpdate(r,s,{new:!0,runValidators:!0});if(!a){t.status(404).json({message:"Product not found"});return}await rt(a),ot("products:"),t.json(a)},Zr=async(e,t)=>{let r=String(e.params.id),o=await w.findByIdAndUpdate(r,{active:!1},{new:!0});if(!o){t.status(404).json({message:"Product not found"});return}await rt(o),ot("products:"),t.json({message:"Product deactivated",product:o})},eo=async(e,t)=>{let r=(0,Et.validationResult)(e);if(!r.isEmpty()){t.status(400).json({message:r.array()[0].msg});return}let o=String(e.params.id),{rating:s,title:n,comment:i}=e.body,a=await w.findById(o);if(!a||!a.active){t.status(404).json({message:"Product not found"});return}let c=await et.create({user:e.user.id,product:o,rating:s,title:n,comment:i}),u=await et.aggregate([{$match:{product:new ze.default.Types.ObjectId(o)}},{$group:{_id:"$product",avgRating:{$avg:"$rating"},count:{$sum:1}}}]);u.length>0&&(a.ratings=Math.round(u[0].avgRating*10)/10,a.numReviews=u[0].count,await a.save()),t.status(201).json(c)};var kt=p(require("jsonwebtoken")),d=(e,t,r)=>{let o=e.headers.authorization?.split(" ")[1];if(!o){t.status(401).json({message:"No token"});return}try{let s=process.env.JWT_SECRET;if(!s){t.status(500).json({message:"JWT secret not configured"});return}e.user=kt.default.verify(o,s),r()}catch{t.status(401).json({message:"Invalid token"})}},fe=(e,t,r)=>{let o=e.headers.authorization?.split(" ")[1];if(!o){r();return}try{let s=process.env.JWT_SECRET;s&&(e.user=kt.default.verify(o,s))}catch{}r()};var m=(e,t,r)=>{if(e.user?.role!=="admin"){t.status(403).json({message:"Admin only"});return}r()};var Ot=p(require("multer")),Xn=Ot.default.memoryStorage(),_=(0,Ot.default)({storage:Xn,limits:{fileSize:5*1024*1024},fileFilter:(e,t,r)=>{t.mimetype.startsWith("image/")?r(null,!0):r(new Error("Only image files are allowed"))}});var se=(0,to.Router)();se.get("/",Yr);se.get("/:id",Kr);se.post("/",d,m,_.array("images",5),[(0,H.body)("name").trim().notEmpty(),(0,H.body)("description").trim().notEmpty(),(0,H.body)("price").isNumeric(),(0,H.body)("category").isIn(["men","women","children"]),(0,H.body)("stock").isNumeric()],Jr);se.put("/:id",d,m,_.array("images",5),Xr);se.delete("/:id",d,m,Zr);se.post("/:id/review",d,[(0,H.body)("rating").isInt({min:1,max:5}),(0,H.body)("title").trim().notEmpty(),(0,H.body)("comment").trim().notEmpty()],eo);var ro=se;var Ao=require("express"),P=require("express-validator");var Ue=p(require("mongoose")),fo=require("express-validator");var Q=p(require("mongoose")),Zn=new Q.Schema({product:{type:Q.Schema.Types.ObjectId,ref:"Product",required:!0},name:{type:String,required:!0},image:{type:String,required:!0},price:{type:Number,required:!0},size:{type:String,required:!0},color:{type:String,required:!0},clothQuality:{type:String,enum:["normal","medium","premium"],default:"normal"},qty:{type:Number,required:!0,min:1}},{_id:!1}),ei=new Q.Schema({name:{type:String,required:!0},phones:{type:[String],default:[]},phone:{type:String},landmark:{type:String,default:""},street:{type:String,required:!0},city:{type:String,required:!0},state:{type:String,required:!0},postal:{type:String,required:!0},country:{type:String,required:!0}},{_id:!1}),ti=new Q.Schema({user:{type:Q.Schema.Types.ObjectId,ref:"User",required:!0},items:[Zn],shippingAddress:{type:ei,required:!0},paymentMethod:{type:String,enum:["cod","bank"],default:"cod"},bankPaymentProof:{url:{type:String},public_id:{type:String}},status:{type:String,enum:["pending","processing","shipped","delivered","cancelled"],default:"pending"},subtotal:{type:Number,required:!0},shippingFee:{type:Number,required:!0},couponCode:{type:String},couponDiscount:{type:Number,default:0},loyaltyPointsRedeemed:{type:Number,default:0},loyaltyPointsEarned:{type:Number,default:0},loyaltyAwarded:{type:Boolean,default:!1},total:{type:Number,required:!0},notes:{type:String}},{timestamps:!0}),S=Q.default.model("Order",ti);var st=p(require("mongoose")),ri=new st.Schema({code:{type:String,required:!0,unique:!0,uppercase:!0,trim:!0},type:{type:String,enum:["percent","fixed","free_shipping"],required:!0},value:{type:Number,required:!0,min:0},minOrder:{type:Number,default:0},maxUses:{type:Number,default:1e3},usedCount:{type:Number,default:0},expiresAt:{type:Date},active:{type:Boolean,default:!0}},{timestamps:!0}),U=st.default.model("Coupon",ri);var nt=(e,t)=>{if(t<e.minOrder)throw new Error(`Minimum order of \u20A8${e.minOrder} required for this coupon`);return e.type==="free_shipping"?{discount:0,freeShipping:!0,coupon:e}:e.type==="percent"?{discount:Math.round(t*Math.min(e.value,100)/100),freeShipping:!1,coupon:e}:{discount:Math.min(e.value,t),freeShipping:!1,coupon:e}};var oi=[{value:"normal",label:"Normal",multiplier:1},{value:"medium",label:"Medium",multiplier:1.15},{value:"premium",label:"Premium",multiplier:1.3}];var it=e=>e==="medium"||e==="premium"?e:"normal",si=e=>oi.find(t=>t.value===e)?.multiplier??1,ni=(e,t)=>Math.round(e*si(t)),at=(e,t)=>{let r=e.discountPrice??e.price;return t==="normal"?r:t==="medium"&&e.mediumPrice!=null&&e.mediumPrice>0?e.mediumPrice:t==="premium"&&e.premiumPrice!=null&&e.premiumPrice>0?e.premiumPrice:ni(r,t)};var ct=p(require("pdfkit"));var N=e=>`Rs ${e.toLocaleString("en-PK")}`,so=e=>e==="premium"?"Premium":e==="medium"?"Medium":"Normal",E="#0A2947",ne="#F3E4C9",Tt="#8B5E3C",W="#71717a",$t="#f4f4f5",B="#171717",oo="#dc2626",Dt=e=>new Promise((t,r)=>{let o=[];e.on("data",s=>o.push(s)),e.on("end",()=>t(Buffer.concat(o))),e.on("error",r),e.end()}),Y=(e,t,r="#e4e4e7")=>{e.save().strokeColor(r).lineWidth(.5).moveTo(40,t).lineTo(555,t).stroke().restore()},no=async(e,t,r)=>{let o=new ct.default({margin:40,size:"A4"});o.rect(0,0,o.page.width,70).fill(E),o.fillColor(ne).fontSize(22).font("Helvetica-Bold").text(te,40,20),o.fillColor(ne).fontSize(10).font("Helvetica").text("Invoice",40,46);let s=e._id.toString().slice(-8).toUpperCase();o.fillColor(B).fontSize(10).font("Helvetica").text(`Invoice #${s}`,40,85).text(`Date: ${new Date(e.createdAt).toLocaleDateString()}`,40,100).text(`Status: ${e.status}`,40,115),o.fillColor(E).fontSize(9).font("Helvetica-Bold").text("BILL TO",350,85).fillColor(B).font("Helvetica").text(t,350,98).text(r,350,111).text(`${e.shippingAddress.street}, ${e.shippingAddress.city}`,350,124),Y(o,142),o.rect(40,148,515,20).fill($t);let n=[40,260,330,420,480];o.fillColor(E).fontSize(9).font("Helvetica-Bold").text("ITEM",n[0],153).text("SIZE / COLOR",n[1],153).text("QTY",n[2],153).text("UNIT",n[3],153).text("TOTAL",n[4],153);let i=175;e.items.forEach((l,b)=>{b%2===1&&o.rect(40,i-4,515,20).fill("#fafafa"),o.fillColor(B).fontSize(9).font("Helvetica-Bold").text(l.name,n[0],i,{width:215,ellipsis:!0}),o.font("Helvetica").text(`${l.size} / ${l.color} / ${so(l.clothQuality)}`,n[1],i,{width:65}).text(String(l.qty),n[2],i).text(N(l.price),n[3],i).text(N(l.price*l.qty),n[4],i),i+=22}),Y(o,i+4),i+=14;let a=380,c=480,u=(l,b,g=!1,A=B)=>{o.fillColor(A).fontSize(9).font(g?"Helvetica-Bold":"Helvetica").text(l,a,i).text(b,c,i),i+=16};u("Subtotal",N(e.subtotal)),e.couponDiscount&&u(`Coupon (${e.couponCode})`,`-${N(e.couponDiscount)}`,!1,oo),e.loyaltyPointsRedeemed&&u("Loyalty points",`-${N(e.loyaltyPointsRedeemed)}`,!1,oo),u("Shipping",e.shippingFee===0?"Free":N(e.shippingFee)),Y(o,i+2,E),i+=8,u("TOTAL",N(e.total),!0,E),i+=10,o.fillColor(W).fontSize(8).font("Helvetica").text(`Payment method: ${Xe(e.paymentMethod)}`,40,i);let y=o.page.height-40;return Y(o,y-8),o.fillColor(W).fontSize(8).text(`Thank you for shopping at ${te}`,40,y,{align:"center",width:515}),Dt(o)},io=async(e,t,r)=>{let o=new ct.default({margin:40,size:"A4"}),s=e._id.toString().slice(-8).toUpperCase();o.rect(0,0,o.page.width,70).fill(E),o.fillColor(ne).fontSize(22).font("Helvetica-Bold").text(te,40,18),o.fillColor(ne).fontSize(10).font("Helvetica").text("Dispatch Receipt",40,44),o.fillColor(Tt).fontSize(14).font("Helvetica-Bold").text(`#${s}`,430,26),o.rect(40,80,515,90).fill("#f0f4f8").stroke(E),o.fillColor(E).fontSize(8).font("Helvetica-Bold").text("SHIP TO \u2014 ATTACH TO PARCEL",52,88),o.fillColor(B).fontSize(13).font("Helvetica-Bold").text(e.shippingAddress.name,52,102),o.fontSize(10).font("Helvetica").text([e.shippingAddress.landmark?`Near: ${e.shippingAddress.landmark}`:"",e.shippingAddress.street,`${e.shippingAddress.city}, ${e.shippingAddress.state} ${e.shippingAddress.postal}`,e.shippingAddress.country,`Mobile: ${Je(e.shippingAddress)}`].filter(Boolean).join(`
-`),52,120,{width:490});let n=185;o.fillColor(W).fontSize(8).font("Helvetica-Bold").text("ORDER DATE",40,n),o.fillColor(W).text("DISPATCH DATE",170,n),o.fillColor(W).text("PAYMENT",310,n),o.fillColor(W).text("CUSTOMER",440,n),n+=12,o.fillColor(B).fontSize(9).font("Helvetica").text(new Date(e.createdAt).toLocaleDateString(),40,n).text(new Date().toLocaleDateString(),170,n).text(e.paymentMethod==="bank"?"Bank Transfer (Prepaid)":"Cash on Delivery",310,n,{width:125}).text(t,440,n,{width:115,ellipsis:!0}),n+=24,Y(o,n),n+=8,o.rect(40,n,515,20).fill(E),o.fillColor(ne).fontSize(8).font("Helvetica-Bold").text("#",48,n+6).text("PRODUCT",68,n+6).text("SIZE / COLOR",290,n+6).text("QTY",400,n+6).text("LINE TOTAL",455,n+6),n+=24,e.items.forEach((a,c)=>{c%2===0&&o.rect(40,n-4,515,20).fill($t),o.fillColor(B).fontSize(9).font("Helvetica-Bold").text(String(c+1),48,n).text(a.name,68,n,{width:218,ellipsis:!0}),o.font("Helvetica").text(`${a.size} \xB7 ${a.color} \xB7 ${so(a.clothQuality)}`,290,n,{width:105}).fillColor(E).font("Helvetica-Bold").text(String(a.qty),400,n).fillColor(B).font("Helvetica").text(N(a.price*a.qty),455,n),n+=22}),Y(o,n+4),n+=16,o.rect(350,n,205,70).fill("#fff7ed").stroke(Tt),o.fillColor(Tt).fontSize(8).font("Helvetica-Bold").text(e.paymentMethod==="bank"?"PREPAID \u2014 DO NOT COLLECT":"AMOUNT TO COLLECT (COD)",358,n+8,{width:190,align:"center"}),o.fillColor(E).fontSize(22).font("Helvetica-Bold").text(N(e.total),358,n+24,{width:190,align:"center"}),o.fillColor(B).fontSize(9).font("Helvetica-Bold").text("Packing checklist:",40,n+8),["Verify items & quantities","Seal package securely","Attach this receipt to parcel"].forEach((a,c)=>{o.font("Helvetica").fontSize(9).fillColor(B).text(`\u2610  ${a}`,40,n+24+c*16)});let i=o.page.height-40;return Y(o,i-8),o.fillColor(W).fontSize(8).text(`${te} \xB7 Dispatch document for Order #${s} \xB7 Internal use only`,40,i,{align:"center",width:515}),Dt(o)},ao=async(e,t)=>{let r=new ct.default({margin:40,size:"A4",layout:"landscape"});r.rect(0,0,r.page.width,60).fill(E),r.fillColor(ne).fontSize(20).font("Helvetica-Bold").text(`${te} \u2014 ${t}`,40,16);let o=e.reduce((a,c)=>a+c.total,0);r.fillColor(ne).fontSize(9).font("Helvetica").text(`${e.length} orders \xB7 Revenue: ${N(o)}`,40,42);let s=76;r.rect(40,s,r.page.width-80,20).fill($t);let n=[40,130,250,350,470,570];r.fillColor(E).fontSize(8).font("Helvetica-Bold").text("ORDER ID",n[0],s+6).text("DATE",n[1],s+6).text("CUSTOMER",n[2],s+6).text("STATUS",n[3],s+6).text("PAYMENT",n[4],s+6).text("TOTAL",n[5],s+6),s+=24,e.forEach((a,c)=>{c%2===1&&r.rect(40,s-4,r.page.width-80,18).fill("#fafafa"),r.fillColor(B).fontSize(8).font("Helvetica").text(a._id.toString().slice(-8).toUpperCase(),n[0],s,{width:85}).text(new Date(a.createdAt).toLocaleDateString(),n[1],s,{width:115}).text("\u2014",n[2],s,{width:95}).text(a.status,n[3],s,{width:115}).text(a.paymentMethod==="bank"?"Bank":"COD",n[4],s,{width:95}).fillColor(E).font("Helvetica-Bold").text(N(a.total),n[5],s,{width:95}),s+=18,s>r.page.height-60&&(r.addPage(),s=40)});let i=r.page.height-30;return Y(r,i-8),r.fillColor(W).fontSize(8).text(`Generated by ${te} \xB7 ${new Date().toLocaleString()}`,40,i,{align:"center",width:r.page.width-80}),Dt(r)};var Mt=p(require("fs/promises")),_t=p(require("path"));var co=_t.default.join(process.cwd(),"uploads","payment-proofs"),uo=async e=>{if(M()){let s=await R.v2.uploader.upload(`data:${e.mimetype};base64,${e.buffer.toString("base64")}`,{folder:"ecom/payment-proofs"});return{url:s.secure_url,public_id:s.public_id}}await Mt.default.mkdir(co,{recursive:!0});let t=e.originalname.replace(/[^a-zA-Z0-9.-]/g,"_"),r=`${Date.now()}-${t}`;return await Mt.default.writeFile(_t.default.join(co,r),e.buffer),{url:`${(process.env.API_PUBLIC_URL??process.env.CLIENT_URL??`http://localhost:${process.env.PORT??5e3}`).replace(/\/$/,"")}/api/uploads/payment-proofs/${r}`,public_id:r}};var ye=p(require("mongoose")),jt=new ye.Schema({admin:{type:ye.Schema.Types.ObjectId,ref:"User",required:!0},action:{type:String,required:!0},target:{type:String,required:!0},targetId:{type:String},meta:{type:ye.Schema.Types.Mixed}},{timestamps:{createdAt:!0,updatedAt:!1}});jt.index({createdAt:-1});jt.index({admin:1,createdAt:-1});var lo=ye.default.model("AuditLog",jt);var mo=async e=>{try{await lo.create({admin:e.adminId,action:e.action,target:e.target,targetId:e.targetId,meta:e.meta})}catch(t){console.error("[AuditLog] Failed to write entry:",t)}};var yo=async(e,t)=>{let r=(0,fo.validationResult)(e);if(!r.isEmpty()){t.status(400).json({message:r.array()[0].msg});return}let{items:o,shippingAddress:s,notes:n,couponCode:i,pointsToRedeem:a,paymentMethod:c}=e.body,u=c==="bank"?"bank":"cod";if(u==="bank"&&!e.file){t.status(400).json({message:"Payment proof image is required for bank transfer"});return}let y;try{y=Sr(s)}catch(b){t.status(400).json({message:b instanceof Error?b.message:"Invalid shipping address"});return}if(!Array.isArray(o)||o.length===0){t.status(400).json({message:"Order must contain at least one item"});return}if(o.length>20){t.status(400).json({message:`Order cannot exceed ${20} line items`});return}let l=await Ue.default.startSession();l.startTransaction();try{let b=[],g=0;for(let f of o){if(f.qty<1||f.qty>10)throw new Error(`Quantity must be between 1 and ${10}`);let I=await w.findById(f.productId).session(l);if(!I||!I.active)throw new Error(`Product not found: ${f.productId}`);if(I.stock<f.qty)throw new Error(`Insufficient stock for ${I.name}`);if(!I.sizes.includes(f.size))throw new Error(`Size ${f.size} not available for ${I.name}`);if(!I.colors.includes(f.color))throw new Error(`Color ${f.color} not available for ${I.name}`);let Ee=it(f.clothQuality),tr=at(I,Ee);g+=tr*f.qty,b.push({product:I._id,name:I.name,image:I.images[0]?.url??"",price:tr,size:f.size,color:f.color,clothQuality:Ee,qty:f.qty}),I.stock-=f.qty,I.sold+=f.qty,await I.save({session:l})}let A=0,O=!1,T;if(i){let f=await U.findOne({code:i.toUpperCase(),active:!0}).session(l);if(!f)throw new Error("Invalid coupon code");if(f.expiresAt&&f.expiresAt<new Date)throw new Error("Coupon has expired");if(f.usedCount>=f.maxUses)throw new Error("Coupon usage limit reached");if(await S.countDocuments({user:e.user.id,couponCode:f.code,status:{$ne:"cancelled"}}).session(l)>0)throw new Error("You have already used this coupon");let Ee=nt(f,g);A=Ee.discount,O=Ee.freeShipping,T=f.code,f.usedCount+=1,await f.save({session:l})}let $=await h.findById(e.user.id).session(l);if(!$)throw new Error("User not found");let x=Math.max(0,g-A),v=a?Ar(a,$.loyaltyPoints??0,x):0;v>0&&($.loyaltyPoints=($.loyaltyPoints??0)-v);let Z=O?0:yr(x-v),Ae=Math.max(0,x-v+Z),q=xt(Ae),F;u==="bank"&&e.file&&(F=await uo(e.file));let[er]=await S.create([{user:e.user.id,items:b,shippingAddress:y,paymentMethod:u,bankPaymentProof:F,status:"pending",subtotal:g,shippingFee:Z,couponCode:T,couponDiscount:A,loyaltyPointsRedeemed:v,loyaltyPointsEarned:q,total:Ae,notes:n}],{session:l});await $.save({session:l}),await l.commitTransaction(),Rr($.email,y.name,er._id.toString(),b.map(f=>({name:f.name,qty:f.qty,size:f.size,color:f.color,price:f.price})),Ae,y,u).catch(f=>{console.error("[Order Email] Failed to send confirmation:",f)}),t.status(201).json(er)}catch(b){await l.abortTransaction();let g=b instanceof Error?b.message:"Order creation failed";t.status(400).json({message:g})}finally{l.endSession()}},ii=async e=>{let t=await S.findById(e);if(!t||t.loyaltyAwarded||t.status!=="delivered")return;let r=await h.findById(t.user);if(!r)return;let o=t.loyaltyPointsEarned??xt(t.total),s=r.tier??"bronze";if(s==="silver"&&(o=Math.round(o*1.05)),s==="gold"&&(o=Math.round(o*1.1)),r.loyaltyPoints=(r.loyaltyPoints??0)+o,r.lifetimePointsEarned=(r.lifetimePointsEarned??0)+o,r.tier=Te(r.lifetimePointsEarned),await S.countDocuments({user:r._id,status:"delivered"})===1&&r.referredBy){r.loyaltyPoints+=100,r.lifetimePointsEarned+=100;let i=await h.findById(r.referredBy);i&&(i.loyaltyPoints=(i.loyaltyPoints??0)+200,i.lifetimePointsEarned=(i.lifetimePointsEarned??0)+200,i.tier=Te(i.lifetimePointsEarned),await i.save())}t.loyaltyAwarded=!0,await Promise.all([r.save(),t.save()])},ho=async(e,t)=>{let r=Math.max(1,parseInt(e.query.page,10)||1),o=Math.min(50,parseInt(e.query.limit,10)||10),s=(r-1)*o,n={user:e.user.id},[i,a]=await Promise.all([S.find(n).sort({createdAt:-1}).skip(s).limit(o),S.countDocuments(n)]);t.json({orders:i,pagination:{page:r,limit:o,total:a,pages:Math.ceil(a/o)}})},bo=async(e,t)=>{let{status:r,startDate:o,endDate:s,page:n="1",limit:i="20"}=e.query,a={};r&&(a.status=r),(o||s)&&(a.createdAt={},o&&(a.createdAt.$gte=new Date(o)),s&&(a.createdAt.$lte=new Date(s)));let c=Math.max(1,parseInt(n,10)),u=Math.min(100,parseInt(i,10)),y=(c-1)*u,[l,b]=await Promise.all([S.find(a).populate("user","name email").sort({createdAt:-1}).skip(y).limit(u),S.countDocuments(a)]);t.json({orders:l,pagination:{page:c,limit:u,total:b,pages:Math.ceil(b/u)}})},wo=async(e,t)=>{let r=await S.findById(e.params.id).populate("user","name email");if(!r){t.status(404).json({message:"Order not found"});return}let o=r.user._id.toString()===e.user.id,s=e.user.role==="admin";if(!o&&!s){t.status(403).json({message:"Not authorized"});return}t.json(r)},xo=async(e,t)=>{let r=await S.findById(e.params.id).populate("user","name email");if(!r){t.status(404).json({message:"Order not found"});return}let o=r.user,s=o._id.toString()===e.user.id,n=e.user.role==="admin";if(!s&&!n){t.status(403).json({message:"Not authorized"});return}try{let i=await no(r,o.name,o.email);t.setHeader("Content-Type","application/pdf"),t.setHeader("Content-Disposition",`attachment; filename=invoice-${r._id.toString().slice(-8)}.pdf`),t.send(i)}catch{t.status(500).json({message:"Failed to generate invoice"})}},So=async(e,t)=>{let r=await S.findById(e.params.id).populate("user","name email");if(!r){t.status(404).json({message:"Order not found"});return}if(e.user.role!=="admin"){t.status(403).json({message:"Not authorized"});return}if(r.status==="cancelled"){t.status(400).json({message:"Cannot generate dispatch receipt for cancelled orders"});return}let o=r.user;try{let s=await io(r,o.name,o.email);t.setHeader("Content-Type","application/pdf"),t.setHeader("Content-Disposition",`attachment; filename=dispatch-receipt-${r._id.toString().slice(-8)}.pdf`),t.send(s)}catch{t.status(500).json({message:"Failed to generate dispatch receipt"})}},vo=async(e,t)=>{let{startDate:r,endDate:o}=e.query,s={status:{$ne:"cancelled"}};(r||o)&&(s.createdAt={},r&&(s.createdAt.$gte=new Date(r)),o&&(s.createdAt.$lte=new Date(o)));let n=await S.find(s).sort({createdAt:-1}).limit(500);try{let i=await ao(n,"Orders Report");t.setHeader("Content-Type","application/pdf"),t.setHeader("Content-Disposition","attachment; filename=orders-report.pdf"),t.send(i)}catch{t.status(500).json({message:"Failed to generate report"})}},Io=async(e,t)=>{let{status:r}=e.body;if(!["pending","processing","shipped","delivered","cancelled"].includes(r)){t.status(400).json({message:"Invalid status"});return}let s=await S.findById(e.params.id).populate("user","name email");if(!s){t.status(404).json({message:"Order not found"});return}let n=s.status;if(r==="cancelled"&&s.status!=="cancelled"){let c=await Ue.default.startSession();c.startTransaction();try{for(let u of s.items)await w.findByIdAndUpdate(u.product,{$inc:{stock:u.qty,sold:-u.qty}},{session:c});s.loyaltyPointsRedeemed&&await h.findByIdAndUpdate(s.user,{$inc:{loyaltyPoints:s.loyaltyPointsRedeemed}},{session:c}),s.couponCode&&await U.findOneAndUpdate({code:s.couponCode},{$inc:{usedCount:-1}},{session:c}),s.status=r,await s.save({session:c}),await c.commitTransaction()}catch{await c.abortTransaction(),t.status(500).json({message:"Failed to cancel order"});return}finally{c.endSession()}}else s.status=r,await s.save();r==="delivered"&&await ii(s._id.toString()),await mo({adminId:e.user.id,action:"order.status_update",target:"order",targetId:s._id.toString(),meta:{from:n,to:r}});let i=s.user;["processing","shipped","delivered","cancelled"].includes(r)&&r!==n&&i?.email&&Cr(i.email,i.name??"Customer",s._id.toString(),r).catch(c=>console.error("[Order Status Email]",c)),t.json(s)},Po=async(e,t)=>{let r=e.user.id,o=await S.findById(e.params.id);if(!o){t.status(404).json({message:"Order not found"});return}if(o.user.toString()!==r){t.status(403).json({message:"Not your order"});return}if(!["pending","processing"].includes(o.status)){t.status(400).json({message:`Cannot cancel an order that is already "${o.status}"`});return}let s=await Ue.default.startSession();s.startTransaction();try{for(let n of o.items)await w.findByIdAndUpdate(n.product,{$inc:{stock:n.qty,sold:-n.qty}},{session:s});o.loyaltyPointsRedeemed&&await h.findByIdAndUpdate(o.user,{$inc:{loyaltyPoints:o.loyaltyPointsRedeemed}},{session:s}),o.couponCode&&await U.findOneAndUpdate({code:o.couponCode},{$inc:{usedCount:-1}},{session:s}),o.status="cancelled",await o.save({session:s}),await s.commitTransaction()}catch{await s.abortTransaction(),t.status(500).json({message:"Failed to cancel order"});return}finally{s.endSession()}t.json({message:"Order cancelled successfully",order:o})},Ro=async(e,t)=>{let r=new Date;r.setDate(r.getDate()-7);let o=10,[s,n,i,a,c,u,y,l]=await Promise.all([S.aggregate([{$match:{status:{$ne:"cancelled"}}},{$group:{_id:null,total:{$sum:"$total"}}}]),S.countDocuments(),w.countDocuments({active:!0}),Ue.default.model("User").countDocuments(),S.find().populate("user","name email").sort({createdAt:-1}).limit(10),S.aggregate([{$match:{createdAt:{$gte:r},status:{$ne:"cancelled"}}},{$group:{_id:{$dateToString:{format:"%Y-%m-%d",date:"$createdAt"}},sales:{$sum:"$total"},orders:{$sum:1}}},{$sort:{_id:1}}]),w.countDocuments({active:!0,stock:{$lte:o}}),w.find({active:!0,stock:{$lte:o}}).sort({stock:1}).limit(10).select("name stock category price")]);t.json({revenue:s[0]?.total??0,orders:n,products:i,users:a,recentOrders:c,dailySales:u,lowStockCount:y,lowStockProducts:l})};var Co=(e,t,r)=>{try{typeof e.body.items=="string"&&(e.body.items=JSON.parse(e.body.items)),typeof e.body.shippingAddress=="string"&&(e.body.shippingAddress=JSON.parse(e.body.shippingAddress)),e.body.pointsToRedeem!==void 0&&e.body.pointsToRedeem!==""&&(e.body.pointsToRedeem=Number(e.body.pointsToRedeem)),r()}catch{t.status(400).json({message:"Invalid order payload"})}};var z=(0,Ao.Router)();z.get("/analytics",d,m,Ro);z.get("/export/pdf",d,m,vo);z.post("/",d,mr,_.single("paymentProof"),Co,[(0,P.body)("paymentMethod").optional().isIn(["cod","bank"]).withMessage("Invalid payment method"),(0,P.body)("items").isArray({min:1,max:20}).withMessage(`Order must contain 1\u2013${20} items`),(0,P.body)("items.*.productId").notEmpty().withMessage("Each item needs a product"),(0,P.body)("items.*.qty").isInt({min:1,max:10}).withMessage(`Quantity must be between 1 and ${10}`),(0,P.body)("shippingAddress.name").notEmpty(),(0,P.body)("shippingAddress").custom(e=>{if((Array.isArray(e?.phones)?e.phones.filter(r=>r?.trim()):[]).length===0&&!e?.phone?.trim())throw new Error("At least one mobile number is required");return!0}),(0,P.body)("shippingAddress.phones.*").optional().isString().isLength({min:10,max:20}).withMessage("Each mobile number must be 10\u201320 characters"),(0,P.body)("shippingAddress.landmark").notEmpty().withMessage("Famous place / landmark is required"),(0,P.body)("shippingAddress.street").notEmpty().withMessage("Your place / house address is required"),(0,P.body)("shippingAddress.city").notEmpty(),(0,P.body)("shippingAddress.state").notEmpty(),(0,P.body)("shippingAddress.postal").notEmpty(),(0,P.body)("shippingAddress.country").notEmpty(),(0,P.body)("couponCode").optional().isString(),(0,P.body)("pointsToRedeem").optional().isInt({min:0})],yo);z.get("/my",d,ho);z.put("/:id/cancel",d,Po);z.get("/",d,m,bo);z.get("/:id/invoice",d,xo);z.get("/:id/dispatch-receipt",d,m,So);z.get("/:id",d,wo);z.put("/:id/status",d,m,Io);var Eo=z;var No=require("express"),Nt=require("express-validator");var ko=require("express-validator");var Oo=async(e,t)=>{let r=await h.findById(e.user.id);if(!r){t.status(404).json({message:"User not found"});return}t.json(j(r))},To=async(e,t)=>{let r=(0,ko.validationResult)(e);if(!r.isEmpty()){t.status(400).json({message:r.array()[0].msg});return}let o=["name","phone","avatar","banner","addresses"],s={};for(let a of o)e.body[a]!==void 0&&(s[a]=e.body[a]);let n=e.files;if(n&&M()){if(n.avatar?.[0]){let a=n.avatar[0],c=await R.v2.uploader.upload(`data:${a.mimetype};base64,${a.buffer.toString("base64")}`,{folder:"ecom/avatars",transformation:[{width:400,height:400,crop:"fill"}]});s.avatar=c.secure_url}if(n.banner?.[0]){let a=n.banner[0],c=await R.v2.uploader.upload(`data:${a.mimetype};base64,${a.buffer.toString("base64")}`,{folder:"ecom/banners",transformation:[{width:1200,height:300,crop:"fill"}]});s.banner=c.secure_url}}let i=await h.findByIdAndUpdate(e.user.id,s,{new:!0,runValidators:!0});if(!i){t.status(404).json({message:"User not found"});return}t.json(j(i))},$o=async(e,t)=>{let r=Math.max(1,parseInt(e.query.page,10)||1),o=Math.min(100,parseInt(e.query.limit,10)||20),s=(r-1)*o,[n,i]=await Promise.all([h.find().select("-password").sort({createdAt:-1}).skip(s).limit(o),h.countDocuments()]);t.json({users:n.map(j),pagination:{page:r,limit:o,total:i,pages:Math.ceil(i/o)}})},Do=async(e,t)=>{let[r,o,s,n]=await Promise.all([h.find().select("name email role isActive createdAt avatar loyaltyPoints").sort({createdAt:-1}).limit(50).lean(),h.countDocuments(),h.countDocuments({createdAt:{$gte:new Date(Date.now()-6048e5)}}),S.aggregate([{$match:{status:{$ne:"cancelled"}}},{$group:{_id:"$user",totalOrders:{$sum:1},totalSpent:{$sum:"$total"},lastOrder:{$max:"$createdAt"}}}])]),i=new Map(n.map(c=>[c._id?.toString(),c])),a=r.map(c=>{let u=i.get(c._id?.toString());return{id:c._id,name:c.name,email:c.email,role:c.role,isActive:c.isActive,avatar:c.avatar,loyaltyPoints:c.loyaltyPoints??0,joinedAt:c.createdAt,totalOrders:u?.totalOrders??0,totalSpent:u?.totalSpent??0,lastOrderAt:u?.lastOrder??null}});t.json({totalUsers:o,newThisWeek:s,users:a})},Mo=async(e,t)=>{let{role:r}=e.body;if(!["user","admin"].includes(r)){t.status(400).json({message:"Invalid role"});return}let o=await h.findByIdAndUpdate(e.params.id,{role:r},{new:!0});if(!o){t.status(404).json({message:"User not found"});return}t.json(j(o))},_o=async(e,t)=>{let{isActive:r}=e.body,o=await h.findByIdAndUpdate(e.params.id,{isActive:r},{new:!0});if(!o){t.status(404).json({message:"User not found"});return}t.json(j(o))},jo=async(e,t)=>{let{currentPassword:r,newPassword:o}=e.body,s=await h.findById(e.user.id).select("+password");if(!s||!s.password){t.status(400).json({message:"OAuth users cannot change password here"});return}let n=await import("bcryptjs");if(!await n.compare(r,s.password)){t.status(401).json({message:"Current password is incorrect"});return}s.password=await n.hash(o,10),await s.save(),t.json({message:"Password updated successfully"})};var J=(0,No.Router)();J.get("/me",d,Oo);J.put("/me",d,_.fields([{name:"avatar",maxCount:1},{name:"banner",maxCount:1}]),To);J.put("/me/password",d,[(0,Nt.body)("currentPassword").notEmpty(),(0,Nt.body)("newPassword").isLength({min:8}).withMessage(de).matches(/^(?=.*[A-Za-z])(?=.*\d).+$/).withMessage(de)],jo);J.get("/stats",d,m,Do);J.get("/",d,m,$o);J.put("/:id/role",d,m,Mo);J.put("/:id/status",d,m,_o);var Bo=J;var Ho=require("express"),Bt=require("express-validator");var zo=require("express-validator");var dt=p(require("mongoose")),ai=new dt.Schema({name:{type:String,required:!0,trim:!0},slug:{type:String,required:!0,unique:!0,lowercase:!0},parent:{type:String,enum:["men","women","children"],required:!0},image:{type:String},active:{type:Boolean,default:!0}},{timestamps:!0}),he=dt.default.model("Category",ai);var Uo=async(e,t)=>{let r=await he.find({active:!0}).sort({name:1});t.json(r)},Lo=async(e,t)=>{let r=(0,zo.validationResult)(e);if(!r.isEmpty()){t.status(400).json({message:r.array()[0].msg});return}let{name:o,parent:s,image:n,active:i=!0}=e.body,a=yt(o);if(await he.findOne({slug:a})){t.status(400).json({message:"Category with this name already exists"});return}let u=await he.create({name:o,slug:a,parent:s,image:n,active:i});t.status(201).json(u)},qo=async(e,t)=>{let{name:r,parent:o,image:s,active:n}=e.body,i={};r&&(i.name=r,i.slug=yt(r)),o&&(i.parent=o),s!==void 0&&(i.image=s),n!==void 0&&(i.active=n);let a=await he.findByIdAndUpdate(e.params.id,i,{new:!0,runValidators:!0});if(!a){t.status(404).json({message:"Category not found"});return}t.json(a)},Fo=async(e,t)=>{if(!await he.findByIdAndDelete(e.params.id)){t.status(404).json({message:"Category not found"});return}t.json({message:"Category deleted"})};var Le=(0,Ho.Router)();Le.get("/",Uo);Le.post("/",d,m,[(0,Bt.body)("name").trim().notEmpty(),(0,Bt.body)("parent").isIn(["men","women","children"])],Lo);Le.put("/:id",d,m,qo);Le.delete("/:id",d,m,Fo);var Vo=Le;var Ko=require("express");var Go=(e,t)=>{t.json(vr())},Qo=(e,t)=>{t.json({message:"Cash on delivery confirmed at order creation"})},Wo=(e,t)=>{t.status(501).json({status:"coming_soon",message:"This payment method is not yet available"})},Yo=(e,t)=>{t.status(501).json({status:"coming_soon",message:"Online banking coming soon"})};var qe=(0,Ko.Router)();qe.get("/bank-details",Go);qe.post("/cod",Qo);qe.post("/code",Wo);qe.post("/banking",Yo);var Jo=qe;var os=require("express");var ie=p(require("mongoose")),ci=new ie.Schema({productId:{type:ie.Schema.Types.ObjectId,ref:"Product",required:!0},name:{type:String,required:!0},price:{type:Number,required:!0,min:0},image:{type:String,required:!0},size:{type:String,required:!0},color:{type:String,required:!0},clothQuality:{type:String,enum:["normal","medium","premium"],default:"normal"},qty:{type:Number,required:!0,min:1}},{_id:!1}),di=new ie.Schema({user:{type:ie.Schema.Types.ObjectId,ref:"User",required:!0,unique:!0},items:{type:[ci],default:[]}},{timestamps:!0}),Fe=ie.default.model("Cart",di);var Xo=p(require("mongoose"));var Zo=async e=>{if(!Array.isArray(e))throw new Error("Items must be an array");if(e.length>20)throw new Error(`Cart cannot exceed ${20} line items`);let t=[];for(let r of e){if(!r?.productId||!Xo.default.Types.ObjectId.isValid(r.productId))throw new Error("Invalid product in cart");let o=Number(r.qty);if(!Number.isFinite(o)||o<1)throw new Error("Invalid quantity in cart");if(o>10)throw new Error(`Maximum ${10} units per item`);let s=await w.findById(r.productId);if(!s||!s.active)throw new Error(`Product unavailable: ${r.name||r.productId}`);if(!s.sizes.includes(r.size))throw new Error(`Size ${r.size} not available for ${s.name}`);if(!s.colors.includes(r.color))throw new Error(`Color ${r.color} not available for ${s.name}`);let n=Math.min(o,s.stock,10);if(n<1)throw new Error(`${s.name} is out of stock`);let i=it(r.clothQuality),a=at(s,i),c=s.images[0]?.url??"";t.push({productId:s._id,name:s.name,price:a,image:c,size:r.size,color:r.color,clothQuality:i,qty:n})}return t};var es=async(e,t)=>{let r=await Fe.findOne({user:e.user.id});r||(r=await Fe.create({user:e.user.id,items:[]})),t.json({items:r.items.map(o=>({productId:o.productId.toString(),name:o.name,price:o.price,image:o.image,size:o.size,color:o.color,qty:o.qty}))})},ts=async(e,t)=>{let{items:r}=e.body;try{let o=await Zo(r),s=await Fe.findOneAndUpdate({user:e.user.id},{items:o.map(n=>({productId:n.productId,name:n.name,price:n.price,image:n.image,size:n.size,color:n.color,qty:n.qty}))},{upsert:!0,new:!0,setDefaultsOnInsert:!0});t.json({items:s.items.map(n=>({productId:n.productId.toString(),name:n.name,price:n.price,image:n.image,size:n.size,color:n.color,qty:n.qty}))})}catch(o){let s=o instanceof Error?o.message:"Invalid cart data";t.status(400).json({message:s})}},rs=async(e,t)=>{await Fe.findOneAndUpdate({user:e.user.id},{items:[]},{upsert:!0,new:!0,setDefaultsOnInsert:!0}),t.json({message:"Cart cleared",items:[]})};var ut=(0,os.Router)();ut.get("/",d,es);ut.put("/",d,ts);ut.delete("/",d,rs);var ss=ut;var us=require("express");var ns=async(e,t)=>{let r=await Hr({q:e.query.q??"",category:e.query.category,minPrice:e.query.minPrice?Number(e.query.minPrice):void 0,maxPrice:e.query.maxPrice?Number(e.query.maxPrice):void 0,size:e.query.size,color:e.query.color,minRating:e.query.minRating?Number(e.query.minRating):void 0,sort:e.query.sort,page:e.query.page?Number(e.query.page):1,limit:e.query.limit?Number(e.query.limit):12,userId:e.user?.id,source:"text"});t.json(r)},is=async(e,t)=>{let r=e.query.q??"",o=await Vr(r);t.json({suggestions:o})},as=async(e,t)=>{let r=e.file;if(!r){t.status(400).json({message:"Image file required"});return}let o=[],s;if(M()){let i=await R.v2.uploader.upload(`data:${r.mimetype};base64,${r.buffer.toString("base64")}`,{folder:"ecom/visual-search",colors:!0});o=(i.predominant?.google??[]).slice(0,3);let c=i.tags??[];c.includes("men")?s="men":c.includes("women")?s="women":c.includes("children")&&(s="children")}else o=["Black","Blue","White"];let n=await Gr(o,s);t.json({products:n,detectedColors:o,category:s})},cs=async(e,t)=>{let r=parseInt(e.query.days,10)||30,o=await Qr(r);t.json(o)},ds=async(e,t)=>{await Fr(),t.json({message:"Search index synced"})};var be=(0,us.Router)();be.get("/",ns);be.get("/suggest",is);be.post("/visual",_.single("image"),as);be.get("/analytics",d,m,cs);be.post("/reindex",d,m,ds);var ls=be;var hs=require("express"),we=require("express-validator");var zt=require("express-validator");var ms=async(e,t)=>{let r=(0,zt.validationResult)(e);if(!r.isEmpty()){t.status(400).json({message:r.array()[0].msg});return}let{code:o,subtotal:s}=e.body,n=await U.findOne({code:o.toUpperCase(),active:!0});if(!n){t.status(404).json({message:"Invalid coupon code"});return}if(n.expiresAt&&n.expiresAt<new Date){t.status(400).json({message:"Coupon has expired"});return}if(n.usedCount>=n.maxUses){t.status(400).json({message:"Coupon usage limit reached"});return}try{let i=nt(n,s);t.json({code:n.code,type:n.type,discount:i.discount,freeShipping:i.freeShipping})}catch(i){t.status(400).json({message:i instanceof Error?i.message:"Invalid coupon"})}},ps=async(e,t)=>{let r=await U.find().sort({createdAt:-1});t.json(r)},gs=async(e,t)=>{let r=(0,zt.validationResult)(e);if(!r.isEmpty()){t.status(400).json({message:r.array()[0].msg});return}let o=await U.create({...e.body,code:e.body.code.toUpperCase(),value:Number(e.body.value),minOrder:Number(e.body.minOrder??0),maxUses:Number(e.body.maxUses??1e3)});t.status(201).json(o)},fs=async(e,t)=>{let r=await U.findByIdAndUpdate(e.params.id,e.body,{new:!0});if(!r){t.status(404).json({message:"Coupon not found"});return}t.json(r)},ys=async(e,t)=>{if(!await U.findByIdAndUpdate(e.params.id,{active:!1},{new:!0})){t.status(404).json({message:"Coupon not found"});return}t.json({message:"Coupon deactivated"})};var xe=(0,hs.Router)();xe.post("/validate",d,[(0,we.body)("code").notEmpty().withMessage("Coupon code is required"),(0,we.body)("subtotal").isNumeric().withMessage("Subtotal is required")],ms);xe.get("/",d,m,ps);xe.post("/",d,m,[(0,we.body)("code").notEmpty(),(0,we.body)("type").isIn(["percent","fixed","free_shipping"]),(0,we.body)("value").isNumeric()],gs);xe.put("/:id",d,m,fs);xe.delete("/:id",d,m,ys);var bs=xe;var Rs=require("express"),Lt=require("express-validator");var ws=require("express-validator");var lt=p(require("mongoose")),ui=new lt.Schema({title:{type:String,required:!0,trim:!0},message:{type:String,required:!0,trim:!0},couponCode:{type:String,uppercase:!0,trim:!0},active:{type:Boolean,default:!0},sortOrder:{type:Number,default:0}},{timestamps:!0}),Se=lt.default.model("Promotion",ui);var C=(e,t,r)=>`https://images.unsplash.com/photo-${e}?auto=format&fit=crop&w=${t}&h=${r}&q=80`,li=[C("1602810318383-e386cc2a3ccf",600,800),C("1521572163474-6864f9cf17ab",600,800),C("1515886657613-9f3515b0c78f",600,800),C("1542291026-7eec264c27ff",600,800),C("1503342564765-7df573e8f429",600,800),C("1515886657613-9f3515b0c78f",600,800),C("1558618666-fcd25c85cd64",600,800),C("1539109136881-3be0616acf4b",600,800),C("1483985988355-763728e1f99c",600,800),C("1490481651871-ab68de25d43d",600,800),C("1519236081223-abe9f490a59b",600,800),C("1519236081223-abe9f490a59b",600,800),C("1503606770372-2ebb58dd75f0",600,800),C("1472099645785-5658abf4ff4e",600,800),C("1559163499-413811b65002",600,800)];var mi=[{name:"Classic Oxford Shirt",category:"men",price:3499,discountPrice:2799,description:"Crafted from premium long-staple cotton with a refined oxford weave. Features a structured collar, button-down front, and a relaxed yet polished fit ideal for office wear or smart casual outings.",sizes:["S","M","L","XL"],colors:["White","Navy","Blue"],stock:45,ratings:4.5,numReviews:28},{name:"Slim Fit Chinos",category:"men",price:2999,discountPrice:2499,description:"Modern slim-fit chinos with 2% elastane for all-day comfort. Mid-rise waist, tapered leg, and wrinkle-resistant fabric make these a wardrobe essential for work and weekends.",sizes:["S","M","L","XL","XXL"],colors:["Beige","Navy","Black"],stock:38,ratings:4.2,numReviews:19},{name:"Wool Blend Blazer",category:"men",price:8999,discountPrice:7499,description:"Tailored single-breasted blazer in a luxurious wool-poly blend. Notch lapels, two-button closure, and interior pockets deliver timeless sophistication for meetings and events.",sizes:["M","L","XL"],colors:["Navy","Gray","Black"],stock:22,ratings:4.8,numReviews:12},{name:"Graphic Tee",category:"men",price:1499,description:"Ultra-soft 100% combed cotton tee with a minimal screen-print design. Pre-shrunk fabric, crew neck, and breathable weave perfect for layering or standalone casual looks.",sizes:["XS","S","M","L","XL"],colors:["Black","White","Gray"],stock:60,ratings:4,numReviews:34},{name:"Denim Jacket",category:"men",price:5499,discountPrice:4499,description:"Vintage-wash denim jacket with classic trucker styling. Reinforced stitching, metal buttons, and chest pockets offer durable style that pairs effortlessly with tees and chinos.",sizes:["S","M","L","XL"],colors:["Blue","Black"],stock:30,ratings:4.6,numReviews:21}],pi=[{name:"Linen Summer Dress",category:"women",price:4299,discountPrice:3599,description:"A breezy A-line dress in pure linen with adjustable tie straps and side pockets. Lightweight and breathable \u2014 perfect for brunches, vacations, and warm-weather elegance.",sizes:["XS","S","M","L"],colors:["Beige","White","Green"],stock:35,ratings:4.7,numReviews:26},{name:"High-Waist Jeans",category:"women",price:3799,discountPrice:3199,description:"Flattering high-rise jeans in stretch denim with a contoured waistband and slim straight leg. Retains shape all day while offering comfort and a streamlined silhouette.",sizes:["XS","S","M","L","XL"],colors:["Blue","Black","Gray"],stock:42,ratings:4.4,numReviews:31},{name:"Silk Blouse",category:"women",price:4999,description:"Luxurious mulberry silk blouse with a relaxed drape and concealed button placket. Elegant enough for the boardroom, versatile enough for evening dinners.",sizes:["S","M","L"],colors:["White","Red","Navy"],stock:28,ratings:4.9,numReviews:15},{name:"Knit Cardigan",category:"women",price:3299,discountPrice:2699,description:"Open-front cardigan in a soft cotton-acrylic blend with ribbed cuffs and hem. Layer over dresses or tops for cozy warmth without bulk.",sizes:["S","M","L","XL"],colors:["Gray","Beige","White"],stock:40,ratings:4.3,numReviews:22},{name:"Floral Maxi Dress",category:"women",price:4599,discountPrice:3899,description:"Flowing maxi dress with an all-over botanical print, smocked bodice, and tiered skirt. Effortlessly romantic for weddings, garden parties, and special occasions.",sizes:["S","M","L"],colors:["Red","Blue","Green"],stock:25,ratings:4.6,numReviews:18}],gi=[{name:"Kids Hoodie",category:"children",price:1999,discountPrice:1599,description:"Cozy fleece-lined hoodie with a kangaroo pocket and soft brushed interior. Durable enough for playground adventures and gentle on sensitive skin.",sizes:["XS","S","M","L"],colors:["Red","Blue","Gray"],stock:50,ratings:4.5,numReviews:20},{name:"Children Joggers",category:"children",price:1499,description:"Stretch-cotton joggers with an elastic waistband and cuffed ankles. Ideal for school, sports, and lounging \u2014 easy to move in and machine washable.",sizes:["XS","S","M","L","XL"],colors:["Black","Navy","Gray"],stock:55,ratings:4.1,numReviews:16},{name:"Kids Polo Shirt",category:"children",price:1299,description:"Classic pique polo with a two-button placket and reinforced collar. Breathable cotton blend keeps kids cool and comfortable all day long.",sizes:["XS","S","M","L"],colors:["White","Red","Blue","Green"],stock:48,ratings:4,numReviews:14},{name:"Rain Jacket",category:"children",price:2499,discountPrice:1999,description:"Waterproof shell jacket with sealed seams, reflective strips, and a packable hood. Keeps little ones dry during monsoon walks and outdoor play.",sizes:["S","M","L"],colors:["Yellow","Blue","Red"],stock:32,ratings:4.4,numReviews:11},{name:"Kids Sneakers Set",category:"children",price:3499,description:"Lightweight sneakers with cushioned insoles, flexible rubber outsoles, and easy hook-and-loop straps. Built for running, jumping, and all-day active play.",sizes:["XS","S","M","L"],colors:["White","Black","Blue"],stock:36,ratings:4.7,numReviews:24}],$d=[...mi,...pi,...gi];var Ut=[{title:"\u{1F525} AMAZING DEAL",message:"Up to 40% off on premium athletic wear \u2014 Limited time only!",couponCode:"WELCOME10",active:!0,sortOrder:0},{title:"\u{1F4B0} SAVE BIG",message:"Flat \u20A8500 off on orders above \u20A83,000",couponCode:"SAVE500",active:!0,sortOrder:1},{title:"\u{1F69A} FREE SHIPPING",message:"Free delivery on orders above \u20A82,000",couponCode:"FREESHIP",active:!0,sortOrder:2}];var xs=async(e,t)=>{if(!D()){t.json(Ut.filter(r=>r.active));return}try{let r=await Se.find({active:!0}).sort({sortOrder:1,createdAt:-1});t.json(r)}catch{t.json(Ut.filter(r=>r.active))}},Ss=async(e,t)=>{let r=await Se.find().sort({sortOrder:1,createdAt:-1});t.json(r)},vs=async(e,t)=>{let r=(0,ws.validationResult)(e);if(!r.isEmpty()){t.status(400).json({message:r.array()[0].msg});return}let o=await Se.create({title:e.body.title,message:e.body.message,couponCode:e.body.couponCode||void 0,active:e.body.active!==!1,sortOrder:Number(e.body.sortOrder??0)});t.status(201).json(o)},Is=async(e,t)=>{let r=await Se.findByIdAndUpdate(e.params.id,e.body,{new:!0});if(!r){t.status(404).json({message:"Promotion not found"});return}t.json(r)},Ps=async(e,t)=>{if(!await Se.findByIdAndDelete(e.params.id)){t.status(404).json({message:"Promotion not found"});return}t.json({message:"Promotion deleted"})};var ve=(0,Rs.Router)();ve.get("/active",xs);ve.get("/",d,m,Ss);ve.post("/",d,m,[(0,Lt.body)("title").trim().notEmpty().withMessage("Title is required"),(0,Lt.body)("message").trim().notEmpty().withMessage("Message is required")],vs);ve.put("/:id",d,m,Is);ve.delete("/:id",d,m,Ps);var Cs=ve;var Ls=require("express");var Ie=p(require("mongoose")),fi=new Ie.Schema({id:{type:String,required:!0},tag:{type:String,default:""},title:{type:String,default:""},titleAccent:{type:String,default:""},subtitle:{type:String,default:""},image:{type:String,default:""},imagePublicId:{type:String},ctaLabel:{type:String,default:"Shop Now"},ctaHref:{type:String,default:"/products"},secondaryLabel:{type:String,default:"View All"},secondaryHref:{type:String,default:"/products"}},{_id:!1}),yi=new Ie.Schema({slug:{type:String,required:!0},label:{type:String,required:!0},image:{type:String,default:""},imagePublicId:{type:String},href:{type:String,default:""}},{_id:!1}),hi=new Ie.Schema({designId:{type:String,default:"classic"},colorSchemeId:{type:String,default:"midnight-athletic"},themeId:{type:String},primaryColor:{type:String},accentColor:{type:String},secondaryColor:{type:String},siteTagline:{type:String,default:"Premium Clothing Store"},seoDescription:{type:String,default:"Shop men, women, and children athletic wear with free delivery above \u20A85000"},seoKeywords:{type:String,default:"clothing, athletic wear, sportswear, fashion, Pakistan"},heroSlides:{type:[fi],default:[]},categoryImages:{type:[yi],default:[]}},{timestamps:{createdAt:!1,updatedAt:!0}}),As=Ie.default.model("SiteSettings",hi),bi={"midnight-athletic":"classic","ocean-breeze":"wave","rose-elite":"boutique","forest-pro":"nature","royal-gold":"premium"},wi=e=>(!e.colorSchemeId&&e.themeId&&(e.colorSchemeId=e.themeId),e.colorSchemeId||(e.colorSchemeId="midnight-athletic"),e.designId||(e.designId=bi[e.colorSchemeId]??"classic"),e),X=async()=>{let e=await As.findOne();return e||(e=await As.create({})),wi(e),e.isModified()&&await e.save(),e};var ks="settings:public",Os="settings:hero-slides",Ft="settings:category-images",Ht=120,Pe=[{slug:"men",label:"Men's",image:"",href:"/category/men"},{slug:"women",label:"Women's",image:"",href:"/category/women"},{slug:"common",label:"Common",image:"",href:"/category/common"},{slug:"children",label:"Children's",image:"",href:"/category/children"}],Ts=e=>{let t=typeof e.toObject=="function"?e.toObject():e,r=String(t.slug??"").trim().toLowerCase(),o=Pe.find(n=>n.slug===r),s=t.href?.trim();return{slug:r,label:t.label?.trim()||o?.label||r,image:t.image?.trim()||o?.image||"",imagePublicId:t.imagePublicId,href:s&&s.startsWith("/category/")?s:o?.href||`/category/${r}`}},xi=e=>{let t=e.map(Ts),r=new Map(t.map(i=>[i.slug,i])),o=new Set(Pe.map(i=>i.slug)),s=Pe.map(i=>({...i,...r.get(i.slug)??{},href:r.get(i.slug)?.href||i.href,image:r.get(i.slug)?.image||i.image})),n=t.filter(i=>!o.has(i.slug));return[...s,...n]},Es={designId:"classic",colorSchemeId:"midnight-athletic",primaryColor:void 0,accentColor:void 0,secondaryColor:void 0,siteTagline:"Premium Clothing Store",seoDescription:"Shop men, women, and children athletic wear with free delivery above \u20A85000",seoKeywords:"clothing, athletic wear, sportswear, fashion, Pakistan"},Si=e=>({designId:e.designId,colorSchemeId:e.colorSchemeId,primaryColor:e.primaryColor,accentColor:e.accentColor,secondaryColor:e.secondaryColor,siteTagline:e.siteTagline,seoDescription:e.seoDescription,seoKeywords:e.seoKeywords}),$s=async(e,t)=>{if(!D()){t.setHeader("Cache-Control","public, max-age=60"),t.json(Es);return}try{let r=await ge(ks,Ht,async()=>{let o=await X();return Si(o)});t.setHeader("Cache-Control","public, max-age=60"),t.json(r)}catch(r){console.warn("[Settings] public fallback:",r instanceof Error?r.message:r),t.json(Es)}},Ds=async(e,t)=>{let r=await X();t.json(r)},Ms=async(e,t)=>{Be(ks);let r=await X(),o=["designId","colorSchemeId","primaryColor","accentColor","secondaryColor","siteTagline","seoDescription","seoKeywords"];for(let s of o)e.body[s]!==void 0&&(r[s]=e.body[s]);await r.save(),t.json(r)},qt=[{id:"elevate",tag:"Premium Collection",title:"Elevate Your",titleAccent:"Style",subtitle:"Discover premium clothing for men, women, and children. Quality fashion crafted for athletes and everyday champions.",image:"/hero/elevate.jpg",ctaLabel:"Shop Men",ctaHref:"/category/men",secondaryLabel:"Shop Women",secondaryHref:"/category/women"},{id:"summer",tag:"Season 2026",title:"Summer",titleAccent:"Collection",subtitle:"Light fabrics, bold colors, and effortless fits designed for heat, movement, and confidence.",image:"/hero/summer.jpg",ctaLabel:"Explore Collection",ctaHref:"/products",secondaryLabel:"View Sale",secondaryHref:"/products?sort=price-desc"},{id:"kids",tag:"Kids & Teens",title:"Playful Styles for",titleAccent:"Kids",subtitle:"Durable, comfortable pieces built for school days, sports, and weekend adventures.",image:"/hero/kids.jpg",ctaLabel:"Shop Children",ctaHref:"/category/children",secondaryLabel:"All Products",secondaryHref:"/products"}],_s=async(e,t)=>{try{if(!D()){t.setHeader("Cache-Control","public, max-age=60"),t.json(qt);return}let r=await ge(Os,Ht,async()=>{let o=await X();return o.heroSlides.length>0?o.heroSlides:qt});t.setHeader("Cache-Control","public, max-age=60"),t.json(r)}catch{t.json(qt)}},js=async(e,t)=>{Be(Os);try{let r=await X(),o=e.body.slides;if(!Array.isArray(o)||o.length===0){t.status(400).json({message:"slides array is required"});return}r.heroSlides=o,await r.save(),t.json(r.heroSlides)}catch{t.status(500).json({message:"Failed to update hero slides"})}},Ns=async(e,t)=>{try{let r=e.file;if(!r){t.status(400).json({message:"No image file provided"});return}if(!M()){t.status(500).json({message:"Image uploads not configured (Cloudinary env vars missing)"});return}let o=await R.v2.uploader.upload(`data:${r.mimetype};base64,${r.buffer.toString("base64")}`,{folder:"ecom/hero",transformation:[{width:1920,height:1080,crop:"fill",quality:"auto"}]});t.json({url:o.secure_url,publicId:o.public_id})}catch(r){console.error("[Hero Upload]",r),t.status(500).json({message:"Image upload failed"})}},Bs=async(e,t)=>{try{if(!D()){t.setHeader("Cache-Control","public, max-age=60"),t.json(Pe);return}let r=await ge(Ft,Ht,async()=>{let o=await X(),s=o.categoryImages.length>0?o.categoryImages:Pe;return xi(s)});t.setHeader("Cache-Control","public, max-age=60"),t.json(r)}catch{t.json(Pe)}},zs=async(e,t)=>{Be(Ft);try{let r=await X(),o=e.body.categories;if(!Array.isArray(o)||o.length===0){t.status(400).json({message:"categories array is required"});return}r.categoryImages=o.map(Ts),await r.save(),t.json(r.categoryImages)}catch{t.status(500).json({message:"Failed to update category images"})}},Us=async(e,t)=>{try{let r=e.file;if(!r){t.status(400).json({message:"No image file provided"});return}if(!M()){t.status(500).json({message:"Cloudinary env vars missing"});return}Be(Ft);let o=await R.v2.uploader.upload(`data:${r.mimetype};base64,${r.buffer.toString("base64")}`,{folder:"ecom/categories",transformation:[{width:800,height:1e3,crop:"fill",quality:"auto"}]});t.json({url:o.secure_url,publicId:o.public_id})}catch(r){console.error("[Category Upload]",r),t.status(500).json({message:"Image upload failed"})}};var L=(0,Ls.Router)();L.get("/public",$s);L.get("/hero-slides",_s);L.get("/",d,m,Ds);L.put("/",d,m,Ms);L.put("/hero-slides",d,m,js);L.post("/hero-slides/upload-image",d,m,_.single("image"),Ns);L.get("/category-images",Bs);L.put("/category-images",d,m,zs);L.post("/category-images/upload-image",d,m,_.single("image"),Us);var qs=L;var Gs=require("express"),Qs=require("express-validator");var Fs=async(e,t)=>{let r=await h.findById(e.user.id).select("loyaltyPoints lifetimePointsEarned tier referralCode");if(!r){t.status(404).json({message:"User not found"});return}let o=await h.countDocuments({referredBy:r._id});t.json({points:r.loyaltyPoints??0,lifetimePointsEarned:r.lifetimePointsEarned??0,tier:r.tier??Te(r.lifetimePointsEarned??0),referralCode:r.referralCode,referrals:o,tiers:{bronze:{min:0,benefits:"Earn 1 pt per \u20A8100 spent"},silver:{min:500,benefits:"5% bonus points on orders"},gold:{min:2e3,benefits:"10% bonus points + early sale access"}}})},Hs=async(e,t)=>{let{referralCode:r}=e.body,o=await h.findById(e.user.id);if(!o){t.status(404).json({message:"User not found"});return}if(o.referredBy){t.status(400).json({message:"Referral already applied"});return}let s=await h.findOne({referralCode:r.toUpperCase()});if(!s||s._id.toString()===o._id.toString()){t.status(404).json({message:"Invalid referral code"});return}if(await S.exists({user:o._id})){t.status(400).json({message:"Referral only valid before first order"});return}o.referredBy=s._id,await o.save(),t.json({message:"Referral applied! Bonus points on your first order."})},Vs=async(e,t)=>{let r=await h.findById(e.user.id).select("referralCode loyaltyPoints");if(!r){t.status(404).json({message:"User not found"});return}let o=await h.find({referredBy:r._id}).select("name email createdAt");t.json({referralCode:r.referralCode,referredUsers:o,total:o.length})};var mt=(0,Gs.Router)();mt.get("/profile",d,Fs);mt.get("/referrals",d,Vs);mt.post("/referral",d,[(0,Qs.body)("referralCode").notEmpty().withMessage("Referral code is required")],Hs);var Ws=mt;var nn=require("express");var He=p(require("mongoose")),Vt=new He.Schema({userIp:{type:String,required:!0,index:!0},deviceIp:{type:String,required:!0},country:{type:String,default:"Unknown",index:!0},city:{type:String,default:"Unknown",index:!0},region:{type:String,default:""},timezone:{type:String,default:""},latitude:{type:Number},longitude:{type:Number},userAgent:{type:String,default:""},deviceType:{type:String,default:"unknown",index:!0},browser:{type:String,default:""},os:{type:String,default:""},path:{type:String,default:"/",index:!0},referrer:{type:String,default:""},referrerHost:{type:String,default:"direct",index:!0},user:{type:He.Schema.Types.ObjectId,ref:"User"},sessionId:{type:String,index:!0},visitedAt:{type:Date,default:Date.now,index:!0}},{timestamps:!1});Vt.index({visitedAt:-1});Vt.index({country:1,city:1});var k=He.default.model("AudienceVisit",Vt);var Ys=p(require("geoip-lite")),Ks=require("ua-parser-js"),Js=e=>{let t=e.headers["x-forwarded-for"];if(typeof t=="string"&&t.length>0)return t.split(",")[0].trim();if(Array.isArray(t)&&t[0])return t[0].split(",")[0].trim();let r=e.headers["x-real-ip"];return typeof r=="string"?r:e.ip??e.socket.remoteAddress??"unknown"},Xs=e=>e.socket.remoteAddress?.replace("::ffff:","")??"unknown",Zs=e=>{let t=e.replace("::ffff:","");if(t==="127.0.0.1"||t==="::1"||t==="unknown"||t.startsWith("192.168.")||t.startsWith("10."))return{country:"Local / Private",city:"Development",region:"Local",timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,latitude:0,longitude:0};let r=Ys.default.lookup(t);return r?{country:r.country??"Unknown",city:r.city??"Unknown",region:r.region??"",timezone:r.timezone??"",latitude:r.ll?.[0],longitude:r.ll?.[1]}:{country:"Unknown",city:"Unknown",region:"",timezone:""}},en=e=>{let t=new Ks.UAParser(e),r=t.getDevice(),o=t.getBrowser(),s=t.getOS();return{deviceType:r.type??"desktop",browser:[o.name,o.version].filter(Boolean).join(" ")||"Unknown",os:[s.name,s.version].filter(Boolean).join(" ")||"Unknown"}},tn=e=>{if(!e)return"direct";try{return new URL(e).hostname.replace("www.","")}catch{return"unknown"}};var rn=async(e,t)=>{let{path:r="/",referrer:o="",sessionId:s}=e.body;try{if(D()){let n=Js(e),i=Xs(e),a=e.headers["user-agent"]??"",c=Zs(n),u=en(a),y=tn(o);await k.create({userIp:n,deviceIp:i,...c,userAgent:a,...u,path:r,referrer:o,referrerHost:y,user:e.user?.id,sessionId:s,visitedAt:new Date})}}catch(n){console.warn("[Analytics] track skipped:",n instanceof Error?n.message:n)}t.status(201).json({ok:!0})},on=async(e,t)=>{let r=Math.min(90,parseInt(e.query.days,10)||30),o=new Date;o.setDate(o.getDate()-r);let s=Math.max(1,parseInt(e.query.page,10)||1),n=Math.min(100,parseInt(e.query.limit,10)||25),i=(s-1)*n,a={visitedAt:{$gte:o}},[c,u,y,l,b,g,A,O,T,$]=await Promise.all([k.countDocuments(a),k.distinct("sessionId",a),k.distinct("userIp",a),k.aggregate([{$match:a},{$group:{_id:"$country",count:{$sum:1},cities:{$addToSet:"$city"}}},{$sort:{count:-1}},{$limit:20}]),k.aggregate([{$match:a},{$group:{_id:{country:"$country",city:"$city"},count:{$sum:1},lat:{$first:"$latitude"},lng:{$first:"$longitude"}}},{$sort:{count:-1}},{$limit:20}]),k.aggregate([{$match:a},{$group:{_id:"$referrerHost",count:{$sum:1}}},{$sort:{count:-1}},{$limit:15}]),k.aggregate([{$match:a},{$group:{_id:"$deviceType",count:{$sum:1}}},{$sort:{count:-1}}]),k.aggregate([{$match:a},{$group:{_id:"$browser",count:{$sum:1}}},{$sort:{count:-1}},{$limit:10}]),k.aggregate([{$match:a},{$group:{_id:{$dateToString:{format:"%Y-%m-%d",date:"$visitedAt"}},visits:{$sum:1}}},{$sort:{_id:1}}]),k.find(a).populate("user","name email").sort({visitedAt:-1}).skip(i).limit(n)]);t.json({summary:{totalVisits:c,uniqueSessions:u.filter(Boolean).length,uniqueIps:y.length,days:r},byCountry:l.map(x=>({country:x._id,count:x.count,cityCount:x.cities?.length??0})),byCity:b.map(x=>({country:x._id.country,city:x._id.city,count:x.count,latitude:x.lat,longitude:x.lng})),byReferrer:g.map(x=>({source:x._id,count:x.count})),byDevice:A,byBrowser:O,dailyVisits:T,recentVisits:$,pagination:{page:s,limit:n,total:c,pages:Math.ceil(c/n)}})},sn=async(e,t)=>{let r=Math.max(1,parseInt(e.query.page,10)||1),o=Math.min(200,parseInt(e.query.limit,10)||50),s=(r-1)*o,n=e.query.country,i={};n&&(i.country=n);let[a,c]=await Promise.all([k.find(i).populate("user","name email").sort({visitedAt:-1}).skip(s).limit(o),k.countDocuments(i)]);t.json({visits:a,pagination:{page:r,limit:o,total:c,pages:Math.ceil(c/o)}})};var pt=(0,nn.Router)();pt.post("/track",pr,fe,rn);pt.get("/audience",d,m,on);pt.get("/visits",d,m,sn);var an=pt;var wn=require("express"),Jt=require("express-validator");var gn=require("express-validator");var Ge=p(require("mongoose"));var Ve=p(require("mongoose")),cn=new Ve.Schema({customerUserId:{type:Ve.Schema.Types.ObjectId,ref:"User",index:!0},guestSessionId:{type:String,index:!0},customerName:{type:String,required:!0,trim:!0},customerEmail:{type:String,trim:!0,lowercase:!0},lastMessage:{type:String},lastMessageAt:{type:Date,default:Date.now,index:!0},unreadCustomer:{type:Number,default:0,min:0},unreadAdmin:{type:Number,default:0,min:0},status:{type:String,enum:["open","closed"],default:"open",index:!0}},{timestamps:!0});cn.index({guestSessionId:1,status:1},{partialFilterExpression:{guestSessionId:{$exists:!0,$type:"string"}}});var Re=Ve.default.model("ChatConversation",cn);var Ce=p(require("mongoose")),Gt=new Ce.Schema({conversationId:{type:Ce.Schema.Types.ObjectId,ref:"ChatConversation",required:!0,index:!0},sender:{type:String,enum:["customer","admin"],required:!0},senderUserId:{type:Ce.Schema.Types.ObjectId,ref:"User"},body:{type:String,required:!0,trim:!0,maxlength:4e3},clientMessageId:{type:String,required:!0},readByCustomer:{type:Boolean,default:!1},readByAdmin:{type:Boolean,default:!1},deliveredAt:{type:Date}},{timestamps:!0});Gt.index({conversationId:1,createdAt:-1});Gt.index({conversationId:1,clientMessageId:1},{unique:!0});var Qt=Ce.default.model("ChatMessage",Gt);var vi=30;var dn=async e=>{let t={status:"open"};if(e.userId)t.customerUserId=new Ge.default.Types.ObjectId(e.userId);else if(e.guestSessionId)t.guestSessionId=e.guestSessionId;else throw new Error("userId or guestSessionId required");let r=await Re.findOne(t).sort({updatedAt:-1});return r?(e.customerName&&r.customerName!==e.customerName&&(r.customerName=e.customerName),e.customerEmail&&r.customerEmail!==e.customerEmail&&(r.customerEmail=e.customerEmail),await r.save(),r):(r=await Re.create({customerUserId:e.userId?new Ge.default.Types.ObjectId(e.userId):void 0,guestSessionId:e.guestSessionId,customerName:e.customerName,customerEmail:e.customerEmail,lastMessageAt:new Date}),r)},un=async(e=50)=>Re.find({status:"open"}).sort({lastMessageAt:-1}).limit(e).lean(),Wt=async e=>Ge.default.Types.ObjectId.isValid(e)?Re.findById(e):null,Yt=(e,t)=>!!(t.isAdmin||t.userId&&e.customerUserId?.toString()===t.userId||t.guestSessionId&&e.guestSessionId&&e.guestSessionId===t.guestSessionId),ln=async(e,t={})=>{let r=Math.min(50,Math.max(1,t.limit??vi)),o={conversationId:new Ge.default.Types.ObjectId(e)};if(t.before){let a=new Date(t.before);Number.isNaN(a.getTime())||(o.createdAt={$lt:a})}let s=await Qt.find(o).sort({createdAt:-1}).limit(r+1).lean(),n=s.length>r,i=n?s.slice(0,r):s;return i.reverse(),{messages:i,hasMore:n,nextBefore:i.length>0?i[0].createdAt.toISOString():void 0}};var mn=async(e,t)=>{let r=t==="admin"?"readByAdmin":"readByCustomer",o=t==="admin"?"unreadAdmin":"unreadCustomer";await Qt.updateMany({conversationId:e,[r]:!1},{$set:{[r]:!0}}),await Re.findByIdAndUpdate(e,{[o]:0})},pn=e=>{let t=e;return{_id:t._id.toString(),conversationId:t.conversationId.toString(),sender:t.sender,senderUserId:t.senderUserId?.toString(),body:t.body,clientMessageId:t.clientMessageId,readByCustomer:t.readByCustomer,readByAdmin:t.readByAdmin,deliveredAt:t.deliveredAt?.toISOString(),createdAt:t.createdAt.toISOString()}},Kt=e=>{let t=e;return{_id:t._id.toString(),customerUserId:t.customerUserId?.toString(),guestSessionId:t.guestSessionId,customerName:t.customerName,customerEmail:t.customerEmail,lastMessage:t.lastMessage,lastMessageAt:t.lastMessageAt.toISOString(),unreadCustomer:t.unreadCustomer,unreadAdmin:t.unreadAdmin,status:t.status,createdAt:t.createdAt.toISOString(),updatedAt:t.updatedAt.toISOString()}};var fn=async(e,t)=>{let r=(0,gn.validationResult)(e);if(!r.isEmpty()){t.status(400).json({message:r.array()[0].msg});return}let{guestSessionId:o,guestName:s}=e.body,n=e.user?.id,i=s?.trim()??e.user?.email?.split("@")[0]??"Guest",a=e.user?.email;if(!n&&!o){t.status(400).json({message:"Login or provide guestSessionId"});return}try{let c=await dn({userId:n,guestSessionId:n?void 0:o,customerName:i,customerEmail:a});t.json({conversation:Kt(c)})}catch(c){t.status(500).json({message:c.message??"Failed to start chat"})}},yn=async(e,t)=>{let r=await un();t.json({conversations:r.map(Kt)})},hn=async(e,t)=>{let r=String(e.params.id),o=e.query.before,s=e.query.limit?Number(e.query.limit):void 0,n=await Wt(r);if(!n){t.status(404).json({message:"Conversation not found"});return}let i=e.headers["x-guest-session"];if(!Yt(n,{userId:e.user?.id,guestSessionId:i,isAdmin:e.user?.role==="admin"})){t.status(403).json({message:"Access denied"});return}let c=await ln(r,{before:o,limit:s});t.json({messages:c.messages.map(pn),hasMore:c.hasMore,nextBefore:c.nextBefore})},bn=async(e,t)=>{let r=String(e.params.id),o=e.user?.role==="admin"?"admin":"customer",s=await Wt(r);if(!s){t.status(404).json({message:"Conversation not found"});return}let n=e.headers["x-guest-session"];if(!Yt(s,{userId:e.user?.id,guestSessionId:n,isAdmin:e.user?.role==="admin"})){t.status(403).json({message:"Access denied"});return}await mn(r,o),t.json({ok:!0})};var Qe=(0,wn.Router)();Qe.post("/conversation",fe,[(0,Jt.body)("guestSessionId").optional().isString().isLength({min:8,max:128}),(0,Jt.body)("guestName").optional().isString().isLength({min:1,max:80})],fn);Qe.get("/conversations",d,m,yn);Qe.get("/conversations/:id/messages",fe,hn);Qe.patch("/conversations/:id/read",fe,bn);var xn=Qe;Xt.default.config();Xt.default.config({path:Zt.default.join(process.cwd(),"backend",".env")});var Ii=process.env.NODE_ENV==="production",Pi=(e={})=>{let t=(0,We.default)();return t.set("trust proxy",!0),t.use((0,vn.default)({contentSecurityPolicy:{directives:{defaultSrc:["'self'"],scriptSrc:["'self'","'unsafe-inline'","'unsafe-eval'","https://*.clerk.com","https://*.clerk.accounts.dev",process.env.CLIENT_URL??"http://localhost:3000"],styleSrc:["'self'","'unsafe-inline'","https:"],imgSrc:["'self'","data:","https:","blob:"],fontSrc:["'self'","https:","data:"],connectSrc:["'self'","https:","wss:","ws:"],frameSrc:["'self'","https://*.clerk.com","https://*.clerk.accounts.dev"],objectSrc:["'none'"],...Ii?{upgradeInsecureRequests:[]}:{}}},crossOriginEmbedderPolicy:!1})),t.use((0,Sn.default)({origin:process.env.CLIENT_URL??"http://localhost:3000",credentials:!0})),t.use((0,Pn.default)()),t.use((0,In.default)({logger:nr,autoLogging:{ignore:r=>r.url==="/api/health"},customLogLevel:(r,o)=>o.statusCode>=500?"error":o.statusCode>=400?"warn":"info",serializers:{req:r=>({method:r.method,url:r.url}),res:r=>({statusCode:r.statusCode})}})),t.use(We.default.json({limit:"10mb"})),t.use(We.default.urlencoded({extended:!0})),t.use(lr),t.use("/api/uploads/payment-proofs",We.default.static(Zt.default.join(process.cwd(),"uploads","payment-proofs"))),t.get("/api/health",(r,o)=>{let s=D(),n=ar();o.status(200).json({status:s?"ok":"degraded",db:s?"connected":"disconnected",mongodbConfigured:n,timestamp:new Date().toISOString(),message:s?"API is ready":n?"Database not connected \u2014 check MongoDB Atlas Network Access (allow 0.0.0.0/0)":"MONGODB_URI is missing \u2014 add it in Hostinger Environment variables"})}),t.get("/api/ready",(r,o)=>{let s=require("fs"),i=require("path").join(process.cwd(),"frontend",".next","BUILD_ID"),a=s.existsSync(i);o.status(a?200:503).json({ready:a,frontendBuild:a?"present":"missing \u2014 run npm run build on Hostinger",cwd:process.cwd()})}),t.use("/api",gr),t.use("/api",(r,o,s)=>r.path==="/health"||r.path==="/ready"||r.path==="/settings/public"||r.path==="/settings/hero-slides"&&r.method==="GET"||r.path==="/settings/category-images"&&r.method==="GET"||r.path==="/promotions/active"&&r.method==="GET"||r.path==="/payments/bank-details"&&r.method==="GET"||r.path==="/analytics/track"&&r.method==="POST"?s():ae(r,o,s)),t.use("/api/auth",zr),t.use("/api/products",ro),t.use("/api/orders",Eo),t.use("/api/users",Bo),t.use("/api/categories",Vo),t.use("/api/payments",Jo),t.use("/api/cart",ss),t.use("/api/search",ls),t.use("/api/coupons",bs),t.use("/api/promotions",Cs),t.use("/api/settings",qs),t.use("/api/loyalty",Ws),t.use("/api/analytics",an),t.use("/api/chat",xn),e.catchAll!==!1&&t.use(ur),t.use(dr),t};0&&(module.exports={createApp});
+  `;
+  if (!transporter) {
+    console.info(`[Order Status] #${shortId} \u2192 ${status} for ${email}`);
+    return { sent: false };
+  }
+  await transporter.sendMail({
+    from: FROM,
+    to: email,
+    subject: `${cfg.emoji} Order #${shortId} \u2014 ${cfg.label} | VexironAthletics`,
+    html: brandEmail(body10)
+  });
+  return { sent: true };
+};
+
+// src/services/loyaltyService.ts
+var POINTS_PER_100_PKR = 1;
+var POINT_VALUE_PKR = 1;
+var REFERRAL_BONUS_REFEREE = 100;
+var REFERRAL_BONUS_REFERRER = 200;
+var getTierFromLifetimePoints = (lifetimePoints) => {
+  if (lifetimePoints >= 2e3) return "gold";
+  if (lifetimePoints >= 500) return "silver";
+  return "bronze";
+};
+var calculatePointsEarned = (orderTotalAfterDiscounts) => Math.floor(orderTotalAfterDiscounts / 100) * POINTS_PER_100_PKR;
+var calculatePointsDiscount = (pointsToRedeem, availablePoints, maxDiscount) => {
+  const points = Math.min(pointsToRedeem, availablePoints);
+  const discount = points * POINT_VALUE_PKR;
+  return Math.min(discount, maxDiscount);
+};
+var generateReferralCode = (name) => {
+  const base = name.replace(/[^a-zA-Z0-9]/g, "").slice(0, 4).toUpperCase() || "VX";
+  const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `${base}${suffix}`;
+};
+
+// src/controllers/authController.ts
+var hashResetToken = (token) => import_crypto.default.createHash("sha256").update(token).digest("hex");
+var register = async (req, res) => {
+  const errors = (0, import_express_validator.validationResult)(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ message: errors.array()[0].msg, errors: errors.array() });
+    return;
+  }
+  const { name, email, password, referralCode } = req.body;
+  const existing = await User.findOne({ email });
+  if (existing) {
+    res.status(400).json({ message: "Email already registered" });
+    return;
+  }
+  let referredBy;
+  if (referralCode) {
+    const referrer = await User.findOne({ referralCode: referralCode.toUpperCase() });
+    if (referrer) referredBy = referrer._id;
+  }
+  const hashedPassword = await import_bcryptjs.default.hash(password, 10);
+  const user = await User.create({
+    name,
+    email,
+    password: hashedPassword,
+    provider: "local",
+    referralCode: generateReferralCode(name),
+    referredBy
+  });
+  const token = signJWT(user);
+  res.status(201).json({ token, user: sanitizeUser(user) });
+};
+var login = async (req, res) => {
+  const errors = (0, import_express_validator.validationResult)(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ message: errors.array()[0].msg });
+    return;
+  }
+  const { email: rawEmail, password } = req.body;
+  const email = rawEmail.toLowerCase().trim();
+  const user = await User.findOne({ email }).select("+password");
+  if (!user) {
+    res.status(401).json({ message: "Invalid credentials" });
+    return;
+  }
+  if (!user.password) {
+    res.status(401).json({
+      message: "This email uses social login. Sign in with Google or Facebook instead."
+    });
+    return;
+  }
+  const isMatch = await import_bcryptjs.default.compare(password, user.password);
+  if (!isMatch) {
+    res.status(401).json({ message: "Invalid credentials" });
+    return;
+  }
+  if (!user.isActive) {
+    res.status(403).json({ message: "Account suspended" });
+    return;
+  }
+  const token = signJWT(user);
+  res.json({ token, user: sanitizeUser(user) });
+};
+var clerkSync = async (req, res) => {
+  const { clerkUserId } = req.body;
+  if (!clerkUserId) {
+    res.status(400).json({ message: "clerkUserId is required" });
+    return;
+  }
+  const clerkData = await syncClerkUser(clerkUserId);
+  const user = await User.findOneAndUpdate(
+    { email: clerkData.email },
+    {
+      ...clerkData,
+      password: null
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  );
+  const token = signJWT(user);
+  res.json({ token, user: sanitizeUser(user) });
+};
+var forgotPassword = async (req, res) => {
+  const errors = (0, import_express_validator.validationResult)(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ message: errors.array()[0].msg });
+    return;
+  }
+  const { email } = req.body;
+  const user = await User.findOne({ email, provider: "local" }).select(
+    "+resetPasswordToken +resetPasswordExpire"
+  );
+  if (user && user.password) {
+    const resetToken = import_crypto.default.randomBytes(32).toString("hex");
+    user.resetPasswordToken = hashResetToken(resetToken);
+    user.resetPasswordExpire = new Date(Date.now() + 60 * 60 * 1e3);
+    await user.save({ validateBeforeSave: false });
+    const clientUrl = process.env.CLIENT_URL ?? "http://localhost:3000";
+    const resetUrl = `${clientUrl}/reset-password?token=${resetToken}`;
+    const emailResult = await sendPasswordResetEmail(email, resetUrl);
+    const payload = {
+      message: "If an account exists with that email, a reset link has been sent."
+    };
+    if (emailResult.resetUrl && process.env.NODE_ENV !== "production") {
+      payload.resetUrl = emailResult.resetUrl;
+    }
+    res.json(payload);
+    return;
+  }
+  res.json({
+    message: "If an account exists with that email, a reset link has been sent."
+  });
+};
+var resetPassword = async (req, res) => {
+  const errors = (0, import_express_validator.validationResult)(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ message: errors.array()[0].msg });
+    return;
+  }
+  const { token, password } = req.body;
+  const hashedToken = hashResetToken(token);
+  const user = await User.findOne({
+    resetPasswordToken: hashedToken,
+    resetPasswordExpire: { $gt: /* @__PURE__ */ new Date() },
+    provider: "local"
+  }).select("+resetPasswordToken +resetPasswordExpire +password");
+  if (!user) {
+    res.status(400).json({ message: "Invalid or expired reset token" });
+    return;
+  }
+  user.password = await import_bcryptjs.default.hash(password, 10);
+  user.resetPasswordToken = null;
+  user.resetPasswordExpire = null;
+  await user.save();
+  res.json({ message: "Password reset successful. You can now sign in." });
+};
+var refresh = async (req, res) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken) {
+    res.status(400).json({ message: "Refresh token required" });
+    return;
+  }
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    res.status(500).json({ message: "JWT secret not configured" });
+    return;
+  }
+  try {
+    const decoded = import_jsonwebtoken2.default.verify(refreshToken, secret);
+    const user = await User.findById(decoded.id);
+    if (!user || !user.isActive) {
+      res.status(401).json({ message: "Invalid refresh token" });
+      return;
+    }
+    const accessToken = signJWT(user);
+    res.json({ token: accessToken, user: sanitizeUser(user) });
+  } catch {
+    res.status(401).json({ message: "Invalid refresh token" });
+  }
+};
+
+// src/utils/constants.ts
+var APP_NAME = "VexironAthletics";
+var MAX_ORDER_LINE_ITEMS = 20;
+var MAX_QTY_PER_LINE = 10;
+var MIN_PASSWORD_LENGTH = 8;
+
+// src/utils/password.ts
+var PASSWORD_REQUIREMENTS_MSG = `Password must be at least ${MIN_PASSWORD_LENGTH} characters and include at least one letter and one number`;
+
+// src/routes/auth.ts
+var passwordValidator = (0, import_express_validator2.body)("password").isLength({ min: MIN_PASSWORD_LENGTH }).withMessage(PASSWORD_REQUIREMENTS_MSG).matches(/^(?=.*[A-Za-z])(?=.*\d).+$/).withMessage(PASSWORD_REQUIREMENTS_MSG);
+var router = (0, import_express.Router)();
+router.post(
+  "/register",
+  authRateLimit,
+  requireDb,
+  [
+    (0, import_express_validator2.body)("name").trim().notEmpty().withMessage("Name is required"),
+    (0, import_express_validator2.body)("email").isEmail().withMessage("Valid email is required"),
+    passwordValidator
+  ],
+  register
+);
+router.post(
+  "/login",
+  authRateLimit,
+  requireDb,
+  [
+    (0, import_express_validator2.body)("email").isEmail().withMessage("Valid email is required"),
+    (0, import_express_validator2.body)("password").notEmpty().withMessage("Password is required")
+  ],
+  login
+);
+router.post("/clerk-sync", authRateLimit, requireDb, clerkSync);
+router.post("/refresh", authRateLimit, refresh);
+router.post(
+  "/forgot-password",
+  authRateLimit,
+  [(0, import_express_validator2.body)("email").isEmail().withMessage("Valid email is required")],
+  forgotPassword
+);
+router.post(
+  "/reset-password",
+  authRateLimit,
+  [
+    (0, import_express_validator2.body)("token").notEmpty().withMessage("Reset token is required"),
+    passwordValidator
+  ],
+  resetPassword
+);
+var auth_default = router;
+
+// src/routes/products.ts
+var import_express2 = require("express");
+var import_express_validator4 = require("express-validator");
+
+// src/controllers/productController.ts
+var import_express_validator3 = require("express-validator");
+var import_mongoose7 = __toESM(require("mongoose"));
+
+// src/models/Product.ts
+var import_mongoose4 = __toESM(require("mongoose"));
+var productImageSchema = new import_mongoose4.Schema(
+  {
+    url: { type: String, required: true },
+    public_id: { type: String, required: true }
+  },
+  { _id: false }
+);
+var productSchema = new import_mongoose4.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    description: { type: String, required: true },
+    price: { type: Number, required: true, min: 0 },
+    discountPrice: { type: Number, min: 0 },
+    mediumPrice: { type: Number, min: 0 },
+    premiumPrice: { type: Number, min: 0 },
+    category: {
+      type: String,
+      enum: ["men", "women", "children"],
+      required: true
+    },
+    images: [productImageSchema],
+    sizes: [{ type: String }],
+    colors: [{ type: String }],
+    stock: { type: Number, required: true, min: 0, default: 0 },
+    sold: { type: Number, default: 0, min: 0 },
+    ratings: { type: Number, default: 0, min: 0, max: 5 },
+    numReviews: { type: Number, default: 0, min: 0 },
+    active: { type: Boolean, default: true }
+  },
+  { timestamps: true }
+);
+productSchema.index({ name: "text", description: "text" });
+productSchema.index({ category: 1, active: 1 });
+var Product = import_mongoose4.default.model("Product", productSchema);
+
+// src/models/Review.ts
+var import_mongoose5 = __toESM(require("mongoose"));
+var reviewSchema = new import_mongoose5.Schema(
+  {
+    user: { type: import_mongoose5.Schema.Types.ObjectId, ref: "User", required: true },
+    product: { type: import_mongoose5.Schema.Types.ObjectId, ref: "Product", required: true },
+    rating: { type: Number, required: true, min: 1, max: 5 },
+    title: { type: String, required: true, trim: true },
+    comment: { type: String, required: true, trim: true }
+  },
+  { timestamps: true }
+);
+reviewSchema.index({ product: 1, createdAt: -1 });
+var Review = import_mongoose5.default.model("Review", reviewSchema);
+
+// src/config/cloudinary.ts
+var import_cloudinary = require("cloudinary");
+var cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+var apiKey = process.env.CLOUDINARY_API_KEY;
+var apiSecret = process.env.CLOUDINARY_API_SECRET;
+if (cloudName && apiKey && apiSecret) {
+  import_cloudinary.v2.config({
+    cloud_name: cloudName,
+    api_key: apiKey,
+    api_secret: apiSecret
+  });
+}
+var isCloudinaryConfigured = () => Boolean(cloudName && apiKey && apiSecret);
+
+// src/services/searchService.ts
+var import_meilisearch = require("meilisearch");
+
+// src/models/SearchLog.ts
+var import_mongoose6 = __toESM(require("mongoose"));
+var searchLogSchema = new import_mongoose6.Schema(
+  {
+    query: { type: String, required: true, trim: true },
+    resultsCount: { type: Number, default: 0 },
+    source: { type: String, enum: ["text", "visual", "autocomplete"], default: "text" },
+    user: { type: import_mongoose6.Schema.Types.ObjectId, ref: "User" },
+    filters: { type: import_mongoose6.Schema.Types.Mixed }
+  },
+  { timestamps: { createdAt: true, updatedAt: false } }
+);
+searchLogSchema.index({ createdAt: -1 });
+searchLogSchema.index({ query: 1 });
+var SearchLog = import_mongoose6.default.model("SearchLog", searchLogSchema);
+
+// src/utils/categories.ts
+var COMMON_PRODUCT_CATEGORIES = ["men", "women"];
+var categoryFilterForSlug = (slug) => {
+  if (slug === "common") return { $in: COMMON_PRODUCT_CATEGORIES };
+  if (slug === "men" || slug === "women" || slug === "children") return slug;
+  return void 0;
+};
+
+// src/services/searchService.ts
+var MEILI_HOST = process.env.MEILI_HOST ?? "http://127.0.0.1:7700";
+var MEILI_KEY = process.env.MEILI_MASTER_KEY ?? "";
+var INDEX_NAME = "products";
+var meiliClient = null;
+var meiliReady = false;
+var getMeili = () => {
+  if (meiliClient) return meiliClient;
+  try {
+    meiliClient = new import_meilisearch.MeiliSearch({ host: MEILI_HOST, apiKey: MEILI_KEY || void 0 });
+    return meiliClient;
+  } catch {
+    return null;
+  }
+};
+var initSearchIndex = async () => {
+  const client = getMeili();
+  if (!client) return;
+  try {
+    await client.createIndex(INDEX_NAME, { primaryKey: "id" });
+  } catch {
+  }
+  const index = client.index(INDEX_NAME);
+  await index.updateSettings({
+    searchableAttributes: ["name", "description", "category", "colors", "sizes"],
+    filterableAttributes: ["category", "sizes", "colors", "price", "ratings", "active"],
+    sortableAttributes: ["price", "ratings", "createdAt"],
+    typoTolerance: { enabled: true }
+  });
+  meiliReady = true;
+};
+var toSearchDoc = (product) => ({
+  id: product._id.toString(),
+  name: product.name,
+  description: product.description,
+  category: product.category,
+  price: product.price,
+  discountPrice: product.discountPrice,
+  sizes: product.sizes,
+  colors: product.colors,
+  ratings: product.ratings,
+  image: product.images[0]?.url ?? "",
+  active: product.active,
+  createdAt: product.createdAt?.getTime?.() ?? Date.now()
+});
+var syncProductToSearch = async (product) => {
+  const client = getMeili();
+  if (!client || !meiliReady) return;
+  try {
+    const index = client.index(INDEX_NAME);
+    if (product.active) {
+      await index.addDocuments([toSearchDoc(product)]);
+    } else {
+      await index.deleteDocument(product._id.toString());
+    }
+  } catch {
+  }
+};
+var syncAllProductsToSearch = async () => {
+  await initSearchIndex();
+  const products = await Product.find({ active: true });
+  const client = getMeili();
+  if (!client || !meiliReady) return;
+  const index = client.index(INDEX_NAME);
+  await index.addDocuments(products.map(toSearchDoc));
+};
+var buildMongoFilter = (params) => {
+  const filter = { active: true };
+  if (params.category) {
+    const categoryFilter = categoryFilterForSlug(params.category);
+    if (categoryFilter) filter.category = categoryFilter;
+  }
+  if (params.minPrice || params.maxPrice) {
+    filter.price = {};
+    if (params.minPrice) filter.price.$gte = params.minPrice;
+    if (params.maxPrice) filter.price.$lte = params.maxPrice;
+  }
+  if (params.size) filter.sizes = { $in: params.size.split(",") };
+  if (params.color) filter.colors = { $in: params.color.split(",") };
+  if (params.minRating) filter.ratings = { $gte: params.minRating };
+  return filter;
+};
+var fuzzyRegex = (q) => {
+  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const pattern = escaped.split("").join(".*");
+  return new RegExp(pattern, "i");
+};
+var searchProducts = async (params) => {
+  const page = Math.max(1, params.page ?? 1);
+  const limit = Math.min(50, params.limit ?? 12);
+  const offset = (page - 1) * limit;
+  const q = params.q.trim();
+  const client = getMeili();
+  if (client && meiliReady && q) {
+    try {
+      const filters = ["active = true"];
+      if (params.category === "common") {
+        filters.push('(category = "men" OR category = "women")');
+      } else if (params.category) {
+        filters.push(`category = "${params.category}"`);
+      }
+      if (params.minPrice) filters.push(`price >= ${params.minPrice}`);
+      if (params.maxPrice) filters.push(`price <= ${params.maxPrice}`);
+      if (params.minRating) filters.push(`ratings >= ${params.minRating}`);
+      if (params.size) {
+        params.size.split(",").forEach((s) => filters.push(`sizes = "${s.trim()}"`));
+      }
+      if (params.color) {
+        params.color.split(",").forEach((c) => filters.push(`colors = "${c.trim()}"`));
+      }
+      const sortMap2 = {
+        "price-asc": ["price:asc"],
+        "price-desc": ["price:desc"],
+        rating: ["ratings:desc"],
+        newest: ["createdAt:desc"]
+      };
+      const result = await client.index(INDEX_NAME).search(q, {
+        filter: filters.length ? filters.join(" AND ") : void 0,
+        sort: sortMap2[params.sort ?? ""] ?? ["createdAt:desc"],
+        limit,
+        offset,
+        facets: ["category", "sizes", "colors"]
+      });
+      const ids = result.hits.map((h) => h.id);
+      const products2 = ids.length ? await Product.find({ _id: { $in: ids }, active: true }) : [];
+      const ordered = ids.map((id) => products2.find((p) => p._id.toString() === id)).filter(Boolean);
+      await SearchLog.create({
+        query: q,
+        resultsCount: result.estimatedTotalHits ?? ordered.length,
+        source: params.source ?? "text",
+        user: params.userId,
+        filters: { category: params.category, minPrice: params.minPrice, maxPrice: params.maxPrice }
+      });
+      return {
+        products: ordered,
+        pagination: {
+          page,
+          limit,
+          total: result.estimatedTotalHits ?? ordered.length,
+          pages: Math.ceil((result.estimatedTotalHits ?? ordered.length) / limit)
+        },
+        facets: result.facetDistribution ?? {},
+        engine: "meilisearch"
+      };
+    } catch {
+    }
+  }
+  const filter = buildMongoFilter(params);
+  if (q) {
+    filter.$or = [
+      { $text: { $search: q } },
+      { name: fuzzyRegex(q) },
+      { description: fuzzyRegex(q) }
+    ];
+  }
+  const sortMap = {
+    "price-asc": { price: 1 },
+    "price-desc": { price: -1 },
+    newest: { createdAt: -1 },
+    rating: { ratings: -1 }
+  };
+  const sort = sortMap[params.sort ?? ""] ?? sortMap.newest;
+  const [products, total, categoryFacets, colorFacets] = await Promise.all([
+    Product.find(filter).sort(sort).skip(offset).limit(limit),
+    Product.countDocuments(filter),
+    Product.aggregate([
+      { $match: { active: true } },
+      { $group: { _id: "$category", count: { $sum: 1 } } }
+    ]),
+    Product.aggregate([
+      { $match: { active: true } },
+      { $unwind: "$colors" },
+      { $group: { _id: "$colors", count: { $sum: 1 } } }
+    ])
+  ]);
+  if (q) {
+    await SearchLog.create({
+      query: q,
+      resultsCount: total,
+      source: params.source ?? "text",
+      user: params.userId
+    });
+  }
+  return {
+    products,
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    facets: {
+      category: Object.fromEntries(categoryFacets.map((f) => [f._id, f.count])),
+      colors: Object.fromEntries(colorFacets.map((f) => [f._id, f.count]))
+    },
+    engine: "mongodb"
+  };
+};
+var autocompleteSearch = async (q, limit = 8) => {
+  const query = q.trim();
+  if (!query) return [];
+  const client = getMeili();
+  if (client && meiliReady) {
+    try {
+      const result = await client.index(INDEX_NAME).search(query, {
+        filter: "active = true",
+        limit,
+        attributesToRetrieve: ["id", "name", "category", "price", "discountPrice", "image"]
+      });
+      return result.hits;
+    } catch {
+    }
+  }
+  const products = await Product.find({
+    active: true,
+    $or: [{ name: fuzzyRegex(query) }, { $text: { $search: query } }]
+  }).select("name category price discountPrice images").limit(limit);
+  return products.map((p) => ({
+    id: p._id.toString(),
+    name: p.name,
+    category: p.category,
+    price: p.price,
+    discountPrice: p.discountPrice,
+    image: p.images[0]?.url ?? ""
+  }));
+};
+var visualSearch = async (colors, category) => {
+  const filter = { active: true };
+  if (colors.length) filter.colors = { $in: colors.map((c) => new RegExp(c, "i")) };
+  if (category) {
+    const categoryFilter = categoryFilterForSlug(category);
+    if (categoryFilter) filter.category = categoryFilter;
+  }
+  const products = await Product.find(filter).limit(24);
+  await SearchLog.create({
+    query: `visual:${colors.join(",")}`,
+    resultsCount: products.length,
+    source: "visual",
+    filters: { colors, category }
+  });
+  return products;
+};
+var getSearchAnalytics = async (days = 30) => {
+  const since = /* @__PURE__ */ new Date();
+  since.setDate(since.getDate() - days);
+  const [topQueries, totalSearches, bySource] = await Promise.all([
+    SearchLog.aggregate([
+      { $match: { createdAt: { $gte: since } } },
+      { $group: { _id: "$query", count: { $sum: 1 }, avgResults: { $avg: "$resultsCount" } } },
+      { $sort: { count: -1 } },
+      { $limit: 20 }
+    ]),
+    SearchLog.countDocuments({ createdAt: { $gte: since } }),
+    SearchLog.aggregate([
+      { $match: { createdAt: { $gte: since } } },
+      { $group: { _id: "$source", count: { $sum: 1 } } }
+    ])
+  ]);
+  return { topQueries, totalSearches, bySource, days };
+};
+
+// src/config/cache.ts
+var store2 = /* @__PURE__ */ new Map();
+function cacheGet(key) {
+  const entry = store2.get(key);
+  if (!entry) return void 0;
+  if (Date.now() > entry.expiresAt) {
+    store2.delete(key);
+    return void 0;
+  }
+  return entry.value;
+}
+function cacheSet(key, value, ttlSeconds) {
+  store2.set(key, { value, expiresAt: Date.now() + ttlSeconds * 1e3 });
+}
+function cacheDelete(key) {
+  store2.delete(key);
+}
+function cacheInvalidatePrefix(prefix) {
+  for (const key of store2.keys()) {
+    if (key.startsWith(prefix)) store2.delete(key);
+  }
+}
+async function cacheAside(key, ttlSeconds, factory) {
+  const cached = cacheGet(key);
+  if (cached !== void 0) return cached;
+  const value = await factory();
+  cacheSet(key, value, ttlSeconds);
+  return value;
+}
+
+// src/controllers/productController.ts
+var PRODUCTS_TTL = 60;
+var SORT_MAP = {
+  "price-asc": { price: 1 },
+  "price-desc": { price: -1 },
+  "name-asc": { name: 1 },
+  "name-desc": { name: -1 },
+  "category-asc": { category: 1 },
+  "category-desc": { category: -1 },
+  "stock-asc": { stock: 1 },
+  "stock-desc": { stock: -1 },
+  newest: { createdAt: -1 },
+  rating: { ratings: -1 }
+};
+var getProducts = async (req, res) => {
+  const {
+    category,
+    minPrice,
+    maxPrice,
+    size,
+    color,
+    search,
+    sort = "newest",
+    page = "1",
+    limit = "12",
+    minRating,
+    maxStock
+  } = req.query;
+  const filter = { active: true };
+  if (category && typeof category === "string") {
+    const categoryFilter = categoryFilterForSlug(category);
+    if (categoryFilter) {
+      filter.category = categoryFilter;
+    }
+  }
+  if (minPrice || maxPrice) {
+    filter.price = {};
+    if (minPrice) filter.price.$gte = Number(minPrice);
+    if (maxPrice) filter.price.$lte = Number(maxPrice);
+  }
+  if (size && typeof size === "string") {
+    filter.sizes = { $in: size.split(",") };
+  }
+  if (color && typeof color === "string") {
+    filter.colors = { $in: color.split(",") };
+  }
+  if (minRating) {
+    filter.ratings = { $gte: Number(minRating) };
+  }
+  if (maxStock) {
+    filter.stock = { $lte: Number(maxStock) };
+  }
+  if (search && typeof search === "string" && search.trim()) {
+    filter.$text = { $search: search.trim() };
+  }
+  const { ids } = req.query;
+  if (ids && typeof ids === "string" && ids.trim()) {
+    const idList = ids.split(",").map((id) => id.trim()).filter((id) => import_mongoose7.default.Types.ObjectId.isValid(id));
+    if (idList.length > 0) {
+      filter._id = { $in: idList };
+    }
+  }
+  const pageNum = Math.max(1, parseInt(page, 10) || 1);
+  const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10) || 12));
+  const skip = (pageNum - 1) * limitNum;
+  const sortOption = SORT_MAP[sort] ?? SORT_MAP.newest;
+  const isSimpleQuery = !maxStock && !search;
+  const cacheKey = isSimpleQuery ? `products:${category ?? "all"}:${sort}:${page}:${limit}:${minPrice ?? ""}:${maxPrice ?? ""}:${minRating ?? ""}` : null;
+  const result = await cacheAside(
+    cacheKey ?? `products:nocache:${Date.now()}`,
+    cacheKey ? PRODUCTS_TTL : 0,
+    async () => {
+      const [products, total] = await Promise.all([
+        Product.find(filter).sort(sortOption).skip(skip).limit(limitNum).lean(),
+        Product.countDocuments(filter)
+      ]);
+      return {
+        products,
+        pagination: { page: pageNum, limit: limitNum, total, pages: Math.ceil(total / limitNum) }
+      };
+    }
+  );
+  if (isSimpleQuery) {
+    res.setHeader("Cache-Control", "public, max-age=30");
+  }
+  res.json(result);
+};
+var getProductById = async (req, res) => {
+  const id = String(req.params.id);
+  if (!import_mongoose7.default.Types.ObjectId.isValid(id)) {
+    res.status(400).json({ message: "Invalid product ID" });
+    return;
+  }
+  const product = await Product.findOne({ _id: id, active: true });
+  if (!product) {
+    res.status(404).json({ message: "Product not found" });
+    return;
+  }
+  const reviews = await Review.find({ product: id }).populate("user", "name avatar").sort({ createdAt: -1 }).limit(50);
+  res.json({ product, reviews });
+};
+var createProduct = async (req, res) => {
+  const errors = (0, import_express_validator3.validationResult)(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ message: errors.array()[0].msg });
+    return;
+  }
+  const files = req.files;
+  const images = [];
+  if (files && files.length > 0 && isCloudinaryConfigured()) {
+    for (const file of files) {
+      const result = await import_cloudinary.v2.uploader.upload(
+        `data:${file.mimetype};base64,${file.buffer.toString("base64")}`,
+        { folder: "ecom/products" }
+      );
+      images.push({ url: result.secure_url, public_id: result.public_id });
+    }
+  } else if (req.body.images) {
+    const parsed = JSON.parse(req.body.images);
+    images.push(...parsed);
+  }
+  const product = await Product.create({
+    ...req.body,
+    price: Number(req.body.price),
+    discountPrice: req.body.discountPrice ? Number(req.body.discountPrice) : void 0,
+    mediumPrice: req.body.mediumPrice ? Number(req.body.mediumPrice) : void 0,
+    premiumPrice: req.body.premiumPrice ? Number(req.body.premiumPrice) : void 0,
+    stock: Number(req.body.stock),
+    sizes: typeof req.body.sizes === "string" ? JSON.parse(req.body.sizes) : req.body.sizes,
+    colors: typeof req.body.colors === "string" ? JSON.parse(req.body.colors) : req.body.colors,
+    active: req.body.active !== "false" && req.body.active !== false,
+    images
+  });
+  await syncProductToSearch(product);
+  cacheInvalidatePrefix("products:");
+  res.status(201).json(product);
+};
+var updateProduct = async (req, res) => {
+  const id = String(req.params.id);
+  if (!import_mongoose7.default.Types.ObjectId.isValid(id)) {
+    res.status(400).json({ message: "Invalid product ID" });
+    return;
+  }
+  const existing = await Product.findById(id);
+  if (!existing) {
+    res.status(404).json({ message: "Product not found" });
+    return;
+  }
+  const updateData = { ...req.body };
+  if (updateData.price !== void 0 && updateData.price !== "") {
+    updateData.price = Number(updateData.price);
+  }
+  if (updateData.discountPrice !== void 0 && updateData.discountPrice !== "") {
+    updateData.discountPrice = Number(updateData.discountPrice);
+  } else if ("discountPrice" in req.body && req.body.discountPrice === "") {
+    updateData.discountPrice = void 0;
+  }
+  if (updateData.mediumPrice !== void 0 && updateData.mediumPrice !== "") {
+    updateData.mediumPrice = Number(updateData.mediumPrice);
+  } else if ("mediumPrice" in req.body && req.body.mediumPrice === "") {
+    updateData.mediumPrice = void 0;
+  }
+  if (updateData.premiumPrice !== void 0 && updateData.premiumPrice !== "") {
+    updateData.premiumPrice = Number(updateData.premiumPrice);
+  } else if ("premiumPrice" in req.body && req.body.premiumPrice === "") {
+    updateData.premiumPrice = void 0;
+  }
+  if (updateData.stock !== void 0 && updateData.stock !== "") {
+    updateData.stock = Number(updateData.stock);
+  }
+  if (typeof updateData.sizes === "string") {
+    updateData.sizes = JSON.parse(updateData.sizes);
+  }
+  if (typeof updateData.colors === "string") {
+    updateData.colors = JSON.parse(updateData.colors);
+  }
+  if (updateData.active !== void 0) {
+    updateData.active = updateData.active !== "false" && updateData.active !== false;
+  }
+  const files = req.files;
+  let images = existing.images;
+  if (typeof req.body.existingImages === "string" && req.body.existingImages.trim()) {
+    try {
+      images = JSON.parse(req.body.existingImages);
+    } catch {
+      res.status(400).json({ message: "Invalid existing images payload" });
+      return;
+    }
+  }
+  if (files && files.length > 0 && isCloudinaryConfigured()) {
+    for (const file of files) {
+      const result = await import_cloudinary.v2.uploader.upload(
+        `data:${file.mimetype};base64,${file.buffer.toString("base64")}`,
+        { folder: "ecom/products" }
+      );
+      images.push({ url: result.secure_url, public_id: result.public_id });
+    }
+  }
+  updateData.images = images;
+  const product = await Product.findByIdAndUpdate(id, updateData, {
+    new: true,
+    runValidators: true
+  });
+  if (!product) {
+    res.status(404).json({ message: "Product not found" });
+    return;
+  }
+  await syncProductToSearch(product);
+  cacheInvalidatePrefix("products:");
+  res.json(product);
+};
+var deleteProduct = async (req, res) => {
+  const id = String(req.params.id);
+  const product = await Product.findByIdAndUpdate(
+    id,
+    { active: false },
+    { new: true }
+  );
+  if (!product) {
+    res.status(404).json({ message: "Product not found" });
+    return;
+  }
+  await syncProductToSearch(product);
+  cacheInvalidatePrefix("products:");
+  res.json({ message: "Product deactivated", product });
+};
+var createReview = async (req, res) => {
+  const errors = (0, import_express_validator3.validationResult)(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ message: errors.array()[0].msg });
+    return;
+  }
+  const id = String(req.params.id);
+  const { rating, title, comment } = req.body;
+  const product = await Product.findById(id);
+  if (!product || !product.active) {
+    res.status(404).json({ message: "Product not found" });
+    return;
+  }
+  const review = await Review.create({
+    user: req.user.id,
+    product: id,
+    rating,
+    title,
+    comment
+  });
+  const stats = await Review.aggregate([
+    { $match: { product: new import_mongoose7.default.Types.ObjectId(id) } },
+    {
+      $group: {
+        _id: "$product",
+        avgRating: { $avg: "$rating" },
+        count: { $sum: 1 }
+      }
+    }
+  ]);
+  if (stats.length > 0) {
+    product.ratings = Math.round(stats[0].avgRating * 10) / 10;
+    product.numReviews = stats[0].count;
+    await product.save();
+  }
+  res.status(201).json(review);
+};
+
+// src/middleware/auth.ts
+var import_jsonwebtoken3 = __toESM(require("jsonwebtoken"));
+var verifyToken = (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) {
+    res.status(401).json({ message: "No token" });
+    return;
+  }
+  try {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      res.status(500).json({ message: "JWT secret not configured" });
+      return;
+    }
+    req.user = import_jsonwebtoken3.default.verify(token, secret);
+    next();
+  } catch {
+    res.status(401).json({ message: "Invalid token" });
+  }
+};
+var optionalAuth = (req, _res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) {
+    next();
+    return;
+  }
+  try {
+    const secret = process.env.JWT_SECRET;
+    if (secret) {
+      req.user = import_jsonwebtoken3.default.verify(token, secret);
+    }
+  } catch {
+  }
+  next();
+};
+
+// src/middleware/adminOnly.ts
+var adminOnly = (req, res, next) => {
+  if (req.user?.role !== "admin") {
+    res.status(403).json({ message: "Admin only" });
+    return;
+  }
+  next();
+};
+
+// src/config/multer.ts
+var import_multer = __toESM(require("multer"));
+var storage = import_multer.default.memoryStorage();
+var upload = (0, import_multer.default)({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed"));
+    }
+  }
+});
+
+// src/routes/products.ts
+var router2 = (0, import_express2.Router)();
+router2.get("/", getProducts);
+router2.get("/:id", getProductById);
+router2.post(
+  "/",
+  verifyToken,
+  adminOnly,
+  upload.array("images", 5),
+  [
+    (0, import_express_validator4.body)("name").trim().notEmpty(),
+    (0, import_express_validator4.body)("description").trim().notEmpty(),
+    (0, import_express_validator4.body)("price").isNumeric(),
+    (0, import_express_validator4.body)("category").isIn(["men", "women", "children"]),
+    (0, import_express_validator4.body)("stock").isNumeric()
+  ],
+  createProduct
+);
+router2.put("/:id", verifyToken, adminOnly, upload.array("images", 5), updateProduct);
+router2.delete("/:id", verifyToken, adminOnly, deleteProduct);
+router2.post(
+  "/:id/review",
+  verifyToken,
+  [
+    (0, import_express_validator4.body)("rating").isInt({ min: 1, max: 5 }),
+    (0, import_express_validator4.body)("title").trim().notEmpty(),
+    (0, import_express_validator4.body)("comment").trim().notEmpty()
+  ],
+  createReview
+);
+var products_default = router2;
+
+// src/routes/orders.ts
+var import_express3 = require("express");
+var import_express_validator6 = require("express-validator");
+
+// src/controllers/orderController.ts
+var import_mongoose11 = __toESM(require("mongoose"));
+var import_express_validator5 = require("express-validator");
+
+// src/models/Order.ts
+var import_mongoose8 = __toESM(require("mongoose"));
+var orderItemSchema = new import_mongoose8.Schema(
+  {
+    product: { type: import_mongoose8.Schema.Types.ObjectId, ref: "Product", required: true },
+    name: { type: String, required: true },
+    image: { type: String, required: true },
+    price: { type: Number, required: true },
+    size: { type: String, required: true },
+    color: { type: String, required: true },
+    clothQuality: { type: String, enum: ["normal", "medium", "premium"], default: "normal" },
+    qty: { type: Number, required: true, min: 1 }
+  },
+  { _id: false }
+);
+var shippingAddressSchema = new import_mongoose8.Schema(
+  {
+    name: { type: String, required: true },
+    phones: { type: [String], default: [] },
+    phone: { type: String },
+    landmark: { type: String, default: "" },
+    street: { type: String, required: true },
+    city: { type: String, required: true },
+    state: { type: String, required: true },
+    postal: { type: String, required: true },
+    country: { type: String, required: true }
+  },
+  { _id: false }
+);
+var orderSchema = new import_mongoose8.Schema(
+  {
+    user: { type: import_mongoose8.Schema.Types.ObjectId, ref: "User", required: true },
+    items: [orderItemSchema],
+    shippingAddress: { type: shippingAddressSchema, required: true },
+    paymentMethod: { type: String, enum: ["cod", "bank"], default: "cod" },
+    bankPaymentProof: {
+      url: { type: String },
+      public_id: { type: String }
+    },
+    status: {
+      type: String,
+      enum: ["pending", "processing", "shipped", "delivered", "cancelled"],
+      default: "pending"
+    },
+    subtotal: { type: Number, required: true },
+    shippingFee: { type: Number, required: true },
+    couponCode: { type: String },
+    couponDiscount: { type: Number, default: 0 },
+    loyaltyPointsRedeemed: { type: Number, default: 0 },
+    loyaltyPointsEarned: { type: Number, default: 0 },
+    loyaltyAwarded: { type: Boolean, default: false },
+    total: { type: Number, required: true },
+    notes: { type: String }
+  },
+  { timestamps: true }
+);
+var Order = import_mongoose8.default.model("Order", orderSchema);
+
+// src/models/Coupon.ts
+var import_mongoose9 = __toESM(require("mongoose"));
+var couponSchema = new import_mongoose9.Schema(
+  {
+    code: { type: String, required: true, unique: true, uppercase: true, trim: true },
+    type: { type: String, enum: ["percent", "fixed", "free_shipping"], required: true },
+    value: { type: Number, required: true, min: 0 },
+    minOrder: { type: Number, default: 0 },
+    maxUses: { type: Number, default: 1e3 },
+    usedCount: { type: Number, default: 0 },
+    expiresAt: { type: Date },
+    active: { type: Boolean, default: true }
+  },
+  { timestamps: true }
+);
+var Coupon = import_mongoose9.default.model("Coupon", couponSchema);
+
+// src/services/couponService.ts
+var calculateCouponDiscount = (coupon, subtotal) => {
+  if (subtotal < coupon.minOrder) {
+    throw new Error(`Minimum order of \u20A8${coupon.minOrder} required for this coupon`);
+  }
+  if (coupon.type === "free_shipping") {
+    return { discount: 0, freeShipping: true, coupon };
+  }
+  if (coupon.type === "percent") {
+    const discount2 = Math.round(subtotal * Math.min(coupon.value, 100) / 100);
+    return { discount: discount2, freeShipping: false, coupon };
+  }
+  const discount = Math.min(coupon.value, subtotal);
+  return { discount, freeShipping: false, coupon };
+};
+
+// src/utils/clothQuality.ts
+var CLOTH_QUALITIES = [
+  { value: "normal", label: "Normal", multiplier: 1 },
+  { value: "medium", label: "Medium", multiplier: 1.15 },
+  { value: "premium", label: "Premium", multiplier: 1.3 }
+];
+var normalizeClothQuality = (value) => {
+  if (value === "medium" || value === "premium") return value;
+  return "normal";
+};
+var getClothQualityMultiplier = (quality) => CLOTH_QUALITIES.find((q) => q.value === quality)?.multiplier ?? 1;
+var getClothQualityPrice = (basePrice, quality) => Math.round(basePrice * getClothQualityMultiplier(quality));
+var getProductQualityPriceForProduct = (product, quality) => {
+  const normalBase = product.discountPrice ?? product.price;
+  if (quality === "normal") return normalBase;
+  if (quality === "medium" && product.mediumPrice != null && product.mediumPrice > 0) {
+    return product.mediumPrice;
+  }
+  if (quality === "premium" && product.premiumPrice != null && product.premiumPrice > 0) {
+    return product.premiumPrice;
+  }
+  return getClothQualityPrice(normalBase, quality);
+};
+
+// src/services/invoiceService.ts
+var import_pdfkit = __toESM(require("pdfkit"));
+var formatPrice = (n) => `Rs ${n.toLocaleString("en-PK")}`;
+var clothQualityLabel = (quality) => {
+  if (quality === "premium") return "Premium";
+  if (quality === "medium") return "Medium";
+  return "Normal";
+};
+var NAVY = "#0A2947";
+var CREAM = "#F3E4C9";
+var BROWN = "#8B5E3C";
+var GRAY = "#71717a";
+var LIGHT = "#f4f4f5";
+var BLACK = "#171717";
+var RED = "#dc2626";
+var streamToBuffer = (doc) => new Promise((resolve, reject) => {
+  const chunks = [];
+  doc.on("data", (chunk) => chunks.push(chunk));
+  doc.on("end", () => resolve(Buffer.concat(chunks)));
+  doc.on("error", reject);
+  doc.end();
+});
+var hr = (doc, y, color = "#e4e4e7") => {
+  doc.save().strokeColor(color).lineWidth(0.5).moveTo(40, y).lineTo(555, y).stroke().restore();
+};
+var generateInvoicePdf = async (order, customerName, customerEmail) => {
+  const doc = new import_pdfkit.default({ margin: 40, size: "A4" });
+  doc.rect(0, 0, doc.page.width, 70).fill(NAVY);
+  doc.fillColor(CREAM).fontSize(22).font("Helvetica-Bold").text(APP_NAME, 40, 20);
+  doc.fillColor(CREAM).fontSize(10).font("Helvetica").text("Invoice", 40, 46);
+  const orderRef = order._id.toString().slice(-8).toUpperCase();
+  doc.fillColor(BLACK).fontSize(10).font("Helvetica").text(`Invoice #${orderRef}`, 40, 85).text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`, 40, 100).text(`Status: ${order.status}`, 40, 115);
+  doc.fillColor(NAVY).fontSize(9).font("Helvetica-Bold").text("BILL TO", 350, 85).fillColor(BLACK).font("Helvetica").text(customerName, 350, 98).text(customerEmail, 350, 111).text(
+    `${order.shippingAddress.street}, ${order.shippingAddress.city}`,
+    350,
+    124
+  );
+  hr(doc, 142);
+  doc.rect(40, 148, 515, 20).fill(LIGHT);
+  const cols = [40, 260, 330, 420, 480];
+  doc.fillColor(NAVY).fontSize(9).font("Helvetica-Bold").text("ITEM", cols[0], 153).text("SIZE / COLOR", cols[1], 153).text("QTY", cols[2], 153).text("UNIT", cols[3], 153).text("TOTAL", cols[4], 153);
+  let y = 175;
+  order.items.forEach((item, idx) => {
+    if (idx % 2 === 1) doc.rect(40, y - 4, 515, 20).fill("#fafafa");
+    doc.fillColor(BLACK).fontSize(9).font("Helvetica-Bold").text(item.name, cols[0], y, { width: 215, ellipsis: true });
+    doc.font("Helvetica").text(`${item.size} / ${item.color} / ${clothQualityLabel(item.clothQuality)}`, cols[1], y, { width: 65 }).text(String(item.qty), cols[2], y).text(formatPrice(item.price), cols[3], y).text(formatPrice(item.price * item.qty), cols[4], y);
+    y += 22;
+  });
+  hr(doc, y + 4);
+  y += 14;
+  const totalsX = 380;
+  const valueX = 480;
+  const totalsLine = (label, value, bold = false, color = BLACK) => {
+    doc.fillColor(color).fontSize(9).font(bold ? "Helvetica-Bold" : "Helvetica").text(label, totalsX, y).text(value, valueX, y);
+    y += 16;
+  };
+  totalsLine("Subtotal", formatPrice(order.subtotal));
+  if (order.couponDiscount)
+    totalsLine(`Coupon (${order.couponCode})`, `-${formatPrice(order.couponDiscount)}`, false, RED);
+  if (order.loyaltyPointsRedeemed)
+    totalsLine("Loyalty points", `-${formatPrice(order.loyaltyPointsRedeemed)}`, false, RED);
+  totalsLine("Shipping", order.shippingFee === 0 ? "Free" : formatPrice(order.shippingFee));
+  hr(doc, y + 2, NAVY);
+  y += 8;
+  totalsLine("TOTAL", formatPrice(order.total), true, NAVY);
+  y += 10;
+  doc.fillColor(GRAY).fontSize(8).font("Helvetica").text(`Payment method: ${formatPaymentMethodLabel(order.paymentMethod)}`, 40, y);
+  const footerY = doc.page.height - 40;
+  hr(doc, footerY - 8);
+  doc.fillColor(GRAY).fontSize(8).text(`Thank you for shopping at ${APP_NAME}`, 40, footerY, { align: "center", width: 515 });
+  return streamToBuffer(doc);
+};
+var generateDispatchReceiptPdf = async (order, customerName, customerEmail) => {
+  const doc = new import_pdfkit.default({ margin: 40, size: "A4" });
+  const orderRef = order._id.toString().slice(-8).toUpperCase();
+  doc.rect(0, 0, doc.page.width, 70).fill(NAVY);
+  doc.fillColor(CREAM).fontSize(22).font("Helvetica-Bold").text(APP_NAME, 40, 18);
+  doc.fillColor(CREAM).fontSize(10).font("Helvetica").text("Dispatch Receipt", 40, 44);
+  doc.fillColor(BROWN).fontSize(14).font("Helvetica-Bold").text(`#${orderRef}`, 430, 26);
+  doc.rect(40, 80, 515, 90).fill("#f0f4f8").stroke(NAVY);
+  doc.fillColor(NAVY).fontSize(8).font("Helvetica-Bold").text("SHIP TO \u2014 ATTACH TO PARCEL", 52, 88);
+  doc.fillColor(BLACK).fontSize(13).font("Helvetica-Bold").text(order.shippingAddress.name, 52, 102);
+  doc.fontSize(10).font("Helvetica").text(
+    [
+      order.shippingAddress.landmark ? `Near: ${order.shippingAddress.landmark}` : "",
+      order.shippingAddress.street,
+      `${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.postal}`,
+      order.shippingAddress.country,
+      `Mobile: ${formatShippingPhones(order.shippingAddress)}`
+    ].filter(Boolean).join("\n"),
+    52,
+    120,
+    { width: 490 }
+  );
+  let y = 185;
+  doc.fillColor(GRAY).fontSize(8).font("Helvetica-Bold").text("ORDER DATE", 40, y);
+  doc.fillColor(GRAY).text("DISPATCH DATE", 170, y);
+  doc.fillColor(GRAY).text("PAYMENT", 310, y);
+  doc.fillColor(GRAY).text("CUSTOMER", 440, y);
+  y += 12;
+  doc.fillColor(BLACK).fontSize(9).font("Helvetica").text(new Date(order.createdAt).toLocaleDateString(), 40, y).text((/* @__PURE__ */ new Date()).toLocaleDateString(), 170, y).text(
+    order.paymentMethod === "bank" ? "Bank Transfer (Prepaid)" : "Cash on Delivery",
+    310,
+    y,
+    { width: 125 }
+  ).text(customerName, 440, y, { width: 115, ellipsis: true });
+  y += 24;
+  hr(doc, y);
+  y += 8;
+  doc.rect(40, y, 515, 20).fill(NAVY);
+  doc.fillColor(CREAM).fontSize(8).font("Helvetica-Bold").text("#", 48, y + 6).text("PRODUCT", 68, y + 6).text("SIZE / COLOR", 290, y + 6).text("QTY", 400, y + 6).text("LINE TOTAL", 455, y + 6);
+  y += 24;
+  order.items.forEach((item, idx) => {
+    if (idx % 2 === 0) doc.rect(40, y - 4, 515, 20).fill(LIGHT);
+    doc.fillColor(BLACK).fontSize(9).font("Helvetica-Bold").text(String(idx + 1), 48, y).text(item.name, 68, y, { width: 218, ellipsis: true });
+    doc.font("Helvetica").text(`${item.size} \xB7 ${item.color} \xB7 ${clothQualityLabel(item.clothQuality)}`, 290, y, { width: 105 }).fillColor(NAVY).font("Helvetica-Bold").text(String(item.qty), 400, y).fillColor(BLACK).font("Helvetica").text(formatPrice(item.price * item.qty), 455, y);
+    y += 22;
+  });
+  hr(doc, y + 4);
+  y += 16;
+  doc.rect(350, y, 205, 70).fill("#fff7ed").stroke(BROWN);
+  doc.fillColor(BROWN).fontSize(8).font("Helvetica-Bold").text(
+    order.paymentMethod === "bank" ? "PREPAID \u2014 DO NOT COLLECT" : "AMOUNT TO COLLECT (COD)",
+    358,
+    y + 8,
+    { width: 190, align: "center" }
+  );
+  doc.fillColor(NAVY).fontSize(22).font("Helvetica-Bold").text(formatPrice(order.total), 358, y + 24, { width: 190, align: "center" });
+  doc.fillColor(BLACK).fontSize(9).font("Helvetica-Bold").text("Packing checklist:", 40, y + 8);
+  ["Verify items & quantities", "Seal package securely", "Attach this receipt to parcel"].forEach(
+    (item, i) => {
+      doc.font("Helvetica").fontSize(9).fillColor(BLACK).text(`\u2610  ${item}`, 40, y + 24 + i * 16);
+    }
+  );
+  const footerY = doc.page.height - 40;
+  hr(doc, footerY - 8);
+  doc.fillColor(GRAY).fontSize(8).text(
+    `${APP_NAME} \xB7 Dispatch document for Order #${orderRef} \xB7 Internal use only`,
+    40,
+    footerY,
+    { align: "center", width: 515 }
+  );
+  return streamToBuffer(doc);
+};
+var generateOrdersReportPdf = async (orders, title) => {
+  const doc = new import_pdfkit.default({ margin: 40, size: "A4", layout: "landscape" });
+  doc.rect(0, 0, doc.page.width, 60).fill(NAVY);
+  doc.fillColor(CREAM).fontSize(20).font("Helvetica-Bold").text(`${APP_NAME} \u2014 ${title}`, 40, 16);
+  const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
+  doc.fillColor(CREAM).fontSize(9).font("Helvetica").text(`${orders.length} orders \xB7 Revenue: ${formatPrice(totalRevenue)}`, 40, 42);
+  let y = 76;
+  doc.rect(40, y, doc.page.width - 80, 20).fill(LIGHT);
+  const cols = [40, 130, 250, 350, 470, 570];
+  doc.fillColor(NAVY).fontSize(8).font("Helvetica-Bold").text("ORDER ID", cols[0], y + 6).text("DATE", cols[1], y + 6).text("CUSTOMER", cols[2], y + 6).text("STATUS", cols[3], y + 6).text("PAYMENT", cols[4], y + 6).text("TOTAL", cols[5], y + 6);
+  y += 24;
+  orders.forEach((o, idx) => {
+    if (idx % 2 === 1) doc.rect(40, y - 4, doc.page.width - 80, 18).fill("#fafafa");
+    doc.fillColor(BLACK).fontSize(8).font("Helvetica").text(o._id.toString().slice(-8).toUpperCase(), cols[0], y, { width: 85 }).text(new Date(o.createdAt).toLocaleDateString(), cols[1], y, { width: 115 }).text("\u2014", cols[2], y, { width: 95 }).text(o.status, cols[3], y, { width: 115 }).text(o.paymentMethod === "bank" ? "Bank" : "COD", cols[4], y, { width: 95 }).fillColor(NAVY).font("Helvetica-Bold").text(formatPrice(o.total), cols[5], y, { width: 95 });
+    y += 18;
+    if (y > doc.page.height - 60) {
+      doc.addPage();
+      y = 40;
+    }
+  });
+  const footerY = doc.page.height - 30;
+  hr(doc, footerY - 8);
+  doc.fillColor(GRAY).fontSize(8).text(`Generated by ${APP_NAME} \xB7 ${(/* @__PURE__ */ new Date()).toLocaleString()}`, 40, footerY, {
+    align: "center",
+    width: doc.page.width - 80
+  });
+  return streamToBuffer(doc);
+};
+
+// src/services/paymentProofUpload.ts
+var import_promises = __toESM(require("fs/promises"));
+var import_path = __toESM(require("path"));
+var PAYMENT_PROOF_DIR = import_path.default.join(process.cwd(), "uploads", "payment-proofs");
+var uploadPaymentProof = async (file) => {
+  if (isCloudinaryConfigured()) {
+    const result = await import_cloudinary.v2.uploader.upload(
+      `data:${file.mimetype};base64,${file.buffer.toString("base64")}`,
+      { folder: "ecom/payment-proofs" }
+    );
+    return { url: result.secure_url, public_id: result.public_id };
+  }
+  await import_promises.default.mkdir(PAYMENT_PROOF_DIR, { recursive: true });
+  const safeName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_");
+  const filename = `${Date.now()}-${safeName}`;
+  await import_promises.default.writeFile(import_path.default.join(PAYMENT_PROOF_DIR, filename), file.buffer);
+  const baseUrl = process.env.API_PUBLIC_URL ?? process.env.CLIENT_URL ?? `http://localhost:${process.env.PORT ?? 5e3}`;
+  return {
+    url: `${baseUrl.replace(/\/$/, "")}/api/uploads/payment-proofs/${filename}`,
+    public_id: filename
+  };
+};
+
+// src/models/AuditLog.ts
+var import_mongoose10 = __toESM(require("mongoose"));
+var auditLogSchema = new import_mongoose10.Schema(
+  {
+    admin: { type: import_mongoose10.Schema.Types.ObjectId, ref: "User", required: true },
+    action: { type: String, required: true },
+    target: { type: String, required: true },
+    targetId: { type: String },
+    meta: { type: import_mongoose10.Schema.Types.Mixed }
+  },
+  { timestamps: { createdAt: true, updatedAt: false } }
+);
+auditLogSchema.index({ createdAt: -1 });
+auditLogSchema.index({ admin: 1, createdAt: -1 });
+var AuditLog = import_mongoose10.default.model("AuditLog", auditLogSchema);
+
+// src/services/auditService.ts
+var logAdminAction = async (params) => {
+  try {
+    await AuditLog.create({
+      admin: params.adminId,
+      action: params.action,
+      target: params.target,
+      targetId: params.targetId,
+      meta: params.meta
+    });
+  } catch (err) {
+    console.error("[AuditLog] Failed to write entry:", err);
+  }
+};
+
+// src/controllers/orderController.ts
+var createOrder = async (req, res) => {
+  const errors = (0, import_express_validator5.validationResult)(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ message: errors.array()[0].msg });
+    return;
+  }
+  const { items, shippingAddress: rawShippingAddress, notes, couponCode, pointsToRedeem, paymentMethod: rawPaymentMethod } = req.body;
+  const paymentMethod = rawPaymentMethod === "bank" ? "bank" : "cod";
+  if (paymentMethod === "bank") {
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ message: "Payment proof image is required for bank transfer" });
+      return;
+    }
+  }
+  let shippingAddress;
+  try {
+    shippingAddress = normalizeShippingAddress(rawShippingAddress);
+  } catch (err) {
+    res.status(400).json({
+      message: err instanceof Error ? err.message : "Invalid shipping address"
+    });
+    return;
+  }
+  if (!Array.isArray(items) || items.length === 0) {
+    res.status(400).json({ message: "Order must contain at least one item" });
+    return;
+  }
+  if (items.length > MAX_ORDER_LINE_ITEMS) {
+    res.status(400).json({ message: `Order cannot exceed ${MAX_ORDER_LINE_ITEMS} line items` });
+    return;
+  }
+  const session = await import_mongoose11.default.startSession();
+  session.startTransaction();
+  try {
+    const orderItems = [];
+    let subtotal = 0;
+    for (const item of items) {
+      if (item.qty < 1 || item.qty > MAX_QTY_PER_LINE) {
+        throw new Error(`Quantity must be between 1 and ${MAX_QTY_PER_LINE}`);
+      }
+      const product = await Product.findById(item.productId).session(session);
+      if (!product || !product.active) {
+        throw new Error(`Product not found: ${item.productId}`);
+      }
+      if (product.stock < item.qty) {
+        throw new Error(`Insufficient stock for ${product.name}`);
+      }
+      if (!product.sizes.includes(item.size)) {
+        throw new Error(`Size ${item.size} not available for ${product.name}`);
+      }
+      if (!product.colors.includes(item.color)) {
+        throw new Error(`Color ${item.color} not available for ${product.name}`);
+      }
+      const clothQuality = normalizeClothQuality(item.clothQuality);
+      const price = getProductQualityPriceForProduct(product, clothQuality);
+      subtotal += price * item.qty;
+      orderItems.push({
+        product: product._id,
+        name: product.name,
+        image: product.images[0]?.url ?? "",
+        price,
+        size: item.size,
+        color: item.color,
+        clothQuality,
+        qty: item.qty
+      });
+      product.stock -= item.qty;
+      product.sold += item.qty;
+      await product.save({ session });
+    }
+    let couponDiscount = 0;
+    let freeShipping = false;
+    let appliedCouponCode;
+    if (couponCode) {
+      const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), active: true }).session(session);
+      if (!coupon) throw new Error("Invalid coupon code");
+      if (coupon.expiresAt && coupon.expiresAt < /* @__PURE__ */ new Date()) throw new Error("Coupon has expired");
+      if (coupon.usedCount >= coupon.maxUses) throw new Error("Coupon usage limit reached");
+      const priorUse = await Order.countDocuments({
+        user: req.user.id,
+        couponCode: coupon.code,
+        status: { $ne: "cancelled" }
+      }).session(session);
+      if (priorUse > 0) throw new Error("You have already used this coupon");
+      const result = calculateCouponDiscount(coupon, subtotal);
+      couponDiscount = result.discount;
+      freeShipping = result.freeShipping;
+      appliedCouponCode = coupon.code;
+      coupon.usedCount += 1;
+      await coupon.save({ session });
+    }
+    const user = await User.findById(req.user.id).session(session);
+    if (!user) throw new Error("User not found");
+    const afterCoupon = Math.max(0, subtotal - couponDiscount);
+    const pointsDiscount = pointsToRedeem ? calculatePointsDiscount(pointsToRedeem, user.loyaltyPoints ?? 0, afterCoupon) : 0;
+    if (pointsDiscount > 0) {
+      user.loyaltyPoints = (user.loyaltyPoints ?? 0) - pointsDiscount;
+    }
+    let shippingFee = freeShipping ? 0 : calculateShippingFee(afterCoupon - pointsDiscount);
+    const total = Math.max(0, afterCoupon - pointsDiscount + shippingFee);
+    const pointsEarned = calculatePointsEarned(total);
+    let bankPaymentProof;
+    if (paymentMethod === "bank" && req.file) {
+      bankPaymentProof = await uploadPaymentProof(req.file);
+    }
+    const [order] = await Order.create(
+      [
+        {
+          user: req.user.id,
+          items: orderItems,
+          shippingAddress,
+          paymentMethod,
+          bankPaymentProof,
+          status: "pending",
+          subtotal,
+          shippingFee,
+          couponCode: appliedCouponCode,
+          couponDiscount,
+          loyaltyPointsRedeemed: pointsDiscount,
+          loyaltyPointsEarned: pointsEarned,
+          total,
+          notes
+        }
+      ],
+      { session }
+    );
+    await user.save({ session });
+    await session.commitTransaction();
+    sendOrderConfirmationEmail(
+      user.email,
+      shippingAddress.name,
+      order._id.toString(),
+      orderItems.map((item) => ({
+        name: item.name,
+        qty: item.qty,
+        size: item.size,
+        color: item.color,
+        price: item.price
+      })),
+      total,
+      shippingAddress,
+      paymentMethod
+    ).catch((err) => {
+      console.error("[Order Email] Failed to send confirmation:", err);
+    });
+    res.status(201).json(order);
+  } catch (error) {
+    await session.abortTransaction();
+    const message = error instanceof Error ? error.message : "Order creation failed";
+    res.status(400).json({ message });
+  } finally {
+    session.endSession();
+  }
+};
+var awardLoyaltyOnDelivery = async (orderId) => {
+  const order = await Order.findById(orderId);
+  if (!order || order.loyaltyAwarded || order.status !== "delivered") return;
+  const user = await User.findById(order.user);
+  if (!user) return;
+  let points = order.loyaltyPointsEarned ?? calculatePointsEarned(order.total);
+  const tier = user.tier ?? "bronze";
+  if (tier === "silver") points = Math.round(points * 1.05);
+  if (tier === "gold") points = Math.round(points * 1.1);
+  user.loyaltyPoints = (user.loyaltyPoints ?? 0) + points;
+  user.lifetimePointsEarned = (user.lifetimePointsEarned ?? 0) + points;
+  user.tier = getTierFromLifetimePoints(user.lifetimePointsEarned);
+  const orderCount = await Order.countDocuments({ user: user._id, status: "delivered" });
+  if (orderCount === 1 && user.referredBy) {
+    user.loyaltyPoints += REFERRAL_BONUS_REFEREE;
+    user.lifetimePointsEarned += REFERRAL_BONUS_REFEREE;
+    const referrer = await User.findById(user.referredBy);
+    if (referrer) {
+      referrer.loyaltyPoints = (referrer.loyaltyPoints ?? 0) + REFERRAL_BONUS_REFERRER;
+      referrer.lifetimePointsEarned = (referrer.lifetimePointsEarned ?? 0) + REFERRAL_BONUS_REFERRER;
+      referrer.tier = getTierFromLifetimePoints(referrer.lifetimePointsEarned);
+      await referrer.save();
+    }
+  }
+  order.loyaltyAwarded = true;
+  await Promise.all([user.save(), order.save()]);
+};
+var getMyOrders = async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(50, parseInt(req.query.limit, 10) || 10);
+  const skip = (page - 1) * limit;
+  const filter = { user: req.user.id };
+  const [orders, total] = await Promise.all([
+    Order.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    Order.countDocuments(filter)
+  ]);
+  res.json({
+    orders,
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) }
+  });
+};
+var getAllOrders = async (req, res) => {
+  const { status, startDate, endDate, page = "1", limit = "20" } = req.query;
+  const filter = {};
+  if (status) filter.status = status;
+  if (startDate || endDate) {
+    filter.createdAt = {};
+    if (startDate) filter.createdAt.$gte = new Date(startDate);
+    if (endDate) filter.createdAt.$lte = new Date(endDate);
+  }
+  const pageNum = Math.max(1, parseInt(page, 10));
+  const limitNum = Math.min(100, parseInt(limit, 10));
+  const skip = (pageNum - 1) * limitNum;
+  const [orders, total] = await Promise.all([
+    Order.find(filter).populate("user", "name email").sort({ createdAt: -1 }).skip(skip).limit(limitNum),
+    Order.countDocuments(filter)
+  ]);
+  res.json({
+    orders,
+    pagination: { page: pageNum, limit: limitNum, total, pages: Math.ceil(total / limitNum) }
+  });
+};
+var getOrderById = async (req, res) => {
+  const order = await Order.findById(req.params.id).populate("user", "name email");
+  if (!order) {
+    res.status(404).json({ message: "Order not found" });
+    return;
+  }
+  const isOwner = order.user._id.toString() === req.user.id;
+  const isAdmin = req.user.role === "admin";
+  if (!isOwner && !isAdmin) {
+    res.status(403).json({ message: "Not authorized" });
+    return;
+  }
+  res.json(order);
+};
+var getOrderInvoice = async (req, res) => {
+  const order = await Order.findById(req.params.id).populate("user", "name email");
+  if (!order) {
+    res.status(404).json({ message: "Order not found" });
+    return;
+  }
+  const userDoc = order.user;
+  const isOwner = userDoc._id.toString() === req.user.id;
+  const isAdmin = req.user.role === "admin";
+  if (!isOwner && !isAdmin) {
+    res.status(403).json({ message: "Not authorized" });
+    return;
+  }
+  try {
+    const pdf = await generateInvoicePdf(order, userDoc.name, userDoc.email);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename=invoice-${order._id.toString().slice(-8)}.pdf`);
+    res.send(pdf);
+  } catch {
+    res.status(500).json({ message: "Failed to generate invoice" });
+  }
+};
+var getOrderDispatchReceipt = async (req, res) => {
+  const order = await Order.findById(req.params.id).populate("user", "name email");
+  if (!order) {
+    res.status(404).json({ message: "Order not found" });
+    return;
+  }
+  if (req.user.role !== "admin") {
+    res.status(403).json({ message: "Not authorized" });
+    return;
+  }
+  if (order.status === "cancelled") {
+    res.status(400).json({ message: "Cannot generate dispatch receipt for cancelled orders" });
+    return;
+  }
+  const userDoc = order.user;
+  try {
+    const pdf = await generateDispatchReceiptPdf(order, userDoc.name, userDoc.email);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=dispatch-receipt-${order._id.toString().slice(-8)}.pdf`
+    );
+    res.send(pdf);
+  } catch {
+    res.status(500).json({ message: "Failed to generate dispatch receipt" });
+  }
+};
+var exportOrdersReport = async (req, res) => {
+  const { startDate, endDate } = req.query;
+  const filter = { status: { $ne: "cancelled" } };
+  if (startDate || endDate) {
+    filter.createdAt = {};
+    if (startDate) filter.createdAt.$gte = new Date(startDate);
+    if (endDate) filter.createdAt.$lte = new Date(endDate);
+  }
+  const orders = await Order.find(filter).sort({ createdAt: -1 }).limit(500);
+  try {
+    const pdf = await generateOrdersReportPdf(orders, "Orders Report");
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "attachment; filename=orders-report.pdf");
+    res.send(pdf);
+  } catch {
+    res.status(500).json({ message: "Failed to generate report" });
+  }
+};
+var updateOrderStatus = async (req, res) => {
+  const { status } = req.body;
+  const validStatuses = [
+    "pending",
+    "processing",
+    "shipped",
+    "delivered",
+    "cancelled"
+  ];
+  if (!validStatuses.includes(status)) {
+    res.status(400).json({ message: "Invalid status" });
+    return;
+  }
+  const order = await Order.findById(req.params.id).populate("user", "name email");
+  if (!order) {
+    res.status(404).json({ message: "Order not found" });
+    return;
+  }
+  const previousStatus = order.status;
+  if (status === "cancelled" && order.status !== "cancelled") {
+    const session = await import_mongoose11.default.startSession();
+    session.startTransaction();
+    try {
+      for (const item of order.items) {
+        await Product.findByIdAndUpdate(
+          item.product,
+          { $inc: { stock: item.qty, sold: -item.qty } },
+          { session }
+        );
+      }
+      if (order.loyaltyPointsRedeemed) {
+        await User.findByIdAndUpdate(
+          order.user,
+          { $inc: { loyaltyPoints: order.loyaltyPointsRedeemed } },
+          { session }
+        );
+      }
+      if (order.couponCode) {
+        await Coupon.findOneAndUpdate(
+          { code: order.couponCode },
+          { $inc: { usedCount: -1 } },
+          { session }
+        );
+      }
+      order.status = status;
+      await order.save({ session });
+      await session.commitTransaction();
+    } catch {
+      await session.abortTransaction();
+      res.status(500).json({ message: "Failed to cancel order" });
+      return;
+    } finally {
+      session.endSession();
+    }
+  } else {
+    order.status = status;
+    await order.save();
+  }
+  if (status === "delivered") {
+    await awardLoyaltyOnDelivery(order._id.toString());
+  }
+  await logAdminAction({
+    adminId: req.user.id,
+    action: "order.status_update",
+    target: "order",
+    targetId: order._id.toString(),
+    meta: { from: previousStatus, to: status }
+  });
+  const userDoc = order.user;
+  const notifyStatuses = ["processing", "shipped", "delivered", "cancelled"];
+  if (notifyStatuses.includes(status) && status !== previousStatus && userDoc?.email) {
+    sendOrderStatusUpdateEmail(
+      userDoc.email,
+      userDoc.name ?? "Customer",
+      order._id.toString(),
+      status
+    ).catch((err) => console.error("[Order Status Email]", err));
+  }
+  res.json(order);
+};
+var cancelMyOrder = async (req, res) => {
+  const userId = req.user.id;
+  const order = await Order.findById(req.params.id);
+  if (!order) {
+    res.status(404).json({ message: "Order not found" });
+    return;
+  }
+  if (order.user.toString() !== userId) {
+    res.status(403).json({ message: "Not your order" });
+    return;
+  }
+  if (!["pending", "processing"].includes(order.status)) {
+    res.status(400).json({ message: `Cannot cancel an order that is already "${order.status}"` });
+    return;
+  }
+  const session = await import_mongoose11.default.startSession();
+  session.startTransaction();
+  try {
+    for (const item of order.items) {
+      await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.qty, sold: -item.qty } }, { session });
+    }
+    if (order.loyaltyPointsRedeemed) {
+      await User.findByIdAndUpdate(order.user, { $inc: { loyaltyPoints: order.loyaltyPointsRedeemed } }, { session });
+    }
+    if (order.couponCode) {
+      await Coupon.findOneAndUpdate({ code: order.couponCode }, { $inc: { usedCount: -1 } }, { session });
+    }
+    order.status = "cancelled";
+    await order.save({ session });
+    await session.commitTransaction();
+  } catch {
+    await session.abortTransaction();
+    res.status(500).json({ message: "Failed to cancel order" });
+    return;
+  } finally {
+    session.endSession();
+  }
+  res.json({ message: "Order cancelled successfully", order });
+};
+var getAnalytics = async (_req, res) => {
+  const sevenDaysAgo = /* @__PURE__ */ new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const LOW_STOCK_THRESHOLD = 10;
+  const [revenue, orderCount, productCount, userCount, recentOrders, dailySales, lowStockCount, lowStockProducts] = await Promise.all([
+    Order.aggregate([
+      { $match: { status: { $ne: "cancelled" } } },
+      { $group: { _id: null, total: { $sum: "$total" } } }
+    ]),
+    Order.countDocuments(),
+    Product.countDocuments({ active: true }),
+    import_mongoose11.default.model("User").countDocuments(),
+    Order.find().populate("user", "name email").sort({ createdAt: -1 }).limit(10),
+    Order.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: sevenDaysAgo },
+          status: { $ne: "cancelled" }
+        }
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          sales: { $sum: "$total" },
+          orders: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]),
+    Product.countDocuments({ active: true, stock: { $lte: LOW_STOCK_THRESHOLD } }),
+    Product.find({ active: true, stock: { $lte: LOW_STOCK_THRESHOLD } }).sort({ stock: 1 }).limit(10).select("name stock category price")
+  ]);
+  res.json({
+    revenue: revenue[0]?.total ?? 0,
+    orders: orderCount,
+    products: productCount,
+    users: userCount,
+    recentOrders,
+    dailySales,
+    lowStockCount,
+    lowStockProducts
+  });
+};
+
+// src/middleware/parseOrderBody.ts
+var parseOrderBody = (req, res, next) => {
+  try {
+    if (typeof req.body.items === "string") {
+      req.body.items = JSON.parse(req.body.items);
+    }
+    if (typeof req.body.shippingAddress === "string") {
+      req.body.shippingAddress = JSON.parse(req.body.shippingAddress);
+    }
+    if (req.body.pointsToRedeem !== void 0 && req.body.pointsToRedeem !== "") {
+      req.body.pointsToRedeem = Number(req.body.pointsToRedeem);
+    }
+    next();
+  } catch {
+    res.status(400).json({ message: "Invalid order payload" });
+  }
+};
+
+// src/routes/orders.ts
+var router3 = (0, import_express3.Router)();
+router3.get("/analytics", verifyToken, adminOnly, getAnalytics);
+router3.get("/export/pdf", verifyToken, adminOnly, exportOrdersReport);
+router3.post(
+  "/",
+  verifyToken,
+  orderRateLimit,
+  upload.single("paymentProof"),
+  parseOrderBody,
+  [
+    (0, import_express_validator6.body)("paymentMethod").optional().isIn(["cod", "bank"]).withMessage("Invalid payment method"),
+    (0, import_express_validator6.body)("items").isArray({ min: 1, max: MAX_ORDER_LINE_ITEMS }).withMessage(`Order must contain 1\u2013${MAX_ORDER_LINE_ITEMS} items`),
+    (0, import_express_validator6.body)("items.*.productId").notEmpty().withMessage("Each item needs a product"),
+    (0, import_express_validator6.body)("items.*.qty").isInt({ min: 1, max: MAX_QTY_PER_LINE }).withMessage(`Quantity must be between 1 and ${MAX_QTY_PER_LINE}`),
+    (0, import_express_validator6.body)("shippingAddress.name").notEmpty(),
+    (0, import_express_validator6.body)("shippingAddress").custom((addr) => {
+      const phones = Array.isArray(addr?.phones) ? addr.phones.filter((p) => p?.trim()) : [];
+      if (phones.length === 0 && !addr?.phone?.trim()) {
+        throw new Error("At least one mobile number is required");
+      }
+      return true;
+    }),
+    (0, import_express_validator6.body)("shippingAddress.phones.*").optional().isString().isLength({ min: 10, max: 20 }).withMessage("Each mobile number must be 10\u201320 characters"),
+    (0, import_express_validator6.body)("shippingAddress.landmark").notEmpty().withMessage("Famous place / landmark is required"),
+    (0, import_express_validator6.body)("shippingAddress.street").notEmpty().withMessage("Your place / house address is required"),
+    (0, import_express_validator6.body)("shippingAddress.city").notEmpty(),
+    (0, import_express_validator6.body)("shippingAddress.state").notEmpty(),
+    (0, import_express_validator6.body)("shippingAddress.postal").notEmpty(),
+    (0, import_express_validator6.body)("shippingAddress.country").notEmpty(),
+    (0, import_express_validator6.body)("couponCode").optional().isString(),
+    (0, import_express_validator6.body)("pointsToRedeem").optional().isInt({ min: 0 })
+  ],
+  createOrder
+);
+router3.get("/my", verifyToken, getMyOrders);
+router3.put("/:id/cancel", verifyToken, cancelMyOrder);
+router3.get("/", verifyToken, adminOnly, getAllOrders);
+router3.get("/:id/invoice", verifyToken, getOrderInvoice);
+router3.get("/:id/dispatch-receipt", verifyToken, adminOnly, getOrderDispatchReceipt);
+router3.get("/:id", verifyToken, getOrderById);
+router3.put("/:id/status", verifyToken, adminOnly, updateOrderStatus);
+var orders_default = router3;
+
+// src/routes/users.ts
+var import_express4 = require("express");
+var import_express_validator8 = require("express-validator");
+
+// src/controllers/userController.ts
+var import_express_validator7 = require("express-validator");
+var getMe = async (req, res) => {
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    res.status(404).json({ message: "User not found" });
+    return;
+  }
+  res.json(sanitizeUser(user));
+};
+var updateMe = async (req, res) => {
+  const errors = (0, import_express_validator7.validationResult)(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ message: errors.array()[0].msg });
+    return;
+  }
+  const allowedFields = ["name", "phone", "avatar", "banner", "addresses"];
+  const updates = {};
+  for (const field of allowedFields) {
+    if (req.body[field] !== void 0) {
+      updates[field] = req.body[field];
+    }
+  }
+  const files = req.files;
+  if (files && isCloudinaryConfigured()) {
+    if (files.avatar?.[0]) {
+      const f = files.avatar[0];
+      const result = await import_cloudinary.v2.uploader.upload(
+        `data:${f.mimetype};base64,${f.buffer.toString("base64")}`,
+        { folder: "ecom/avatars", transformation: [{ width: 400, height: 400, crop: "fill" }] }
+      );
+      updates.avatar = result.secure_url;
+    }
+    if (files.banner?.[0]) {
+      const f = files.banner[0];
+      const result = await import_cloudinary.v2.uploader.upload(
+        `data:${f.mimetype};base64,${f.buffer.toString("base64")}`,
+        { folder: "ecom/banners", transformation: [{ width: 1200, height: 300, crop: "fill" }] }
+      );
+      updates.banner = result.secure_url;
+    }
+  }
+  const user = await User.findByIdAndUpdate(req.user.id, updates, {
+    new: true,
+    runValidators: true
+  });
+  if (!user) {
+    res.status(404).json({ message: "User not found" });
+    return;
+  }
+  res.json(sanitizeUser(user));
+};
+var getAllUsers = async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(100, parseInt(req.query.limit, 10) || 20);
+  const skip = (page - 1) * limit;
+  const [users, total] = await Promise.all([
+    User.find().select("-password").sort({ createdAt: -1 }).skip(skip).limit(limit),
+    User.countDocuments()
+  ]);
+  res.json({
+    users: users.map(sanitizeUser),
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) }
+  });
+};
+var getUserStats = async (_req, res) => {
+  const [users, totalUsers, newThisWeek, orderStats] = await Promise.all([
+    User.find().select("name email role isActive createdAt avatar loyaltyPoints").sort({ createdAt: -1 }).limit(50).lean(),
+    User.countDocuments(),
+    User.countDocuments({ createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1e3) } }),
+    Order.aggregate([
+      { $match: { status: { $ne: "cancelled" } } },
+      { $group: { _id: "$user", totalOrders: { $sum: 1 }, totalSpent: { $sum: "$total" }, lastOrder: { $max: "$createdAt" } } }
+    ])
+  ]);
+  const statsMap = new Map(orderStats.map((s) => [s._id?.toString(), s]));
+  const enriched = users.map((u) => {
+    const stats = statsMap.get(u._id?.toString());
+    return {
+      id: u._id,
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      isActive: u.isActive,
+      avatar: u.avatar,
+      loyaltyPoints: u.loyaltyPoints ?? 0,
+      joinedAt: u.createdAt,
+      totalOrders: stats?.totalOrders ?? 0,
+      totalSpent: stats?.totalSpent ?? 0,
+      lastOrderAt: stats?.lastOrder ?? null
+    };
+  });
+  res.json({ totalUsers, newThisWeek, users: enriched });
+};
+var updateUserRole = async (req, res) => {
+  const { role } = req.body;
+  if (!["user", "admin"].includes(role)) {
+    res.status(400).json({ message: "Invalid role" });
+    return;
+  }
+  const user = await User.findByIdAndUpdate(
+    req.params.id,
+    { role },
+    { new: true }
+  );
+  if (!user) {
+    res.status(404).json({ message: "User not found" });
+    return;
+  }
+  res.json(sanitizeUser(user));
+};
+var updateUserStatus = async (req, res) => {
+  const { isActive } = req.body;
+  const user = await User.findByIdAndUpdate(
+    req.params.id,
+    { isActive },
+    { new: true }
+  );
+  if (!user) {
+    res.status(404).json({ message: "User not found" });
+    return;
+  }
+  res.json(sanitizeUser(user));
+};
+var changePassword = async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const user = await User.findById(req.user.id).select("+password");
+  if (!user || !user.password) {
+    res.status(400).json({ message: "OAuth users cannot change password here" });
+    return;
+  }
+  const bcrypt2 = await import("bcryptjs");
+  const isMatch = await bcrypt2.compare(currentPassword, user.password);
+  if (!isMatch) {
+    res.status(401).json({ message: "Current password is incorrect" });
+    return;
+  }
+  user.password = await bcrypt2.hash(newPassword, 10);
+  await user.save();
+  res.json({ message: "Password updated successfully" });
+};
+
+// src/routes/users.ts
+var router4 = (0, import_express4.Router)();
+router4.get("/me", verifyToken, getMe);
+router4.put(
+  "/me",
+  verifyToken,
+  upload.fields([
+    { name: "avatar", maxCount: 1 },
+    { name: "banner", maxCount: 1 }
+  ]),
+  updateMe
+);
+router4.put(
+  "/me/password",
+  verifyToken,
+  [
+    (0, import_express_validator8.body)("currentPassword").notEmpty(),
+    (0, import_express_validator8.body)("newPassword").isLength({ min: MIN_PASSWORD_LENGTH }).withMessage(PASSWORD_REQUIREMENTS_MSG).matches(/^(?=.*[A-Za-z])(?=.*\d).+$/).withMessage(PASSWORD_REQUIREMENTS_MSG)
+  ],
+  changePassword
+);
+router4.get("/stats", verifyToken, adminOnly, getUserStats);
+router4.get("/", verifyToken, adminOnly, getAllUsers);
+router4.put("/:id/role", verifyToken, adminOnly, updateUserRole);
+router4.put("/:id/status", verifyToken, adminOnly, updateUserStatus);
+var users_default = router4;
+
+// src/routes/categories.ts
+var import_express5 = require("express");
+var import_express_validator10 = require("express-validator");
+
+// src/controllers/categoryController.ts
+var import_express_validator9 = require("express-validator");
+
+// src/models/Category.ts
+var import_mongoose12 = __toESM(require("mongoose"));
+var categorySchema = new import_mongoose12.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    slug: { type: String, required: true, unique: true, lowercase: true },
+    parent: {
+      type: String,
+      enum: ["men", "women", "children"],
+      required: true
+    },
+    image: { type: String },
+    active: { type: Boolean, default: true }
+  },
+  { timestamps: true }
+);
+var Category = import_mongoose12.default.model("Category", categorySchema);
+
+// src/controllers/categoryController.ts
+var getCategories = async (_req, res) => {
+  const categories = await Category.find({ active: true }).sort({ name: 1 });
+  res.json(categories);
+};
+var createCategory = async (req, res) => {
+  const errors = (0, import_express_validator9.validationResult)(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ message: errors.array()[0].msg });
+    return;
+  }
+  const { name, parent, image, active = true } = req.body;
+  const slug = slugify(name);
+  const existing = await Category.findOne({ slug });
+  if (existing) {
+    res.status(400).json({ message: "Category with this name already exists" });
+    return;
+  }
+  const category = await Category.create({ name, slug, parent, image, active });
+  res.status(201).json(category);
+};
+var updateCategory = async (req, res) => {
+  const { name, parent, image, active } = req.body;
+  const updates = {};
+  if (name) {
+    updates.name = name;
+    updates.slug = slugify(name);
+  }
+  if (parent) updates.parent = parent;
+  if (image !== void 0) updates.image = image;
+  if (active !== void 0) updates.active = active;
+  const category = await Category.findByIdAndUpdate(req.params.id, updates, {
+    new: true,
+    runValidators: true
+  });
+  if (!category) {
+    res.status(404).json({ message: "Category not found" });
+    return;
+  }
+  res.json(category);
+};
+var deleteCategory = async (req, res) => {
+  const category = await Category.findByIdAndDelete(req.params.id);
+  if (!category) {
+    res.status(404).json({ message: "Category not found" });
+    return;
+  }
+  res.json({ message: "Category deleted" });
+};
+
+// src/routes/categories.ts
+var router5 = (0, import_express5.Router)();
+router5.get("/", getCategories);
+router5.post(
+  "/",
+  verifyToken,
+  adminOnly,
+  [
+    (0, import_express_validator10.body)("name").trim().notEmpty(),
+    (0, import_express_validator10.body)("parent").isIn(["men", "women", "children"])
+  ],
+  createCategory
+);
+router5.put("/:id", verifyToken, adminOnly, updateCategory);
+router5.delete("/:id", verifyToken, adminOnly, deleteCategory);
+var categories_default = router5;
+
+// src/routes/payments.ts
+var import_express6 = require("express");
+
+// src/controllers/paymentController.ts
+var getBankDetails = (_req, res) => {
+  res.json(getBankTransferDetails());
+};
+var confirmCod = (_req, res) => {
+  res.json({ message: "Cash on delivery confirmed at order creation" });
+};
+var payByCode = (_req, res) => {
+  res.status(501).json({
+    status: "coming_soon",
+    message: "This payment method is not yet available"
+  });
+};
+var onlineBanking = (_req, res) => {
+  res.status(501).json({
+    status: "coming_soon",
+    message: "Online banking coming soon"
+  });
+};
+
+// src/routes/payments.ts
+var router6 = (0, import_express6.Router)();
+router6.get("/bank-details", getBankDetails);
+router6.post("/cod", confirmCod);
+router6.post("/code", payByCode);
+router6.post("/banking", onlineBanking);
+var payments_default = router6;
+
+// src/routes/cart.ts
+var import_express7 = require("express");
+
+// src/models/Cart.ts
+var import_mongoose13 = __toESM(require("mongoose"));
+var cartItemSchema = new import_mongoose13.Schema(
+  {
+    productId: { type: import_mongoose13.Schema.Types.ObjectId, ref: "Product", required: true },
+    name: { type: String, required: true },
+    price: { type: Number, required: true, min: 0 },
+    image: { type: String, required: true },
+    size: { type: String, required: true },
+    color: { type: String, required: true },
+    clothQuality: { type: String, enum: ["normal", "medium", "premium"], default: "normal" },
+    qty: { type: Number, required: true, min: 1 }
+  },
+  { _id: false }
+);
+var cartSchema = new import_mongoose13.Schema(
+  {
+    user: { type: import_mongoose13.Schema.Types.ObjectId, ref: "User", required: true, unique: true },
+    items: { type: [cartItemSchema], default: [] }
+  },
+  { timestamps: true }
+);
+var Cart = import_mongoose13.default.model("Cart", cartSchema);
+
+// src/services/cartValidation.ts
+var import_mongoose14 = __toESM(require("mongoose"));
+var validateAndNormalizeCartItems = async (items) => {
+  if (!Array.isArray(items)) {
+    throw new Error("Items must be an array");
+  }
+  if (items.length > MAX_ORDER_LINE_ITEMS) {
+    throw new Error(`Cart cannot exceed ${MAX_ORDER_LINE_ITEMS} line items`);
+  }
+  const normalized = [];
+  for (const item of items) {
+    if (!item?.productId || !import_mongoose14.default.Types.ObjectId.isValid(item.productId)) {
+      throw new Error("Invalid product in cart");
+    }
+    const qty = Number(item.qty);
+    if (!Number.isFinite(qty) || qty < 1) {
+      throw new Error("Invalid quantity in cart");
+    }
+    if (qty > MAX_QTY_PER_LINE) {
+      throw new Error(`Maximum ${MAX_QTY_PER_LINE} units per item`);
+    }
+    const product = await Product.findById(item.productId);
+    if (!product || !product.active) {
+      throw new Error(`Product unavailable: ${item.name || item.productId}`);
+    }
+    if (!product.sizes.includes(item.size)) {
+      throw new Error(`Size ${item.size} not available for ${product.name}`);
+    }
+    if (!product.colors.includes(item.color)) {
+      throw new Error(`Color ${item.color} not available for ${product.name}`);
+    }
+    const safeQty = Math.min(qty, product.stock, MAX_QTY_PER_LINE);
+    if (safeQty < 1) {
+      throw new Error(`${product.name} is out of stock`);
+    }
+    const clothQuality = normalizeClothQuality(item.clothQuality);
+    const price = getProductQualityPriceForProduct(product, clothQuality);
+    const image = product.images[0]?.url ?? "";
+    normalized.push({
+      productId: product._id,
+      name: product.name,
+      price,
+      image,
+      size: item.size,
+      color: item.color,
+      clothQuality,
+      qty: safeQty
+    });
+  }
+  return normalized;
+};
+
+// src/controllers/cartController.ts
+var getCart = async (req, res) => {
+  let cart = await Cart.findOne({ user: req.user.id });
+  if (!cart) {
+    cart = await Cart.create({ user: req.user.id, items: [] });
+  }
+  res.json({
+    items: cart.items.map((item) => ({
+      productId: item.productId.toString(),
+      name: item.name,
+      price: item.price,
+      image: item.image,
+      size: item.size,
+      color: item.color,
+      qty: item.qty
+    }))
+  });
+};
+var saveCart = async (req, res) => {
+  const { items } = req.body;
+  try {
+    const validatedItems = await validateAndNormalizeCartItems(items);
+    const cart = await Cart.findOneAndUpdate(
+      { user: req.user.id },
+      {
+        items: validatedItems.map((item) => ({
+          productId: item.productId,
+          name: item.name,
+          price: item.price,
+          image: item.image,
+          size: item.size,
+          color: item.color,
+          qty: item.qty
+        }))
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    res.json({
+      items: cart.items.map((item) => ({
+        productId: item.productId.toString(),
+        name: item.name,
+        price: item.price,
+        image: item.image,
+        size: item.size,
+        color: item.color,
+        qty: item.qty
+      }))
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Invalid cart data";
+    res.status(400).json({ message });
+  }
+};
+var clearCart = async (req, res) => {
+  await Cart.findOneAndUpdate(
+    { user: req.user.id },
+    { items: [] },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  );
+  res.json({ message: "Cart cleared", items: [] });
+};
+
+// src/routes/cart.ts
+var router7 = (0, import_express7.Router)();
+router7.get("/", verifyToken, getCart);
+router7.put("/", verifyToken, saveCart);
+router7.delete("/", verifyToken, clearCart);
+var cart_default = router7;
+
+// src/routes/search.ts
+var import_express8 = require("express");
+
+// src/controllers/searchController.ts
+var advancedSearch = async (req, res) => {
+  const result = await searchProducts({
+    q: req.query.q ?? "",
+    category: req.query.category,
+    minPrice: req.query.minPrice ? Number(req.query.minPrice) : void 0,
+    maxPrice: req.query.maxPrice ? Number(req.query.maxPrice) : void 0,
+    size: req.query.size,
+    color: req.query.color,
+    minRating: req.query.minRating ? Number(req.query.minRating) : void 0,
+    sort: req.query.sort,
+    page: req.query.page ? Number(req.query.page) : 1,
+    limit: req.query.limit ? Number(req.query.limit) : 12,
+    userId: req.user?.id,
+    source: "text"
+  });
+  res.json(result);
+};
+var searchSuggest = async (req, res) => {
+  const q = req.query.q ?? "";
+  const suggestions = await autocompleteSearch(q);
+  res.json({ suggestions });
+};
+var searchVisual = async (req, res) => {
+  const file = req.file;
+  if (!file) {
+    res.status(400).json({ message: "Image file required" });
+    return;
+  }
+  let detectedColors = [];
+  let category;
+  if (isCloudinaryConfigured()) {
+    const result = await import_cloudinary.v2.uploader.upload(
+      `data:${file.mimetype};base64,${file.buffer.toString("base64")}`,
+      { folder: "ecom/visual-search", colors: true }
+    );
+    const colorNames = result.predominant?.google ?? [];
+    detectedColors = colorNames.slice(0, 3);
+    const tags = result.tags ?? [];
+    if (tags.includes("men")) category = "men";
+    else if (tags.includes("women")) category = "women";
+    else if (tags.includes("children")) category = "children";
+  } else {
+    detectedColors = ["Black", "Blue", "White"];
+  }
+  const products = await visualSearch(detectedColors, category);
+  res.json({ products, detectedColors, category });
+};
+var searchAnalytics = async (_req, res) => {
+  const days = parseInt(_req.query.days, 10) || 30;
+  const analytics = await getSearchAnalytics(days);
+  res.json(analytics);
+};
+var reindexSearch = async (_req, res) => {
+  await syncAllProductsToSearch();
+  res.json({ message: "Search index synced" });
+};
+
+// src/routes/search.ts
+var router8 = (0, import_express8.Router)();
+router8.get("/", advancedSearch);
+router8.get("/suggest", searchSuggest);
+router8.post("/visual", upload.single("image"), searchVisual);
+router8.get("/analytics", verifyToken, adminOnly, searchAnalytics);
+router8.post("/reindex", verifyToken, adminOnly, reindexSearch);
+var search_default = router8;
+
+// src/routes/coupons.ts
+var import_express9 = require("express");
+var import_express_validator12 = require("express-validator");
+
+// src/controllers/couponController.ts
+var import_express_validator11 = require("express-validator");
+var validateCoupon = async (req, res) => {
+  const errors = (0, import_express_validator11.validationResult)(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ message: errors.array()[0].msg });
+    return;
+  }
+  const { code, subtotal } = req.body;
+  const coupon = await Coupon.findOne({ code: code.toUpperCase(), active: true });
+  if (!coupon) {
+    res.status(404).json({ message: "Invalid coupon code" });
+    return;
+  }
+  if (coupon.expiresAt && coupon.expiresAt < /* @__PURE__ */ new Date()) {
+    res.status(400).json({ message: "Coupon has expired" });
+    return;
+  }
+  if (coupon.usedCount >= coupon.maxUses) {
+    res.status(400).json({ message: "Coupon usage limit reached" });
+    return;
+  }
+  try {
+    const result = calculateCouponDiscount(coupon, subtotal);
+    res.json({
+      code: coupon.code,
+      type: coupon.type,
+      discount: result.discount,
+      freeShipping: result.freeShipping
+    });
+  } catch (error) {
+    res.status(400).json({ message: error instanceof Error ? error.message : "Invalid coupon" });
+  }
+};
+var getCoupons = async (_req, res) => {
+  const coupons = await Coupon.find().sort({ createdAt: -1 });
+  res.json(coupons);
+};
+var createCoupon = async (req, res) => {
+  const errors = (0, import_express_validator11.validationResult)(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ message: errors.array()[0].msg });
+    return;
+  }
+  const coupon = await Coupon.create({
+    ...req.body,
+    code: req.body.code.toUpperCase(),
+    value: Number(req.body.value),
+    minOrder: Number(req.body.minOrder ?? 0),
+    maxUses: Number(req.body.maxUses ?? 1e3)
+  });
+  res.status(201).json(coupon);
+};
+var updateCoupon = async (req, res) => {
+  const coupon = await Coupon.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  if (!coupon) {
+    res.status(404).json({ message: "Coupon not found" });
+    return;
+  }
+  res.json(coupon);
+};
+var deleteCoupon = async (req, res) => {
+  const coupon = await Coupon.findByIdAndUpdate(req.params.id, { active: false }, { new: true });
+  if (!coupon) {
+    res.status(404).json({ message: "Coupon not found" });
+    return;
+  }
+  res.json({ message: "Coupon deactivated" });
+};
+
+// src/routes/coupons.ts
+var router9 = (0, import_express9.Router)();
+router9.post(
+  "/validate",
+  verifyToken,
+  [
+    (0, import_express_validator12.body)("code").notEmpty().withMessage("Coupon code is required"),
+    (0, import_express_validator12.body)("subtotal").isNumeric().withMessage("Subtotal is required")
+  ],
+  validateCoupon
+);
+router9.get("/", verifyToken, adminOnly, getCoupons);
+router9.post(
+  "/",
+  verifyToken,
+  adminOnly,
+  [
+    (0, import_express_validator12.body)("code").notEmpty(),
+    (0, import_express_validator12.body)("type").isIn(["percent", "fixed", "free_shipping"]),
+    (0, import_express_validator12.body)("value").isNumeric()
+  ],
+  createCoupon
+);
+router9.put("/:id", verifyToken, adminOnly, updateCoupon);
+router9.delete("/:id", verifyToken, adminOnly, deleteCoupon);
+var coupons_default = router9;
+
+// src/routes/promotions.ts
+var import_express10 = require("express");
+var import_express_validator14 = require("express-validator");
+
+// src/controllers/promotionController.ts
+var import_express_validator13 = require("express-validator");
+
+// src/models/Promotion.ts
+var import_mongoose15 = __toESM(require("mongoose"));
+var promotionSchema = new import_mongoose15.Schema(
+  {
+    title: { type: String, required: true, trim: true },
+    message: { type: String, required: true, trim: true },
+    couponCode: { type: String, uppercase: true, trim: true },
+    active: { type: Boolean, default: true },
+    sortOrder: { type: Number, default: 0 }
+  },
+  { timestamps: true }
+);
+var Promotion = import_mongoose15.default.model("Promotion", promotionSchema);
+
+// src/data/shirtImages.ts
+var unsplash = (photoId, w, h) => `https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=${w}&h=${h}&q=80`;
+var catalogProductImages = [
+  unsplash("1602810318383-e386cc2a3ccf", 600, 800),
+  unsplash("1521572163474-6864f9cf17ab", 600, 800),
+  unsplash("1515886657613-9f3515b0c78f", 600, 800),
+  unsplash("1542291026-7eec264c27ff", 600, 800),
+  unsplash("1503342564765-7df573e8f429", 600, 800),
+  unsplash("1515886657613-9f3515b0c78f", 600, 800),
+  unsplash("1558618666-fcd25c85cd64", 600, 800),
+  unsplash("1539109136881-3be0616acf4b", 600, 800),
+  unsplash("1483985988355-763728e1f99c", 600, 800),
+  unsplash("1490481651871-ab68de25d43d", 600, 800),
+  unsplash("1519236081223-abe9f490a59b", 600, 800),
+  unsplash("1519236081223-abe9f490a59b", 600, 800),
+  unsplash("1503606770372-2ebb58dd75f0", 600, 800),
+  unsplash("1472099645785-5658abf4ff4e", 600, 800),
+  unsplash("1559163499-413811b65002", 600, 800)
+];
+
+// src/data/catalogSeed.ts
+var menProducts = [
+  { name: "Classic Oxford Shirt", category: "men", price: 3499, discountPrice: 2799, description: "Crafted from premium long-staple cotton with a refined oxford weave. Features a structured collar, button-down front, and a relaxed yet polished fit ideal for office wear or smart casual outings.", sizes: ["S", "M", "L", "XL"], colors: ["White", "Navy", "Blue"], stock: 45, ratings: 4.5, numReviews: 28 },
+  { name: "Slim Fit Chinos", category: "men", price: 2999, discountPrice: 2499, description: "Modern slim-fit chinos with 2% elastane for all-day comfort. Mid-rise waist, tapered leg, and wrinkle-resistant fabric make these a wardrobe essential for work and weekends.", sizes: ["S", "M", "L", "XL", "XXL"], colors: ["Beige", "Navy", "Black"], stock: 38, ratings: 4.2, numReviews: 19 },
+  { name: "Wool Blend Blazer", category: "men", price: 8999, discountPrice: 7499, description: "Tailored single-breasted blazer in a luxurious wool-poly blend. Notch lapels, two-button closure, and interior pockets deliver timeless sophistication for meetings and events.", sizes: ["M", "L", "XL"], colors: ["Navy", "Gray", "Black"], stock: 22, ratings: 4.8, numReviews: 12 },
+  { name: "Graphic Tee", category: "men", price: 1499, description: "Ultra-soft 100% combed cotton tee with a minimal screen-print design. Pre-shrunk fabric, crew neck, and breathable weave perfect for layering or standalone casual looks.", sizes: ["XS", "S", "M", "L", "XL"], colors: ["Black", "White", "Gray"], stock: 60, ratings: 4, numReviews: 34 },
+  { name: "Denim Jacket", category: "men", price: 5499, discountPrice: 4499, description: "Vintage-wash denim jacket with classic trucker styling. Reinforced stitching, metal buttons, and chest pockets offer durable style that pairs effortlessly with tees and chinos.", sizes: ["S", "M", "L", "XL"], colors: ["Blue", "Black"], stock: 30, ratings: 4.6, numReviews: 21 }
+];
+var womenProducts = [
+  { name: "Linen Summer Dress", category: "women", price: 4299, discountPrice: 3599, description: "A breezy A-line dress in pure linen with adjustable tie straps and side pockets. Lightweight and breathable \u2014 perfect for brunches, vacations, and warm-weather elegance.", sizes: ["XS", "S", "M", "L"], colors: ["Beige", "White", "Green"], stock: 35, ratings: 4.7, numReviews: 26 },
+  { name: "High-Waist Jeans", category: "women", price: 3799, discountPrice: 3199, description: "Flattering high-rise jeans in stretch denim with a contoured waistband and slim straight leg. Retains shape all day while offering comfort and a streamlined silhouette.", sizes: ["XS", "S", "M", "L", "XL"], colors: ["Blue", "Black", "Gray"], stock: 42, ratings: 4.4, numReviews: 31 },
+  { name: "Silk Blouse", category: "women", price: 4999, description: "Luxurious mulberry silk blouse with a relaxed drape and concealed button placket. Elegant enough for the boardroom, versatile enough for evening dinners.", sizes: ["S", "M", "L"], colors: ["White", "Red", "Navy"], stock: 28, ratings: 4.9, numReviews: 15 },
+  { name: "Knit Cardigan", category: "women", price: 3299, discountPrice: 2699, description: "Open-front cardigan in a soft cotton-acrylic blend with ribbed cuffs and hem. Layer over dresses or tops for cozy warmth without bulk.", sizes: ["S", "M", "L", "XL"], colors: ["Gray", "Beige", "White"], stock: 40, ratings: 4.3, numReviews: 22 },
+  { name: "Floral Maxi Dress", category: "women", price: 4599, discountPrice: 3899, description: "Flowing maxi dress with an all-over botanical print, smocked bodice, and tiered skirt. Effortlessly romantic for weddings, garden parties, and special occasions.", sizes: ["S", "M", "L"], colors: ["Red", "Blue", "Green"], stock: 25, ratings: 4.6, numReviews: 18 }
+];
+var childrenProducts = [
+  { name: "Kids Hoodie", category: "children", price: 1999, discountPrice: 1599, description: "Cozy fleece-lined hoodie with a kangaroo pocket and soft brushed interior. Durable enough for playground adventures and gentle on sensitive skin.", sizes: ["XS", "S", "M", "L"], colors: ["Red", "Blue", "Gray"], stock: 50, ratings: 4.5, numReviews: 20 },
+  { name: "Children Joggers", category: "children", price: 1499, description: "Stretch-cotton joggers with an elastic waistband and cuffed ankles. Ideal for school, sports, and lounging \u2014 easy to move in and machine washable.", sizes: ["XS", "S", "M", "L", "XL"], colors: ["Black", "Navy", "Gray"], stock: 55, ratings: 4.1, numReviews: 16 },
+  { name: "Kids Polo Shirt", category: "children", price: 1299, description: "Classic pique polo with a two-button placket and reinforced collar. Breathable cotton blend keeps kids cool and comfortable all day long.", sizes: ["XS", "S", "M", "L"], colors: ["White", "Red", "Blue", "Green"], stock: 48, ratings: 4, numReviews: 14 },
+  { name: "Rain Jacket", category: "children", price: 2499, discountPrice: 1999, description: "Waterproof shell jacket with sealed seams, reflective strips, and a packable hood. Keeps little ones dry during monsoon walks and outdoor play.", sizes: ["S", "M", "L"], colors: ["Yellow", "Blue", "Red"], stock: 32, ratings: 4.4, numReviews: 11 },
+  { name: "Kids Sneakers Set", category: "children", price: 3499, description: "Lightweight sneakers with cushioned insoles, flexible rubber outsoles, and easy hook-and-loop straps. Built for running, jumping, and all-day active play.", sizes: ["XS", "S", "M", "L"], colors: ["White", "Black", "Blue"], stock: 36, ratings: 4.7, numReviews: 24 }
+];
+var catalogSeedProducts = [...menProducts, ...womenProducts, ...childrenProducts];
+var catalogPromotions = [
+  {
+    title: "\u{1F525} AMAZING DEAL",
+    message: "Up to 40% off on premium athletic wear \u2014 Limited time only!",
+    couponCode: "WELCOME10",
+    active: true,
+    sortOrder: 0
+  },
+  {
+    title: "\u{1F4B0} SAVE BIG",
+    message: "Flat \u20A8500 off on orders above \u20A83,000",
+    couponCode: "SAVE500",
+    active: true,
+    sortOrder: 1
+  },
+  {
+    title: "\u{1F69A} FREE SHIPPING",
+    message: "Free delivery on orders above \u20A82,000",
+    couponCode: "FREESHIP",
+    active: true,
+    sortOrder: 2
+  }
+];
+
+// src/controllers/promotionController.ts
+var getActivePromotions = async (_req, res) => {
+  if (!isDbConnected()) {
+    res.json(catalogPromotions.filter((p) => p.active));
+    return;
+  }
+  try {
+    const promotions = await Promotion.find({ active: true }).sort({ sortOrder: 1, createdAt: -1 });
+    res.json(promotions);
+  } catch {
+    res.json(catalogPromotions.filter((p) => p.active));
+  }
+};
+var getPromotions = async (_req, res) => {
+  const promotions = await Promotion.find().sort({ sortOrder: 1, createdAt: -1 });
+  res.json(promotions);
+};
+var createPromotion = async (req, res) => {
+  const errors = (0, import_express_validator13.validationResult)(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ message: errors.array()[0].msg });
+    return;
+  }
+  const promotion = await Promotion.create({
+    title: req.body.title,
+    message: req.body.message,
+    couponCode: req.body.couponCode || void 0,
+    active: req.body.active !== false,
+    sortOrder: Number(req.body.sortOrder ?? 0)
+  });
+  res.status(201).json(promotion);
+};
+var updatePromotion = async (req, res) => {
+  const promotion = await Promotion.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  if (!promotion) {
+    res.status(404).json({ message: "Promotion not found" });
+    return;
+  }
+  res.json(promotion);
+};
+var deletePromotion = async (req, res) => {
+  const promotion = await Promotion.findByIdAndDelete(req.params.id);
+  if (!promotion) {
+    res.status(404).json({ message: "Promotion not found" });
+    return;
+  }
+  res.json({ message: "Promotion deleted" });
+};
+
+// src/routes/promotions.ts
+var router10 = (0, import_express10.Router)();
+router10.get("/active", getActivePromotions);
+router10.get("/", verifyToken, adminOnly, getPromotions);
+router10.post(
+  "/",
+  verifyToken,
+  adminOnly,
+  [
+    (0, import_express_validator14.body)("title").trim().notEmpty().withMessage("Title is required"),
+    (0, import_express_validator14.body)("message").trim().notEmpty().withMessage("Message is required")
+  ],
+  createPromotion
+);
+router10.put("/:id", verifyToken, adminOnly, updatePromotion);
+router10.delete("/:id", verifyToken, adminOnly, deletePromotion);
+var promotions_default = router10;
+
+// src/routes/settings.ts
+var import_express11 = require("express");
+
+// src/models/SiteSettings.ts
+var import_mongoose16 = __toESM(require("mongoose"));
+var heroSlideSchema = new import_mongoose16.Schema(
+  {
+    id: { type: String, required: true },
+    tag: { type: String, default: "" },
+    title: { type: String, default: "" },
+    titleAccent: { type: String, default: "" },
+    subtitle: { type: String, default: "" },
+    image: { type: String, default: "" },
+    imagePublicId: { type: String },
+    ctaLabel: { type: String, default: "Shop Now" },
+    ctaHref: { type: String, default: "/products" },
+    secondaryLabel: { type: String, default: "View All" },
+    secondaryHref: { type: String, default: "/products" }
+  },
+  { _id: false }
+);
+var categoryImageSchema = new import_mongoose16.Schema(
+  {
+    slug: { type: String, required: true },
+    label: { type: String, required: true },
+    image: { type: String, default: "" },
+    imagePublicId: { type: String },
+    href: { type: String, default: "" }
+  },
+  { _id: false }
+);
+var siteSettingsSchema = new import_mongoose16.Schema(
+  {
+    designId: { type: String, default: "classic" },
+    colorSchemeId: { type: String, default: "midnight-athletic" },
+    themeId: { type: String },
+    primaryColor: { type: String },
+    accentColor: { type: String },
+    secondaryColor: { type: String },
+    siteTagline: { type: String, default: "Premium Clothing Store" },
+    seoDescription: {
+      type: String,
+      default: "Shop men, women, and children athletic wear with free delivery above \u20A85000"
+    },
+    seoKeywords: {
+      type: String,
+      default: "clothing, athletic wear, sportswear, fashion, Pakistan"
+    },
+    heroSlides: { type: [heroSlideSchema], default: [] },
+    categoryImages: { type: [categoryImageSchema], default: [] }
+  },
+  { timestamps: { createdAt: false, updatedAt: true } }
+);
+var SiteSettings = import_mongoose16.default.model("SiteSettings", siteSettingsSchema);
+var LEGACY_THEME_TO_DESIGN = {
+  "midnight-athletic": "classic",
+  "ocean-breeze": "wave",
+  "rose-elite": "boutique",
+  "forest-pro": "nature",
+  "royal-gold": "premium"
+};
+var migrateSiteSettings = (settings) => {
+  if (!settings.colorSchemeId && settings.themeId) {
+    settings.colorSchemeId = settings.themeId;
+  }
+  if (!settings.colorSchemeId) {
+    settings.colorSchemeId = "midnight-athletic";
+  }
+  if (!settings.designId) {
+    settings.designId = LEGACY_THEME_TO_DESIGN[settings.colorSchemeId] ?? "classic";
+  }
+  return settings;
+};
+var getOrCreateSiteSettings = async () => {
+  let settings = await SiteSettings.findOne();
+  if (!settings) {
+    settings = await SiteSettings.create({});
+  }
+  migrateSiteSettings(settings);
+  if (settings.isModified()) {
+    await settings.save();
+  }
+  return settings;
+};
+
+// src/controllers/settingsController.ts
+var SETTINGS_CACHE_KEY = "settings:public";
+var HERO_SLIDES_CACHE_KEY = "settings:hero-slides";
+var CATEGORY_IMAGES_CACHE_KEY = "settings:category-images";
+var SETTINGS_TTL = 120;
+var DEFAULT_CATEGORY_IMAGES = [
+  { slug: "men", label: "Men's", image: "", href: "/category/men" },
+  { slug: "women", label: "Women's", image: "", href: "/category/women" },
+  { slug: "common", label: "Common", image: "", href: "/category/common" },
+  { slug: "children", label: "Children's", image: "", href: "/category/children" }
+];
+var toPlainCategoryImage = (cat) => {
+  const raw = typeof cat.toObject === "function" ? cat.toObject() : cat;
+  const slug = String(raw.slug ?? "").trim().toLowerCase();
+  const defaultDef = DEFAULT_CATEGORY_IMAGES.find((d) => d.slug === slug);
+  const href = raw.href?.trim();
+  return {
+    slug,
+    label: raw.label?.trim() || defaultDef?.label || slug,
+    image: raw.image?.trim() || defaultDef?.image || "",
+    imagePublicId: raw.imagePublicId,
+    href: href && href.startsWith("/category/") ? href : defaultDef?.href || `/category/${slug}`
+  };
+};
+var mergeCategoryImages = (saved) => {
+  const plain = saved.map(toPlainCategoryImage);
+  const bySlug = new Map(plain.map((c) => [c.slug, c]));
+  const defaultSlugs = new Set(DEFAULT_CATEGORY_IMAGES.map((d) => d.slug));
+  const mergedDefaults = DEFAULT_CATEGORY_IMAGES.map((def) => ({
+    ...def,
+    ...bySlug.get(def.slug) ?? {},
+    href: bySlug.get(def.slug)?.href || def.href,
+    image: bySlug.get(def.slug)?.image || def.image
+  }));
+  const extras = plain.filter((c) => !defaultSlugs.has(c.slug));
+  return [...mergedDefaults, ...extras];
+};
+var DEFAULT_PUBLIC_SETTINGS = {
+  designId: "classic",
+  colorSchemeId: "midnight-athletic",
+  primaryColor: void 0,
+  accentColor: void 0,
+  secondaryColor: void 0,
+  siteTagline: "Premium Clothing Store",
+  seoDescription: "Shop men, women, and children athletic wear with free delivery above \u20A85000",
+  seoKeywords: "clothing, athletic wear, sportswear, fashion, Pakistan"
+};
+var toPublicSettings = (settings) => ({
+  designId: settings.designId,
+  colorSchemeId: settings.colorSchemeId,
+  primaryColor: settings.primaryColor,
+  accentColor: settings.accentColor,
+  secondaryColor: settings.secondaryColor,
+  siteTagline: settings.siteTagline,
+  seoDescription: settings.seoDescription,
+  seoKeywords: settings.seoKeywords
+});
+var getPublicSettings = async (_req, res) => {
+  if (!isDbConnected()) {
+    res.setHeader("Cache-Control", "public, max-age=60");
+    res.json(DEFAULT_PUBLIC_SETTINGS);
+    return;
+  }
+  try {
+    const data = await cacheAside(SETTINGS_CACHE_KEY, SETTINGS_TTL, async () => {
+      const settings = await getOrCreateSiteSettings();
+      return toPublicSettings(settings);
+    });
+    res.setHeader("Cache-Control", "public, max-age=60");
+    res.json(data);
+  } catch (err) {
+    console.warn("[Settings] public fallback:", err instanceof Error ? err.message : err);
+    res.json(DEFAULT_PUBLIC_SETTINGS);
+  }
+};
+var getSettings = async (_req, res) => {
+  const settings = await getOrCreateSiteSettings();
+  res.json(settings);
+};
+var updateSettings = async (req, res) => {
+  cacheDelete(SETTINGS_CACHE_KEY);
+  const settings = await getOrCreateSiteSettings();
+  const allowed = [
+    "designId",
+    "colorSchemeId",
+    "primaryColor",
+    "accentColor",
+    "secondaryColor",
+    "siteTagline",
+    "seoDescription",
+    "seoKeywords"
+  ];
+  for (const key of allowed) {
+    if (req.body[key] !== void 0) {
+      settings[key] = req.body[key];
+    }
+  }
+  await settings.save();
+  res.json(settings);
+};
+var DEFAULT_HERO_SLIDES = [
+  {
+    id: "elevate",
+    tag: "Premium Collection",
+    title: "Elevate Your",
+    titleAccent: "Style",
+    subtitle: "Discover premium clothing for men, women, and children. Quality fashion crafted for athletes and everyday champions.",
+    image: "/hero/elevate.jpg",
+    ctaLabel: "Shop Men",
+    ctaHref: "/category/men",
+    secondaryLabel: "Shop Women",
+    secondaryHref: "/category/women"
+  },
+  {
+    id: "summer",
+    tag: "Season 2026",
+    title: "Summer",
+    titleAccent: "Collection",
+    subtitle: "Light fabrics, bold colors, and effortless fits designed for heat, movement, and confidence.",
+    image: "/hero/summer.jpg",
+    ctaLabel: "Explore Collection",
+    ctaHref: "/products",
+    secondaryLabel: "View Sale",
+    secondaryHref: "/products?sort=price-desc"
+  },
+  {
+    id: "kids",
+    tag: "Kids & Teens",
+    title: "Playful Styles for",
+    titleAccent: "Kids",
+    subtitle: "Durable, comfortable pieces built for school days, sports, and weekend adventures.",
+    image: "/hero/kids.jpg",
+    ctaLabel: "Shop Children",
+    ctaHref: "/category/children",
+    secondaryLabel: "All Products",
+    secondaryHref: "/products"
+  }
+];
+var getHeroSlides = async (_req, res) => {
+  try {
+    if (!isDbConnected()) {
+      res.setHeader("Cache-Control", "public, max-age=60");
+      res.json(DEFAULT_HERO_SLIDES);
+      return;
+    }
+    const slides = await cacheAside(HERO_SLIDES_CACHE_KEY, SETTINGS_TTL, async () => {
+      const settings = await getOrCreateSiteSettings();
+      return settings.heroSlides.length > 0 ? settings.heroSlides : DEFAULT_HERO_SLIDES;
+    });
+    res.setHeader("Cache-Control", "public, max-age=60");
+    res.json(slides);
+  } catch {
+    res.json(DEFAULT_HERO_SLIDES);
+  }
+};
+var updateHeroSlides = async (req, res) => {
+  cacheDelete(HERO_SLIDES_CACHE_KEY);
+  try {
+    const settings = await getOrCreateSiteSettings();
+    const slides = req.body.slides;
+    if (!Array.isArray(slides) || slides.length === 0) {
+      res.status(400).json({ message: "slides array is required" });
+      return;
+    }
+    settings.heroSlides = slides;
+    await settings.save();
+    res.json(settings.heroSlides);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to update hero slides" });
+  }
+};
+var uploadHeroSlideImage = async (req, res) => {
+  try {
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ message: "No image file provided" });
+      return;
+    }
+    if (!isCloudinaryConfigured()) {
+      res.status(500).json({ message: "Image uploads not configured (Cloudinary env vars missing)" });
+      return;
+    }
+    const result = await import_cloudinary.v2.uploader.upload(
+      `data:${file.mimetype};base64,${file.buffer.toString("base64")}`,
+      {
+        folder: "ecom/hero",
+        transformation: [{ width: 1920, height: 1080, crop: "fill", quality: "auto" }]
+      }
+    );
+    res.json({ url: result.secure_url, publicId: result.public_id });
+  } catch (err) {
+    console.error("[Hero Upload]", err);
+    res.status(500).json({ message: "Image upload failed" });
+  }
+};
+var getCategoryImages = async (_req, res) => {
+  try {
+    if (!isDbConnected()) {
+      res.setHeader("Cache-Control", "public, max-age=60");
+      res.json(DEFAULT_CATEGORY_IMAGES);
+      return;
+    }
+    const data = await cacheAside(CATEGORY_IMAGES_CACHE_KEY, SETTINGS_TTL, async () => {
+      const settings = await getOrCreateSiteSettings();
+      const saved = settings.categoryImages.length > 0 ? settings.categoryImages : DEFAULT_CATEGORY_IMAGES;
+      return mergeCategoryImages(saved);
+    });
+    res.setHeader("Cache-Control", "public, max-age=60");
+    res.json(data);
+  } catch {
+    res.json(DEFAULT_CATEGORY_IMAGES);
+  }
+};
+var updateCategoryImages = async (req, res) => {
+  cacheDelete(CATEGORY_IMAGES_CACHE_KEY);
+  try {
+    const settings = await getOrCreateSiteSettings();
+    const categories = req.body.categories;
+    if (!Array.isArray(categories) || categories.length === 0) {
+      res.status(400).json({ message: "categories array is required" });
+      return;
+    }
+    settings.categoryImages = categories.map(toPlainCategoryImage);
+    await settings.save();
+    res.json(settings.categoryImages);
+  } catch {
+    res.status(500).json({ message: "Failed to update category images" });
+  }
+};
+var uploadCategoryImage = async (req, res) => {
+  try {
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ message: "No image file provided" });
+      return;
+    }
+    if (!isCloudinaryConfigured()) {
+      res.status(500).json({ message: "Cloudinary env vars missing" });
+      return;
+    }
+    cacheDelete(CATEGORY_IMAGES_CACHE_KEY);
+    const result = await import_cloudinary.v2.uploader.upload(
+      `data:${file.mimetype};base64,${file.buffer.toString("base64")}`,
+      { folder: "ecom/categories", transformation: [{ width: 800, height: 1e3, crop: "fill", quality: "auto" }] }
+    );
+    res.json({ url: result.secure_url, publicId: result.public_id });
+  } catch (err) {
+    console.error("[Category Upload]", err);
+    res.status(500).json({ message: "Image upload failed" });
+  }
+};
+
+// src/routes/settings.ts
+var router11 = (0, import_express11.Router)();
+router11.get("/public", getPublicSettings);
+router11.get("/hero-slides", getHeroSlides);
+router11.get("/", verifyToken, adminOnly, getSettings);
+router11.put("/", verifyToken, adminOnly, updateSettings);
+router11.put("/hero-slides", verifyToken, adminOnly, updateHeroSlides);
+router11.post("/hero-slides/upload-image", verifyToken, adminOnly, upload.single("image"), uploadHeroSlideImage);
+router11.get("/category-images", getCategoryImages);
+router11.put("/category-images", verifyToken, adminOnly, updateCategoryImages);
+router11.post("/category-images/upload-image", verifyToken, adminOnly, upload.single("image"), uploadCategoryImage);
+var settings_default = router11;
+
+// src/routes/loyalty.ts
+var import_express12 = require("express");
+var import_express_validator15 = require("express-validator");
+
+// src/controllers/loyaltyController.ts
+var getLoyaltyProfile = async (req, res) => {
+  const user = await User.findById(req.user.id).select(
+    "loyaltyPoints lifetimePointsEarned tier referralCode"
+  );
+  if (!user) {
+    res.status(404).json({ message: "User not found" });
+    return;
+  }
+  const referrals = await User.countDocuments({ referredBy: user._id });
+  res.json({
+    points: user.loyaltyPoints ?? 0,
+    lifetimePointsEarned: user.lifetimePointsEarned ?? 0,
+    tier: user.tier ?? getTierFromLifetimePoints(user.lifetimePointsEarned ?? 0),
+    referralCode: user.referralCode,
+    referrals,
+    tiers: {
+      bronze: { min: 0, benefits: "Earn 1 pt per \u20A8100 spent" },
+      silver: { min: 500, benefits: "5% bonus points on orders" },
+      gold: { min: 2e3, benefits: "10% bonus points + early sale access" }
+    }
+  });
+};
+var applyReferral = async (req, res) => {
+  const { referralCode } = req.body;
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    res.status(404).json({ message: "User not found" });
+    return;
+  }
+  if (user.referredBy) {
+    res.status(400).json({ message: "Referral already applied" });
+    return;
+  }
+  const referrer = await User.findOne({ referralCode: referralCode.toUpperCase() });
+  if (!referrer || referrer._id.toString() === user._id.toString()) {
+    res.status(404).json({ message: "Invalid referral code" });
+    return;
+  }
+  const hasOrder = await Order.exists({ user: user._id });
+  if (hasOrder) {
+    res.status(400).json({ message: "Referral only valid before first order" });
+    return;
+  }
+  user.referredBy = referrer._id;
+  await user.save();
+  res.json({ message: "Referral applied! Bonus points on your first order." });
+};
+var getReferralStats = async (req, res) => {
+  const user = await User.findById(req.user.id).select("referralCode loyaltyPoints");
+  if (!user) {
+    res.status(404).json({ message: "User not found" });
+    return;
+  }
+  const referredUsers = await User.find({ referredBy: user._id }).select("name email createdAt");
+  res.json({ referralCode: user.referralCode, referredUsers, total: referredUsers.length });
+};
+
+// src/routes/loyalty.ts
+var router12 = (0, import_express12.Router)();
+router12.get("/profile", verifyToken, getLoyaltyProfile);
+router12.get("/referrals", verifyToken, getReferralStats);
+router12.post(
+  "/referral",
+  verifyToken,
+  [(0, import_express_validator15.body)("referralCode").notEmpty().withMessage("Referral code is required")],
+  applyReferral
+);
+var loyalty_default = router12;
+
+// src/routes/analytics.ts
+var import_express13 = require("express");
+
+// src/models/AudienceVisit.ts
+var import_mongoose17 = __toESM(require("mongoose"));
+var audienceVisitSchema = new import_mongoose17.Schema(
+  {
+    userIp: { type: String, required: true, index: true },
+    deviceIp: { type: String, required: true },
+    country: { type: String, default: "Unknown", index: true },
+    city: { type: String, default: "Unknown", index: true },
+    region: { type: String, default: "" },
+    timezone: { type: String, default: "" },
+    latitude: { type: Number },
+    longitude: { type: Number },
+    userAgent: { type: String, default: "" },
+    deviceType: { type: String, default: "unknown", index: true },
+    browser: { type: String, default: "" },
+    os: { type: String, default: "" },
+    path: { type: String, default: "/", index: true },
+    referrer: { type: String, default: "" },
+    referrerHost: { type: String, default: "direct", index: true },
+    user: { type: import_mongoose17.Schema.Types.ObjectId, ref: "User" },
+    sessionId: { type: String, index: true },
+    visitedAt: { type: Date, default: Date.now, index: true }
+  },
+  { timestamps: false }
+);
+audienceVisitSchema.index({ visitedAt: -1 });
+audienceVisitSchema.index({ country: 1, city: 1 });
+var AudienceVisit = import_mongoose17.default.model("AudienceVisit", audienceVisitSchema);
+
+// src/services/geoService.ts
+var import_geoip_lite = __toESM(require("geoip-lite"));
+var import_ua_parser_js = require("ua-parser-js");
+var getClientIp = (req) => {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (typeof forwarded === "string" && forwarded.length > 0) {
+    return forwarded.split(",")[0].trim();
+  }
+  if (Array.isArray(forwarded) && forwarded[0]) {
+    return forwarded[0].split(",")[0].trim();
+  }
+  const realIp = req.headers["x-real-ip"];
+  if (typeof realIp === "string") return realIp;
+  return req.ip ?? req.socket.remoteAddress ?? "unknown";
+};
+var getDeviceIp = (req) => req.socket.remoteAddress?.replace("::ffff:", "") ?? "unknown";
+var resolveGeoLocation = (ip) => {
+  const cleanIp = ip.replace("::ffff:", "");
+  if (cleanIp === "127.0.0.1" || cleanIp === "::1" || cleanIp === "unknown" || cleanIp.startsWith("192.168.") || cleanIp.startsWith("10.")) {
+    return {
+      country: "Local / Private",
+      city: "Development",
+      region: "Local",
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      latitude: 0,
+      longitude: 0
+    };
+  }
+  const geo = import_geoip_lite.default.lookup(cleanIp);
+  if (!geo) {
+    return {
+      country: "Unknown",
+      city: "Unknown",
+      region: "",
+      timezone: ""
+    };
+  }
+  return {
+    country: geo.country ?? "Unknown",
+    city: geo.city ?? "Unknown",
+    region: geo.region ?? "",
+    timezone: geo.timezone ?? "",
+    latitude: geo.ll?.[0],
+    longitude: geo.ll?.[1]
+  };
+};
+var parseUserAgent = (userAgent) => {
+  const parser = new import_ua_parser_js.UAParser(userAgent);
+  const device = parser.getDevice();
+  const browser = parser.getBrowser();
+  const os = parser.getOS();
+  return {
+    deviceType: device.type ?? "desktop",
+    browser: [browser.name, browser.version].filter(Boolean).join(" ") || "Unknown",
+    os: [os.name, os.version].filter(Boolean).join(" ") || "Unknown"
+  };
+};
+var parseReferrerHost = (referrer) => {
+  if (!referrer) return "direct";
+  try {
+    return new URL(referrer).hostname.replace("www.", "");
+  } catch {
+    return "unknown";
+  }
+};
+
+// src/controllers/analyticsController.ts
+var trackVisit = async (req, res) => {
+  const { path: path3 = "/", referrer = "", sessionId } = req.body;
+  try {
+    if (isDbConnected()) {
+      const userIp = getClientIp(req);
+      const deviceIp = getDeviceIp(req);
+      const userAgent = req.headers["user-agent"] ?? "";
+      const geo = resolveGeoLocation(userIp);
+      const device = parseUserAgent(userAgent);
+      const referrerHost = parseReferrerHost(referrer);
+      await AudienceVisit.create({
+        userIp,
+        deviceIp,
+        ...geo,
+        userAgent,
+        ...device,
+        path: path3,
+        referrer,
+        referrerHost,
+        user: req.user?.id,
+        sessionId,
+        visitedAt: /* @__PURE__ */ new Date()
+      });
+    }
+  } catch (err) {
+    console.warn("[Analytics] track skipped:", err instanceof Error ? err.message : err);
+  }
+  res.status(201).json({ ok: true });
+};
+var getAudienceAnalytics = async (req, res) => {
+  const days = Math.min(90, parseInt(req.query.days, 10) || 30);
+  const since = /* @__PURE__ */ new Date();
+  since.setDate(since.getDate() - days);
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(100, parseInt(req.query.limit, 10) || 25);
+  const skip = (page - 1) * limit;
+  const matchStage = { visitedAt: { $gte: since } };
+  const [
+    totalVisits,
+    uniqueSessions,
+    uniqueIps,
+    byCountry,
+    byCity,
+    byReferrer,
+    byDevice,
+    byBrowser,
+    dailyVisits,
+    recentVisits
+  ] = await Promise.all([
+    AudienceVisit.countDocuments(matchStage),
+    AudienceVisit.distinct("sessionId", matchStage),
+    AudienceVisit.distinct("userIp", matchStage),
+    AudienceVisit.aggregate([
+      { $match: matchStage },
+      { $group: { _id: "$country", count: { $sum: 1 }, cities: { $addToSet: "$city" } } },
+      { $sort: { count: -1 } },
+      { $limit: 20 }
+    ]),
+    AudienceVisit.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: { country: "$country", city: "$city" },
+          count: { $sum: 1 },
+          lat: { $first: "$latitude" },
+          lng: { $first: "$longitude" }
+        }
+      },
+      { $sort: { count: -1 } },
+      { $limit: 20 }
+    ]),
+    AudienceVisit.aggregate([
+      { $match: matchStage },
+      { $group: { _id: "$referrerHost", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 15 }
+    ]),
+    AudienceVisit.aggregate([
+      { $match: matchStage },
+      { $group: { _id: "$deviceType", count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]),
+    AudienceVisit.aggregate([
+      { $match: matchStage },
+      { $group: { _id: "$browser", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
+    ]),
+    AudienceVisit.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$visitedAt" } },
+          visits: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]),
+    AudienceVisit.find(matchStage).populate("user", "name email").sort({ visitedAt: -1 }).skip(skip).limit(limit)
+  ]);
+  res.json({
+    summary: {
+      totalVisits,
+      uniqueSessions: uniqueSessions.filter(Boolean).length,
+      uniqueIps: uniqueIps.length,
+      days
+    },
+    byCountry: byCountry.map((c) => ({
+      country: c._id,
+      count: c.count,
+      cityCount: c.cities?.length ?? 0
+    })),
+    byCity: byCity.map((c) => ({
+      country: c._id.country,
+      city: c._id.city,
+      count: c.count,
+      latitude: c.lat,
+      longitude: c.lng
+    })),
+    byReferrer: byReferrer.map((r) => ({ source: r._id, count: r.count })),
+    byDevice,
+    byBrowser,
+    dailyVisits,
+    recentVisits,
+    pagination: {
+      page,
+      limit,
+      total: totalVisits,
+      pages: Math.ceil(totalVisits / limit)
+    }
+  });
+};
+var getAllVisits = async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(200, parseInt(req.query.limit, 10) || 50);
+  const skip = (page - 1) * limit;
+  const country = req.query.country;
+  const filter = {};
+  if (country) filter.country = country;
+  const [visits, total] = await Promise.all([
+    AudienceVisit.find(filter).populate("user", "name email").sort({ visitedAt: -1 }).skip(skip).limit(limit),
+    AudienceVisit.countDocuments(filter)
+  ]);
+  res.json({
+    visits,
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) }
+  });
+};
+
+// src/routes/analytics.ts
+var router13 = (0, import_express13.Router)();
+router13.post("/track", analyticsRateLimit, optionalAuth, trackVisit);
+router13.get("/audience", verifyToken, adminOnly, getAudienceAnalytics);
+router13.get("/visits", verifyToken, adminOnly, getAllVisits);
+var analytics_default = router13;
+
+// src/routes/chat.ts
+var import_express14 = require("express");
+var import_express_validator17 = require("express-validator");
+
+// src/controllers/chatController.ts
+var import_express_validator16 = require("express-validator");
+
+// src/services/chatService.ts
+var import_mongoose20 = __toESM(require("mongoose"));
+
+// src/models/ChatConversation.ts
+var import_mongoose18 = __toESM(require("mongoose"));
+var chatConversationSchema = new import_mongoose18.Schema(
+  {
+    customerUserId: { type: import_mongoose18.Schema.Types.ObjectId, ref: "User", index: true },
+    guestSessionId: { type: String, index: true },
+    customerName: { type: String, required: true, trim: true },
+    customerEmail: { type: String, trim: true, lowercase: true },
+    lastMessage: { type: String },
+    lastMessageAt: { type: Date, default: Date.now, index: true },
+    unreadCustomer: { type: Number, default: 0, min: 0 },
+    unreadAdmin: { type: Number, default: 0, min: 0 },
+    status: { type: String, enum: ["open", "closed"], default: "open", index: true }
+  },
+  { timestamps: true }
+);
+chatConversationSchema.index(
+  { guestSessionId: 1, status: 1 },
+  { partialFilterExpression: { guestSessionId: { $exists: true, $type: "string" } } }
+);
+var ChatConversation = import_mongoose18.default.model(
+  "ChatConversation",
+  chatConversationSchema
+);
+
+// src/models/ChatMessage.ts
+var import_mongoose19 = __toESM(require("mongoose"));
+var chatMessageSchema = new import_mongoose19.Schema(
+  {
+    conversationId: {
+      type: import_mongoose19.Schema.Types.ObjectId,
+      ref: "ChatConversation",
+      required: true,
+      index: true
+    },
+    sender: { type: String, enum: ["customer", "admin"], required: true },
+    senderUserId: { type: import_mongoose19.Schema.Types.ObjectId, ref: "User" },
+    body: { type: String, required: true, trim: true, maxlength: 4e3 },
+    clientMessageId: { type: String, required: true },
+    readByCustomer: { type: Boolean, default: false },
+    readByAdmin: { type: Boolean, default: false },
+    deliveredAt: { type: Date }
+  },
+  { timestamps: true }
+);
+chatMessageSchema.index({ conversationId: 1, createdAt: -1 });
+chatMessageSchema.index({ conversationId: 1, clientMessageId: 1 }, { unique: true });
+var ChatMessage = import_mongoose19.default.model("ChatMessage", chatMessageSchema);
+
+// src/services/chatService.ts
+var DEFAULT_PAGE_SIZE = 30;
+var findOrCreateConversation = async (params) => {
+  const filter = { status: "open" };
+  if (params.userId) {
+    filter.customerUserId = new import_mongoose20.default.Types.ObjectId(params.userId);
+  } else if (params.guestSessionId) {
+    filter.guestSessionId = params.guestSessionId;
+  } else {
+    throw new Error("userId or guestSessionId required");
+  }
+  let conversation = await ChatConversation.findOne(filter).sort({ updatedAt: -1 });
+  if (conversation) {
+    if (params.customerName && conversation.customerName !== params.customerName) {
+      conversation.customerName = params.customerName;
+    }
+    if (params.customerEmail && conversation.customerEmail !== params.customerEmail) {
+      conversation.customerEmail = params.customerEmail;
+    }
+    await conversation.save();
+    return conversation;
+  }
+  conversation = await ChatConversation.create({
+    customerUserId: params.userId ? new import_mongoose20.default.Types.ObjectId(params.userId) : void 0,
+    guestSessionId: params.guestSessionId,
+    customerName: params.customerName,
+    customerEmail: params.customerEmail,
+    lastMessageAt: /* @__PURE__ */ new Date()
+  });
+  return conversation;
+};
+var listAdminConversations = async (limit = 50) => ChatConversation.find({ status: "open" }).sort({ lastMessageAt: -1 }).limit(limit).lean();
+var getConversationById = async (id) => {
+  if (!import_mongoose20.default.Types.ObjectId.isValid(id)) return null;
+  return ChatConversation.findById(id);
+};
+var userCanAccessConversation = (conversation, opts) => {
+  if (opts.isAdmin) return true;
+  if (opts.userId && conversation.customerUserId?.toString() === opts.userId) return true;
+  if (opts.guestSessionId && conversation.guestSessionId && conversation.guestSessionId === opts.guestSessionId) {
+    return true;
+  }
+  return false;
+};
+var getMessagesPage = async (conversationId, opts = {}) => {
+  const limit = Math.min(50, Math.max(1, opts.limit ?? DEFAULT_PAGE_SIZE));
+  const filter = {
+    conversationId: new import_mongoose20.default.Types.ObjectId(conversationId)
+  };
+  if (opts.before) {
+    const beforeDate = new Date(opts.before);
+    if (!Number.isNaN(beforeDate.getTime())) {
+      filter.createdAt = { $lt: beforeDate };
+    }
+  }
+  const messages = await ChatMessage.find(filter).sort({ createdAt: -1 }).limit(limit + 1).lean();
+  const hasMore = messages.length > limit;
+  const page = hasMore ? messages.slice(0, limit) : messages;
+  page.reverse();
+  return {
+    messages: page,
+    hasMore,
+    nextBefore: page.length > 0 ? page[0].createdAt.toISOString() : void 0
+  };
+};
+var markConversationRead = async (conversationId, reader) => {
+  const readField = reader === "admin" ? "readByAdmin" : "readByCustomer";
+  const unreadField = reader === "admin" ? "unreadAdmin" : "unreadCustomer";
+  await ChatMessage.updateMany(
+    { conversationId, [readField]: false },
+    { $set: { [readField]: true } }
+  );
+  await ChatConversation.findByIdAndUpdate(conversationId, {
+    [unreadField]: 0
+  });
+};
+var serializeMessage = (msg) => {
+  const m = msg;
+  return {
+    _id: m._id.toString(),
+    conversationId: m.conversationId.toString(),
+    sender: m.sender,
+    senderUserId: m.senderUserId?.toString(),
+    body: m.body,
+    clientMessageId: m.clientMessageId,
+    readByCustomer: m.readByCustomer,
+    readByAdmin: m.readByAdmin,
+    deliveredAt: m.deliveredAt?.toISOString(),
+    createdAt: m.createdAt.toISOString()
+  };
+};
+var serializeConversation = (conv) => {
+  const c = conv;
+  return {
+    _id: c._id.toString(),
+    customerUserId: c.customerUserId?.toString(),
+    guestSessionId: c.guestSessionId,
+    customerName: c.customerName,
+    customerEmail: c.customerEmail,
+    lastMessage: c.lastMessage,
+    lastMessageAt: c.lastMessageAt.toISOString(),
+    unreadCustomer: c.unreadCustomer,
+    unreadAdmin: c.unreadAdmin,
+    status: c.status,
+    createdAt: c.createdAt.toISOString(),
+    updatedAt: c.updatedAt.toISOString()
+  };
+};
+
+// src/controllers/chatController.ts
+var getOrCreateConversation = async (req, res) => {
+  const errors = (0, import_express_validator16.validationResult)(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ message: errors.array()[0].msg });
+    return;
+  }
+  const { guestSessionId, guestName } = req.body;
+  const userId = req.user?.id;
+  const customerName = guestName?.trim() ?? req.user?.email?.split("@")[0] ?? "Guest";
+  const customerEmail = req.user?.email;
+  if (!userId && !guestSessionId) {
+    res.status(400).json({ message: "Login or provide guestSessionId" });
+    return;
+  }
+  try {
+    const conversation = await findOrCreateConversation({
+      userId,
+      guestSessionId: userId ? void 0 : guestSessionId,
+      customerName,
+      customerEmail
+    });
+    res.json({ conversation: serializeConversation(conversation) });
+  } catch (err) {
+    res.status(500).json({ message: err.message ?? "Failed to start chat" });
+  }
+};
+var getConversations = async (_req, res) => {
+  const conversations = await listAdminConversations();
+  res.json({ conversations: conversations.map(serializeConversation) });
+};
+var getConversationMessages = async (req, res) => {
+  const id = String(req.params.id);
+  const before = req.query.before;
+  const limit = req.query.limit ? Number(req.query.limit) : void 0;
+  const conversation = await getConversationById(id);
+  if (!conversation) {
+    res.status(404).json({ message: "Conversation not found" });
+    return;
+  }
+  const guestSessionId = req.headers["x-guest-session"];
+  const allowed = userCanAccessConversation(conversation, {
+    userId: req.user?.id,
+    guestSessionId,
+    isAdmin: req.user?.role === "admin"
+  });
+  if (!allowed) {
+    res.status(403).json({ message: "Access denied" });
+    return;
+  }
+  const result = await getMessagesPage(id, { before, limit });
+  res.json({
+    messages: result.messages.map(serializeMessage),
+    hasMore: result.hasMore,
+    nextBefore: result.nextBefore
+  });
+};
+var markRead = async (req, res) => {
+  const id = String(req.params.id);
+  const reader = req.user?.role === "admin" ? "admin" : "customer";
+  const conversation = await getConversationById(id);
+  if (!conversation) {
+    res.status(404).json({ message: "Conversation not found" });
+    return;
+  }
+  const guestSessionId = req.headers["x-guest-session"];
+  const allowed = userCanAccessConversation(conversation, {
+    userId: req.user?.id,
+    guestSessionId,
+    isAdmin: req.user?.role === "admin"
+  });
+  if (!allowed) {
+    res.status(403).json({ message: "Access denied" });
+    return;
+  }
+  await markConversationRead(id, reader);
+  res.json({ ok: true });
+};
+
+// src/routes/chat.ts
+var router14 = (0, import_express14.Router)();
+router14.post(
+  "/conversation",
+  optionalAuth,
+  [
+    (0, import_express_validator17.body)("guestSessionId").optional().isString().isLength({ min: 8, max: 128 }),
+    (0, import_express_validator17.body)("guestName").optional().isString().isLength({ min: 1, max: 80 })
+  ],
+  getOrCreateConversation
+);
+router14.get("/conversations", verifyToken, adminOnly, getConversations);
+router14.get("/conversations/:id/messages", optionalAuth, getConversationMessages);
+router14.patch("/conversations/:id/read", optionalAuth, markRead);
+var chat_default = router14;
+
+// src/createApp.ts
+import_dotenv.default.config();
+import_dotenv.default.config({ path: import_path2.default.join(process.cwd(), "backend", ".env") });
+var isProd3 = process.env.NODE_ENV === "production";
+var createApp = (options = {}) => {
+  const app = (0, import_express15.default)();
+  app.set("trust proxy", true);
+  app.use(
+    (0, import_helmet.default)({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            "'unsafe-eval'",
+            "https://*.clerk.com",
+            "https://*.clerk.accounts.dev",
+            process.env.CLIENT_URL ?? "http://localhost:3000"
+          ],
+          styleSrc: ["'self'", "'unsafe-inline'", "https:"],
+          imgSrc: ["'self'", "data:", "https:", "blob:"],
+          fontSrc: ["'self'", "https:", "data:"],
+          connectSrc: ["'self'", "https:", "wss:", "ws:"],
+          frameSrc: ["'self'", "https://*.clerk.com", "https://*.clerk.accounts.dev"],
+          objectSrc: ["'none'"],
+          ...isProd3 ? { upgradeInsecureRequests: [] } : {}
+        }
+      },
+      crossOriginEmbedderPolicy: false
+    })
+  );
+  app.use(
+    (0, import_cors.default)({
+      origin: process.env.CLIENT_URL ?? "http://localhost:3000",
+      credentials: true
+    })
+  );
+  app.use((0, import_compression.default)());
+  app.use(
+    (0, import_pino_http.default)({
+      logger: logger_default,
+      // Skip health-check noise
+      autoLogging: { ignore: (req) => req.url === "/api/health" },
+      customLogLevel: (_req, res) => res.statusCode >= 500 ? "error" : res.statusCode >= 400 ? "warn" : "info",
+      serializers: {
+        req: (req) => ({ method: req.method, url: req.url }),
+        res: (res) => ({ statusCode: res.statusCode })
+      }
+    })
+  );
+  app.use(import_express15.default.json({ limit: "10mb" }));
+  app.use(import_express15.default.urlencoded({ extended: true }));
+  app.use(sanitizeInputs);
+  app.use(
+    "/api/uploads/payment-proofs",
+    import_express15.default.static(import_path2.default.join(process.cwd(), "uploads", "payment-proofs"))
+  );
+  app.get("/api/health", (_req, res) => {
+    const dbConnected = isDbConnected();
+    const mongoConfigured = isMongoConfigured();
+    res.status(200).json({
+      status: dbConnected ? "ok" : "degraded",
+      db: dbConnected ? "connected" : "disconnected",
+      mongodbConfigured: mongoConfigured,
+      timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+      message: dbConnected ? "API is ready" : mongoConfigured ? "Database not connected \u2014 check MongoDB Atlas Network Access (allow 0.0.0.0/0)" : "MONGODB_URI is missing \u2014 add it in Hostinger Environment variables"
+    });
+  });
+  app.get("/api/ready", (_req, res) => {
+    const fs2 = require("fs");
+    const path3 = require("path");
+    const nextBuild = path3.join(process.cwd(), "frontend", ".next", "BUILD_ID");
+    const hasBuild = fs2.existsSync(nextBuild);
+    res.status(hasBuild ? 200 : 503).json({
+      ready: hasBuild,
+      frontendBuild: hasBuild ? "present" : "missing \u2014 run npm run build on Hostinger",
+      cwd: process.cwd()
+    });
+  });
+  app.use("/api", globalApiRateLimit);
+  app.use("/api", (req, res, next) => {
+    if (req.path === "/health") return next();
+    if (req.path === "/ready") return next();
+    if (req.path === "/settings/public") return next();
+    if (req.path === "/settings/hero-slides" && req.method === "GET") return next();
+    if (req.path === "/settings/category-images" && req.method === "GET") return next();
+    if (req.path === "/promotions/active" && req.method === "GET") return next();
+    if (req.path === "/payments/bank-details" && req.method === "GET") return next();
+    if (req.path === "/analytics/track" && req.method === "POST") return next();
+    return requireDb(req, res, next);
+  });
+  app.use("/api/auth", auth_default);
+  app.use("/api/products", products_default);
+  app.use("/api/orders", orders_default);
+  app.use("/api/users", users_default);
+  app.use("/api/categories", categories_default);
+  app.use("/api/payments", payments_default);
+  app.use("/api/cart", cart_default);
+  app.use("/api/search", search_default);
+  app.use("/api/coupons", coupons_default);
+  app.use("/api/promotions", promotions_default);
+  app.use("/api/settings", settings_default);
+  app.use("/api/loyalty", loyalty_default);
+  app.use("/api/analytics", analytics_default);
+  app.use("/api/chat", chat_default);
+  if (options.catchAll !== false) {
+    app.use(notFound);
+  }
+  app.use(errorHandler);
+  return app;
+};
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
+  createApp
+});
 //# sourceMappingURL=createApp.js.map
