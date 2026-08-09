@@ -24,7 +24,8 @@ try {
   // Hostinger injects env vars via hPanel — dotenv is optional
 }
 
-const PORT = parseInt(process.env.PORT || '3000', 10);
+const HOST = process.env.HOST || '0.0.0.0';
+const PORT = process.env.PORT ? (isNaN(Number(process.env.PORT)) ? process.env.PORT : Number(process.env.PORT)) : 3000;
 const dev = process.env.NODE_ENV !== 'production';
 const frontendDir = path.join(__dirname, 'frontend');
 const nextBuildDir = path.join(frontendDir, '.next');
@@ -129,15 +130,26 @@ async function main() {
   });
 
   // Listen FIRST — Hostinger health checks time out if we wait for next.prepare()
-  httpServer.listen(PORT, () => {
-    console.log(`[Startup] VexironAthletics listening on port ${PORT}`);
-    console.log(`[Startup] API health: http://localhost:${PORT}/api/health`);
-    console.log(`[Startup] Socket.IO: ws://localhost:${PORT}/socket.io`);
-  });
+  if (typeof PORT === 'number') {
+    httpServer.listen(PORT, HOST, () => {
+      console.log(`[Startup] VexironAthletics listening on http://${HOST}:${PORT}`);
+      console.log(`[Startup] API health: http://${HOST}:${PORT}/api/health`);
+      console.log(`[Startup] Socket.IO: ws://${HOST}:${PORT}/socket.io`);
+    });
+  } else {
+    httpServer.listen(PORT, () => {
+      console.log(`[Startup] VexironAthletics listening on socket ${PORT}`);
+    });
+  }
 
   // Load Next.js in background (can take 30–60s on shared hosting)
   if (hasFrontendBuild) {
-    const nextApp = next({ dev, dir: frontendDir });
+    const nextApp = next({
+      dev,
+      dir: frontendDir,
+      hostname: typeof PORT === 'number' ? HOST : 'localhost',
+      port: typeof PORT === 'number' ? PORT : 3000,
+    });
     nextApp
       .prepare()
       .then(() => {
